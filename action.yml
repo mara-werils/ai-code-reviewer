@@ -7,6 +7,10 @@ branding:
   color: 'purple'
 
 inputs:
+  github_token:
+    description: 'GitHub token for API access (defaults to github.token)'
+    required: false
+    default: ${{ github.token }}
   provider:
     description: 'LLM provider: openai, anthropic, groq, google, ollama'
     required: false
@@ -62,7 +66,7 @@ runs:
   using: 'docker'
   image: 'Dockerfile'
   env:
-    GITHUB_TOKEN: ${{ github.token }}
+    GITHUB_TOKEN: ${{ inputs.github_token }}
     INPUT_PROVIDER: ${{ inputs.provider }}
     INPUT_MODEL: ${{ inputs.model }}
     INPUT_API_BASE_URL: ${{ inputs.api_base_url }}
