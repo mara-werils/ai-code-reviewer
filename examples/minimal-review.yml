@@ -1,0 +1,21 @@
+name: AI Code Review (Minimal - only critical issues)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mara-werils/ai-code-reviewer@v1
+        with:
+          review_style: 'minimal'
+          max_comments: '5'
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}

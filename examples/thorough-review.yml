@@ -1,0 +1,29 @@
+name: AI Code Review (Thorough)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mara-werils/ai-code-reviewer@v1
+        with:
+          provider: 'anthropic'
+          review_style: 'thorough'
+          max_comments: '25'
+          suggest_tests: 'true'
+          label_pr: 'true'
+          custom_instructions: |
+            - We use the Repository pattern, flag violations
+            - All new endpoints need OpenAPI docs
+            - Security is critical — we handle PII
+            - Flag any raw SQL, we use SQLAlchemy ORM only
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
