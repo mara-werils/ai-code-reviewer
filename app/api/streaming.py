@@ -24,9 +24,7 @@ async def stream_review_progress(review_id: str) -> EventSourceResponse:
 
         try:
             while True:
-                message = await pubsub.get_message(
-                    ignore_subscribe_messages=True, timeout=1.0
-                )
+                message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
                 if message and message["type"] == "message":
                     data = json.loads(message["data"])
                     event_type = data.get("event", "progress")

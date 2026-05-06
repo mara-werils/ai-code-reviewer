@@ -31,12 +31,14 @@ async def main(repo: str, limit: int) -> None:
         data = json.loads(f.read_text())
         print(f"\n--- PR #{data['pr_number']}: {data['title']} ---")
         # TODO: Run agent on this PR and compare with human comments
-        results.append({
-            "pr_number": data["pr_number"],
-            "title": data["title"],
-            "human_comments": len(data.get("human_review_comments", [])),
-            "status": "pending",
-        })
+        results.append(
+            {
+                "pr_number": data["pr_number"],
+                "title": data["title"],
+                "human_comments": len(data.get("human_review_comments", [])),
+                "status": "pending",
+            }
+        )
 
     # Generate report
     report_path = EVAL_DIR / "report.md"
@@ -47,7 +49,9 @@ async def main(repo: str, limit: int) -> None:
         f.write("| PR | Title | Human Comments | Agent Comments | Recall | Precision |\n")
         f.write("|---|---|---|---|---|---|\n")
         for r in results:
-            f.write(f"| #{r['pr_number']} | {r['title'][:40]} | {r['human_comments']} | - | - | - |\n")
+            f.write(
+                f"| #{r['pr_number']} | {r['title'][:40]} | {r['human_comments']} | - | - | - |\n"
+            )
         f.write("\n*Run with full agent to populate results.*\n")
 
     print(f"\nReport written to {report_path}")

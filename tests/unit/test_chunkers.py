@@ -1,4 +1,3 @@
-
 from app.services.indexer.chunkers.markdown import MarkdownChunker
 from app.services.indexer.chunkers.python_ast import PythonChunker
 
@@ -48,11 +47,11 @@ class TestPythonChunker:
             assert mc.metadata.get("parent_class") == "Calculator"
 
     def test_decorated_function(self) -> None:
-        code = '''@app.route("/api")
+        code = """@app.route("/api")
 @login_required
 def api_endpoint():
     return {"status": "ok"}
-'''
+"""
         chunks = self.chunker.chunk("routes.py", code)
         func_chunks = [c for c in chunks if c.chunk_type == "function"]
         assert len(func_chunks) == 1
@@ -61,24 +60,24 @@ def api_endpoint():
         assert "@app.route" in func_chunks[0].content
 
     def test_async_function(self) -> None:
-        code = '''async def fetch_data(url: str) -> dict:
+        code = """async def fetch_data(url: str) -> dict:
     async with httpx.AsyncClient() as client:
         resp = await client.get(url)
         return resp.json()
-'''
+"""
         chunks = self.chunker.chunk("fetch.py", code)
         func_chunks = [c for c in chunks if c.chunk_type == "function"]
         assert len(func_chunks) == 1
         assert func_chunks[0].metadata.get("is_async") is True
 
     def test_imports(self) -> None:
-        code = '''import os
+        code = """import os
 from pathlib import Path
 from typing import Optional
 
 def main():
     pass
-'''
+"""
         chunks = self.chunker.chunk("main.py", code)
         import_chunks = [c for c in chunks if c.chunk_type == "module_imports"]
         assert len(import_chunks) == 1

@@ -72,11 +72,13 @@ def format_review_body(result: ReviewResult) -> str:
         parts.append("")
 
     # Footer
-    parts.extend([
-        "---",
-        f"<sub>Cost: ${result.cost_usd:.4f} | {result.duration_ms / 1000:.1f}s | "
-        f"{result.model}</sub>",
-    ])
+    parts.extend(
+        [
+            "---",
+            f"<sub>Cost: ${result.cost_usd:.4f} | {result.duration_ms / 1000:.1f}s | "
+            f"{result.model}</sub>",
+        ]
+    )
 
     return "\n".join(parts)
 
@@ -95,11 +97,13 @@ def build_github_review_comments(result: ReviewResult) -> list[dict]:
         if not c.line:
             continue  # General comments go in the body
 
-        comments.append({
-            "path": c.path,
-            "line": c.line,
-            "side": c.side,
-            "body": format_inline_comment(c.severity, c.body),
-        })
+        comments.append(
+            {
+                "path": c.path,
+                "line": c.line,
+                "side": c.side,
+                "body": format_inline_comment(c.severity, c.body),
+            }
+        )
 
     return comments

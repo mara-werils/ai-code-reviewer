@@ -59,5 +59,6 @@ class GoogleProvider(LLMProvider):
 
     def estimate_cost(self, input_tokens: int, output_tokens: int) -> float:
         pricing = PRICING.get(self._model, PRICING["gemini-2.0-flash"])
-        return (input_tokens / 1_000_000) * pricing["input"] + \
-               (output_tokens / 1_000_000) * pricing["output"]
+        return (input_tokens / 1_000_000) * pricing["input"] + (
+            output_tokens / 1_000_000
+        ) * pricing["output"]

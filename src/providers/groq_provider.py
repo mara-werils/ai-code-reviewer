@@ -63,5 +63,6 @@ class GroqProvider(LLMProvider):
 
     def estimate_cost(self, input_tokens: int, output_tokens: int) -> float:
         pricing = PRICING.get(self._model, {"input": 0.59, "output": 0.79})
-        return (input_tokens / 1_000_000) * pricing["input"] + \
-               (output_tokens / 1_000_000) * pricing["output"]
+        return (input_tokens / 1_000_000) * pricing["input"] + (
+            output_tokens / 1_000_000
+        ) * pricing["output"]

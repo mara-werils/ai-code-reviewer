@@ -88,7 +88,7 @@ class ReviewEngine:
         if not diff:
             diff = build_diff_text(filtered, max_size=self.config.max_diff_size)
         else:
-            diff = diff[:self.config.max_diff_size]
+            diff = diff[: self.config.max_diff_size]
 
         files_summary = build_files_summary(filtered)
 
@@ -189,13 +189,15 @@ class ReviewEngine:
                 else:
                     continue
 
-            comments.append(ReviewComment(
-                path=path,
-                line=line,
-                side=c.get("side", "RIGHT"),
-                body=c.get("body", ""),
-                severity=c.get("severity", "info"),
-            ))
+            comments.append(
+                ReviewComment(
+                    path=path,
+                    line=line,
+                    side=c.get("side", "RIGHT"),
+                    body=c.get("body", ""),
+                    severity=c.get("severity", "info"),
+                )
+            )
 
         return ReviewResult(
             summary=data.get("summary", ""),

@@ -34,16 +34,34 @@ class ReviewConfig:
     review_language: str = "en"
     max_files: int = 50
     max_diff_size: int = 30000  # chars
-    ignore_paths: list[str] = field(default_factory=lambda: [
-        "*.lock", "*.min.js", "*.min.css", "*.map",
-        "package-lock.json", "yarn.lock", "pnpm-lock.yaml",
-        "poetry.lock", "Cargo.lock", "go.sum",
-        "*.pb.go", "*.generated.*", "*_generated.*",
-        "vendor/**", "node_modules/**", "dist/**", "build/**",
-    ])
-    ignore_titles: list[str] = field(default_factory=lambda: [
-        "WIP", "DO NOT MERGE", "DRAFT",
-    ])
+    ignore_paths: list[str] = field(
+        default_factory=lambda: [
+            "*.lock",
+            "*.min.js",
+            "*.min.css",
+            "*.map",
+            "package-lock.json",
+            "yarn.lock",
+            "pnpm-lock.yaml",
+            "poetry.lock",
+            "Cargo.lock",
+            "go.sum",
+            "*.pb.go",
+            "*.generated.*",
+            "*_generated.*",
+            "vendor/**",
+            "node_modules/**",
+            "dist/**",
+            "build/**",
+        ]
+    )
+    ignore_titles: list[str] = field(
+        default_factory=lambda: [
+            "WIP",
+            "DO NOT MERGE",
+            "DRAFT",
+        ]
+    )
 
     # Review style
     review_style: str = "concise"  # concise, thorough, minimal

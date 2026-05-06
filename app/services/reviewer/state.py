@@ -14,9 +14,7 @@ class ReviewCommentDraft(BaseModel):
     line_number: int | None = None
     body: str
     severity: Literal["info", "suggestion", "warning", "critical"]
-    category: Literal[
-        "correctness", "performance", "security", "style", "test_coverage", "design"
-    ]
+    category: Literal["correctness", "performance", "security", "style", "test_coverage", "design"]
 
 
 class FinalReview(BaseModel):

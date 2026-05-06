@@ -118,7 +118,9 @@ def build_review_graph(session: AsyncSession) -> StateGraph:
                 f"lines {chunk.start_line}-{chunk.end_line}):\n"
                 f"```{chunk.language}\n{chunk.content[:2000]}\n```"
             )
-        retrieved_context = "\n\n".join(context_parts) if context_parts else "No relevant context found."
+        retrieved_context = (
+            "\n\n".join(context_parts) if context_parts else "No relevant context found."
+        )
 
         classification = state.get("classification")
         cat = classification.category if classification else "unknown"
@@ -161,24 +163,28 @@ def build_review_graph(session: AsyncSession) -> StateGraph:
                     content_blocks.append({"type": "text", "text": msg.content})
                 if msg.tool_calls:
                     for tc in msg.tool_calls:
-                        content_blocks.append({
-                            "type": "tool_use",
-                            "id": tc["id"],
-                            "name": tc["name"],
-                            "input": tc["args"],
-                        })
+                        content_blocks.append(
+                            {
+                                "type": "tool_use",
+                                "id": tc["id"],
+                                "name": tc["name"],
+                                "input": tc["args"],
+                            }
+                        )
                 anthropic_messages.append({"role": "assistant", "content": content_blocks})
             elif isinstance(msg, ToolMessage):
-                anthropic_messages.append({
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "tool_result",
-                            "tool_use_id": msg.tool_call_id,
-                            "content": msg.content,
-                        }
-                    ],
-                })
+                anthropic_messages.append(
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "tool_result",
+                                "tool_use_id": msg.tool_call_id,
+                                "content": msg.content,
+                            }
+                        ],
+                    }
+                )
 
         start = time.monotonic()
         try:
@@ -217,11 +223,13 @@ def build_review_graph(session: AsyncSession) -> StateGraph:
                 if block.type == "text":
                     text_content = block.text
                 elif block.type == "tool_use":
-                    tool_calls.append({
-                        "id": block.id,
-                        "name": block.name,
-                        "args": block.input,  # type: ignore[dict-item]
-                    })
+                    tool_calls.append(
+                        {
+                            "id": block.id,
+                            "name": block.name,
+                            "args": block.input,  # type: ignore[dict-item]
+                        }
+                    )
 
             ai_message = AIMessage(content=text_content, tool_calls=tool_calls)
 
@@ -254,9 +262,7 @@ def build_review_graph(session: AsyncSession) -> StateGraph:
         tool_messages = []
         for tc in last_message.tool_calls:
             result = await registry.dispatch(tc["name"], tc["args"])
-            tool_messages.append(
-                ToolMessage(content=result, tool_call_id=tc["id"])
-            )
+            tool_messages.append(ToolMessage(content=result, tool_call_id=tc["id"]))
 
         return {"messages": tool_messages}
 
@@ -361,12 +367,14 @@ def build_review_graph(session: AsyncSession) -> StateGraph:
             else:
                 body_parts.append("No issues found. LGTM!")
 
-            body_parts.extend([
-                "",
-                "---",
-                f"*Cost: ${state.get('cost_spent_usd', 0):.4f} | "
-                f"Tool calls: {state.get('tool_calls_count', 0)}*",
-            ])
+            body_parts.extend(
+                [
+                    "",
+                    "---",
+                    f"*Cost: ${state.get('cost_spent_usd', 0):.4f} | "
+                    f"Tool calls: {state.get('tool_calls_count', 0)}*",
+                ]
+            )
 
             body = "\n".join(body_parts)
 
@@ -374,11 +382,13 @@ def build_review_graph(session: AsyncSession) -> StateGraph:
             gh_comments = []
             for c in comments:
                 if c.line_number:
-                    gh_comments.append({
-                        "path": c.file_path,
-                        "line": c.line_number,
-                        "body": f"**[{c.severity.upper()}]** ({c.category})\n\n{c.body}",
-                    })
+                    gh_comments.append(
+                        {
+                            "path": c.file_path,
+                            "line": c.line_number,
+                            "body": f"**[{c.severity.upper()}]** ({c.category})\n\n{c.body}",
+                        }
+                    )
 
             await github.post_review(
                 repo=state["repo_full_name"],
@@ -390,6 +400,7 @@ def build_review_graph(session: AsyncSession) -> StateGraph:
 
             # Save to DB
             from sqlalchemy import update
+
             await session.execute(
                 update(Review)
                 .where(Review.id == state["review_id"])
@@ -419,6 +430,7 @@ def build_review_graph(session: AsyncSession) -> StateGraph:
         except Exception as e:
             logger.error("post_review_failed", error=str(e))
             from sqlalchemy import update
+
             await session.execute(
                 update(Review)
                 .where(Review.id == state["review_id"])

@@ -49,8 +49,11 @@ def pr_opened_payload() -> dict:  # type: ignore[type-arg]
 
 
 def make_signature(payload: bytes, secret: str) -> str:
-    return "sha256=" + hmac.new(
-        secret.encode("utf-8"),
-        payload,
-        hashlib.sha256,
-    ).hexdigest()
+    return (
+        "sha256="
+        + hmac.new(
+            secret.encode("utf-8"),
+            payload,
+            hashlib.sha256,
+        ).hexdigest()
+    )

@@ -12,7 +12,9 @@ PRICING = {
     "claude-opus-4-20250514": {"input": 15.00, "output": 75.00},
 }
 
-JSON_SUFFIX = "\n\nIMPORTANT: You MUST respond with ONLY a valid JSON object. No text before or after."
+JSON_SUFFIX = (
+    "\n\nIMPORTANT: You MUST respond with ONLY a valid JSON object. No text before or after."
+)
 
 
 class AnthropicProvider(LLMProvider):
@@ -72,5 +74,6 @@ class AnthropicProvider(LLMProvider):
 
     def estimate_cost(self, input_tokens: int, output_tokens: int) -> float:
         pricing = PRICING.get(self._model, PRICING["claude-sonnet-4-20250514"])
-        return (input_tokens / 1_000_000) * pricing["input"] + \
-               (output_tokens / 1_000_000) * pricing["output"]
+        return (input_tokens / 1_000_000) * pricing["input"] + (
+            output_tokens / 1_000_000
+        ) * pricing["output"]

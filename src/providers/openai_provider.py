@@ -61,5 +61,6 @@ class OpenAIProvider(LLMProvider):
 
     def estimate_cost(self, input_tokens: int, output_tokens: int) -> float:
         pricing = PRICING.get(self._model, PRICING["gpt-4o"])
-        return (input_tokens / 1_000_000) * pricing["input"] + \
-               (output_tokens / 1_000_000) * pricing["output"]
+        return (input_tokens / 1_000_000) * pricing["input"] + (
+            output_tokens / 1_000_000
+        ) * pricing["output"]

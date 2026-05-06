@@ -223,9 +223,7 @@ class ToolRegistry:
         content = "\n".join(lines[:300])
         return f"{header}\n```\n{content}\n```"
 
-    async def _tool_find_similar_functions(
-        self, function_signature: str, top_k: int = 5
-    ) -> str:
+    async def _tool_find_similar_functions(self, function_signature: str, top_k: int = 5) -> str:
         embedding = await self._embedding.embed_single(function_signature)
 
         result = await self._session.execute(
@@ -349,9 +347,7 @@ class ToolRegistry:
 
         parts = []
         for row in rows:
-            parts.append(
-                f"### {row[0]} — {row[1] or 'Section'}\n{row[2][:2000]}"
-            )
+            parts.append(f"### {row[0]} — {row[1] or 'Section'}\n{row[2][:2000]}")
         return "\n\n".join(parts)
 
     async def _tool_get_file_diff_context(self, file_path: str) -> str:

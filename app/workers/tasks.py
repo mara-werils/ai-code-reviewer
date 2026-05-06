@@ -38,9 +38,7 @@ async def process_review(
         try:
             # Update status
             await session.execute(
-                update(Review)
-                .where(Review.id == UUID(review_id))
-                .values(status="running")
+                update(Review).where(Review.id == UUID(review_id)).values(status="running")
             )
             await session.commit()
 
@@ -82,9 +80,7 @@ async def process_review(
             }
 
             # Load PR title from DB
-            result = await session.execute(
-                select(Review).where(Review.id == UUID(review_id))
-            )
+            result = await session.execute(select(Review).where(Review.id == UUID(review_id)))
             review = result.scalar_one_or_none()
             if review and review.pr_title:
                 initial_state["pr_title"] = review.pr_title
@@ -93,9 +89,7 @@ async def process_review(
 
             duration_ms = int((time.monotonic() - start) * 1000)
             await session.execute(
-                update(Review)
-                .where(Review.id == UUID(review_id))
-                .values(duration_ms=duration_ms)
+                update(Review).where(Review.id == UUID(review_id)).values(duration_ms=duration_ms)
             )
             await session.commit()
 

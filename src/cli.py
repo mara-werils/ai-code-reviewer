@@ -94,7 +94,9 @@ async def cmd_review(args: argparse.Namespace) -> None:
         finally:
             await github.close()
 
-    print(f"\n---\nCost: ${result.cost_usd:.4f} | Model: {result.model} | Duration: {result.duration_ms}ms")
+    print(
+        f"\n---\nCost: ${result.cost_usd:.4f} | Model: {result.model} | Duration: {result.duration_ms}ms"
+    )
 
 
 def main() -> None:

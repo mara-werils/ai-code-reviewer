@@ -78,9 +78,7 @@ class GitHubClient:
         token = await self.authenticate_as_installation(installation_id)
         return {"Authorization": f"token {token}"}
 
-    async def get_pull_request_diff(
-        self, repo: str, pr_number: int, installation_id: int
-    ) -> str:
+    async def get_pull_request_diff(self, repo: str, pr_number: int, installation_id: int) -> str:
         headers = await self._authed_headers(installation_id)
         headers["Accept"] = "application/vnd.github.v3.diff"
         resp = await self._client.get(
@@ -102,9 +100,7 @@ class GitHubClient:
         resp.raise_for_status()
         return [FileChange(**f) for f in resp.json()]
 
-    async def get_repo_tree(
-        self, repo: str, sha: str, installation_id: int
-    ) -> list[TreeEntry]:
+    async def get_repo_tree(self, repo: str, sha: str, installation_id: int) -> list[TreeEntry]:
         headers = await self._authed_headers(installation_id)
         resp = await self._client.get(
             f"/repos/{repo}/git/trees/{sha}",
@@ -114,9 +110,7 @@ class GitHubClient:
         resp.raise_for_status()
         return [TreeEntry(**t) for t in resp.json().get("tree", [])]
 
-    async def get_file_content(
-        self, repo: str, path: str, sha: str, installation_id: int
-    ) -> str:
+    async def get_file_content(self, repo: str, path: str, sha: str, installation_id: int) -> str:
         headers = await self._authed_headers(installation_id)
         headers["Accept"] = "application/vnd.github.v3.raw"
         resp = await self._client.get(

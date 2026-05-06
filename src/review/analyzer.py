@@ -20,13 +20,33 @@ class DiffStats:
 
 
 EXTENSION_LANGUAGE = {
-    ".py": "Python", ".js": "JavaScript", ".ts": "TypeScript", ".tsx": "TypeScript",
-    ".jsx": "JavaScript", ".go": "Go", ".rs": "Rust", ".java": "Java",
-    ".kt": "Kotlin", ".swift": "Swift", ".rb": "Ruby", ".php": "PHP",
-    ".cs": "C#", ".cpp": "C++", ".c": "C", ".h": "C/C++",
-    ".yaml": "YAML", ".yml": "YAML", ".json": "JSON", ".toml": "TOML",
-    ".md": "Markdown", ".sql": "SQL", ".sh": "Shell", ".bash": "Shell",
-    ".dockerfile": "Docker", ".tf": "Terraform", ".hcl": "HCL",
+    ".py": "Python",
+    ".js": "JavaScript",
+    ".ts": "TypeScript",
+    ".tsx": "TypeScript",
+    ".jsx": "JavaScript",
+    ".go": "Go",
+    ".rs": "Rust",
+    ".java": "Java",
+    ".kt": "Kotlin",
+    ".swift": "Swift",
+    ".rb": "Ruby",
+    ".php": "PHP",
+    ".cs": "C#",
+    ".cpp": "C++",
+    ".c": "C",
+    ".h": "C/C++",
+    ".yaml": "YAML",
+    ".yml": "YAML",
+    ".json": "JSON",
+    ".toml": "TOML",
+    ".md": "Markdown",
+    ".sql": "SQL",
+    ".sh": "Shell",
+    ".bash": "Shell",
+    ".dockerfile": "Docker",
+    ".tf": "Terraform",
+    ".hcl": "HCL",
 }
 
 
@@ -60,7 +80,9 @@ def build_diff_text(files: list[PRFile], max_size: int = 30000) -> str:
             remaining = max_size - total_size
             if remaining > 200:
                 parts.append(chunk[:remaining] + "\n... (truncated)")
-            parts.append(f"\n... and {len(sorted_files) - len(parts)} more files (truncated due to size)")
+            parts.append(
+                f"\n... and {len(sorted_files) - len(parts)} more files (truncated due to size)"
+            )
             break
 
         parts.append(chunk)
@@ -74,7 +96,10 @@ def build_files_summary(files: list[PRFile]) -> str:
     lines = []
     for f in files:
         status_icon = {
-            "added": "[NEW]", "modified": "[MOD]", "removed": "[DEL]", "renamed": "[REN]",
+            "added": "[NEW]",
+            "modified": "[MOD]",
+            "removed": "[DEL]",
+            "renamed": "[REN]",
         }.get(f.status, "[FILE]")
         lines.append(f"- {status_icon} `{f.filename}` (+{f.additions}/-{f.deletions})")
     return "\n".join(lines)

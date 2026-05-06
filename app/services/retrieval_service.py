@@ -60,9 +60,7 @@ class RetrievalService:
         if not top_ids:
             return []
 
-        result = await self._session.execute(
-            select(Chunk).where(Chunk.id.in_(top_ids))
-        )
+        result = await self._session.execute(select(Chunk).where(Chunk.id.in_(top_ids)))
         chunks_map = {c.id: c for c in result.scalars().all()}
 
         retrieved: list[RetrievedChunk] = []

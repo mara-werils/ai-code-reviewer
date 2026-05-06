@@ -23,9 +23,7 @@ async def get_stats(
     since = datetime.now(UTC) - timedelta(days=days)
 
     # Get repository
-    result = await db.execute(
-        select(Repository).where(Repository.github_full_name == repo)
-    )
+    result = await db.execute(select(Repository).where(Repository.github_full_name == repo))
     repo_obj = result.scalar_one_or_none()
     if not repo_obj:
         return {"error": "Repository not found"}
@@ -75,7 +73,9 @@ async def get_stats(
         select(func.count(Feedback.id)).where(
             Feedback.feedback_type.in_(["resolved", "thumbs_up"]),
             Feedback.review_comment_id.in_(
-                select(ReviewComment.id).join(Review).where(
+                select(ReviewComment.id)
+                .join(Review)
+                .where(
                     Review.repository_id == repo_id,
                     Review.created_at >= since,
                 )
@@ -87,7 +87,9 @@ async def get_stats(
     total_feedback_result = await db.execute(
         select(func.count(Feedback.id)).where(
             Feedback.review_comment_id.in_(
-                select(ReviewComment.id).join(Review).where(
+                select(ReviewComment.id)
+                .join(Review)
+                .where(
                     Review.repository_id == repo_id,
                     Review.created_at >= since,
                 )

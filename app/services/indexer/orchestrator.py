@@ -96,12 +96,11 @@ async def index_repository(
 
         # Get existing chunk hashes
         existing_result = await session.execute(
-            select(Chunk.file_path, Chunk.identifier_coalesce, Chunk.start_line, Chunk.content_hash)
-            .where(Chunk.repository_id == repo_id)
+            select(
+                Chunk.file_path, Chunk.identifier_coalesce, Chunk.start_line, Chunk.content_hash
+            ).where(Chunk.repository_id == repo_id)
         )
-        existing_map = {
-            (row[0], row[1], row[2]): row[3] for row in existing_result.fetchall()
-        }
+        existing_map = {(row[0], row[1], row[2]): row[3] for row in existing_result.fetchall()}
 
         # Find new/changed chunks that need embedding
         to_embed: list[tuple[CodeChunk, str]] = []
@@ -170,9 +169,7 @@ async def index_repository(
                 session.add(new_chunk)
 
         # Delete chunks that no longer exist in repo
-        current_keys = {
-            (c.file_path, c.identifier or "", c.start_line) for c, _ in chunk_hashes
-        }
+        current_keys = {(c.file_path, c.identifier or "", c.start_line) for c, _ in chunk_hashes}
         for key in existing_map:
             if key not in current_keys:
                 await session.execute(

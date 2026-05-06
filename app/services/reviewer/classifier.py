@@ -30,8 +30,7 @@ async def classify_pr(
     client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
 
     files_desc = "\n".join(
-        f"- {f.filename} ({f.status}, +{f.additions}/-{f.deletions})"
-        for f in changed_files
+        f"- {f.filename} ({f.status}, +{f.additions}/-{f.deletions})" for f in changed_files
     )
 
     prompt = CLASSIFICATION_PROMPT.format(

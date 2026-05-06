@@ -85,13 +85,15 @@ class GitHubAPI:
             if not data:
                 break
             for f in data:
-                files.append(PRFile(
-                    filename=f["filename"],
-                    status=f["status"],
-                    additions=f["additions"],
-                    deletions=f["deletions"],
-                    patch=f.get("patch", ""),
-                ))
+                files.append(
+                    PRFile(
+                        filename=f["filename"],
+                        status=f["status"],
+                        additions=f["additions"],
+                        deletions=f["deletions"],
+                        patch=f.get("patch", ""),
+                    )
+                )
             if len(data) < 100:
                 break
             page += 1

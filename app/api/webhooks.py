@@ -1,4 +1,3 @@
-
 import structlog
 from fastapi import APIRouter, Depends, Header, Request, Response
 from redis.asyncio import Redis

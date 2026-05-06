@@ -131,9 +131,7 @@ async def run_action() -> None:
         # Post review
         try:
             if inline_comments:
-                await github.post_review(
-                    repo, pr_number, body, inline_comments, event="COMMENT"
-                )
+                await github.post_review(repo, pr_number, body, inline_comments, event="COMMENT")
                 logger.info(f"Posted review with {len(inline_comments)} inline comments")
             else:
                 await github.post_comment(repo, pr_number, body)
@@ -170,7 +168,8 @@ async def run_action() -> None:
         # Try to post a failure comment so the user knows
         with contextlib.suppress(Exception):
             await github.post_comment(
-                repo, pr_number,
+                repo,
+                pr_number,
                 f"## AI Code Review\n\nReview failed: `{type(e).__name__}: {e}`\n\n"
                 f"Check the [Action logs]({os.getenv('GITHUB_SERVER_URL', 'https://github.com')}"
                 f"/{repo}/actions) for details.",

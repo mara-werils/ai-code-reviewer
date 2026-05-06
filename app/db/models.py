@@ -200,6 +200,4 @@ class Feedback(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
 
-    review_comment: Mapped["ReviewComment | None"] = relationship(
-        back_populates="feedback_entries"
-    )
+    review_comment: Mapped["ReviewComment | None"] = relationship(back_populates="feedback_entries")
