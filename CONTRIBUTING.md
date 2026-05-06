@@ -5,7 +5,7 @@ Thanks for considering contributing! Here's how to get started.
 ## Development Setup
 
 ```bash
-git clone https://github.com/yourusername/ai-code-reviewer.git
+git clone https://github.com/mara-werils/ai-code-reviewer.git
 cd ai-code-reviewer
 pip install -e ".[dev]"
 ```

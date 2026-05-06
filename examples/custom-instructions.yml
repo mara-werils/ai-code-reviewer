@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: your-username/pr-reviewer@v1
+      - uses: mara-werils/ai-code-reviewer@v1
         with:
           provider: 'openai'
           review_style: 'thorough'

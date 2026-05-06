@@ -5,9 +5,9 @@
 **AI-powered code review for GitHub pull requests.**
 **One-line setup. Zero config. Works with any LLM.**
 
-[![CI](https://github.com/yourusername/ai-code-reviewer/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/ai-code-reviewer/actions)
+[![CI](https://github.com/mara-werils/ai-code-reviewer/actions/workflows/ci.yml/badge.svg)](https://github.com/mara-werils/ai-code-reviewer/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/yourusername/ai-code-reviewer)](https://github.com/yourusername/ai-code-reviewer/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/mara-werils/ai-code-reviewer)](https://github.com/mara-werils/ai-code-reviewer/stargazers)
 
 [Quick Start](#-quick-start) · [Examples](#-examples) · [Providers](#-supported-providers) · [Configuration](#%EF%B8%8F-configuration) · [Self-Hosted](#-self-hosted-mode) · [FAQ](#-faq)
 
@@ -55,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: yourusername/ai-code-reviewer@v1
+      - uses: mara-werils/ai-code-reviewer@v1
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 ```
@@ -92,7 +92,7 @@ Use any LLM. Switch providers with one line.
 <summary><b>OpenAI (GPT-4o)</b></summary>
 
 ```yaml
-- uses: yourusername/ai-code-reviewer@v1
+- uses: mara-werils/ai-code-reviewer@v1
   env:
     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 ```
@@ -102,7 +102,7 @@ Use any LLM. Switch providers with one line.
 <summary><b>Anthropic (Claude)</b></summary>
 
 ```yaml
-- uses: yourusername/ai-code-reviewer@v1
+- uses: mara-werils/ai-code-reviewer@v1
   with:
     provider: 'anthropic'
   env:
@@ -114,7 +114,7 @@ Use any LLM. Switch providers with one line.
 <summary><b>Groq (Llama — nearly free)</b></summary>
 
 ```yaml
-- uses: yourusername/ai-code-reviewer@v1
+- uses: mara-werils/ai-code-reviewer@v1
   with:
     provider: 'groq'
   env:
@@ -128,7 +128,7 @@ Get a free API key at [console.groq.com](https://console.groq.com).
 <summary><b>Google (Gemini)</b></summary>
 
 ```yaml
-- uses: yourusername/ai-code-reviewer@v1
+- uses: mara-werils/ai-code-reviewer@v1
   with:
     provider: 'google'
   env:
@@ -140,7 +140,7 @@ Get a free API key at [console.groq.com](https://console.groq.com).
 <summary><b id="ollama-local">Ollama (100% local, free)</b></summary>
 
 ```yaml
-- uses: yourusername/ai-code-reviewer@v1
+- uses: mara-werils/ai-code-reviewer@v1
   with:
     provider: 'ollama'
     model: 'llama3.1:8b'
@@ -152,7 +152,7 @@ Get a free API key at [console.groq.com](https://console.groq.com).
 <summary><b>Any OpenAI-compatible API (LiteLLM, vLLM, etc.)</b></summary>
 
 ```yaml
-- uses: yourusername/ai-code-reviewer@v1
+- uses: mara-werils/ai-code-reviewer@v1
   with:
     api_base_url: 'https://your-api.example.com/v1'
     model: 'your-model'
@@ -194,7 +194,7 @@ The reviewer posts a summary comment + inline comments on specific lines:
 ### Action inputs
 
 ```yaml
-- uses: yourusername/ai-code-reviewer@v1
+- uses: mara-werils/ai-code-reviewer@v1
   with:
     # LLM provider (openai, anthropic, groq, google, ollama)
     provider: 'openai'
@@ -280,7 +280,7 @@ pr-reviewer review --repo owner/name --pr 42 --post
 For teams needing full control, RAG-powered codebase understanding, and persistent analytics.
 
 ```bash
-git clone https://github.com/yourusername/ai-code-reviewer.git
+git clone https://github.com/mara-werils/ai-code-reviewer.git
 cd ai-code-reviewer
 cp .env.example .env  # Edit with your keys
 docker-compose up -d
@@ -377,7 +377,7 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
 
 ```bash
 # Development setup
-git clone https://github.com/yourusername/ai-code-reviewer.git
+git clone https://github.com/mara-werils/ai-code-reviewer.git
 cd ai-code-reviewer
 pip install -e ".[dev]"
 pytest tests/ -v
@@ -396,6 +396,6 @@ MIT — use it however you want.
 
 **If this saves you time, consider giving it a ⭐**
 
-[Report Bug](https://github.com/yourusername/ai-code-reviewer/issues) · [Request Feature](https://github.com/yourusername/ai-code-reviewer/issues) · [Discussions](https://github.com/yourusername/ai-code-reviewer/discussions)
+[Report Bug](https://github.com/mara-werils/ai-code-reviewer/issues) · [Request Feature](https://github.com/mara-werils/ai-code-reviewer/issues) · [Discussions](https://github.com/mara-werils/ai-code-reviewer/discussions)
 
 </div>
