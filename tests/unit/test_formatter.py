@@ -51,12 +51,12 @@ class TestFormatReviewBody:
 class TestFormatInlineComment:
     def test_critical(self) -> None:
         comment = format_inline_comment("critical", "This will crash in production")
-        assert "🔴" in comment
+        assert "[CRITICAL]" in comment
         assert "Critical" in comment
 
     def test_suggestion(self) -> None:
         comment = format_inline_comment("suggestion", "Consider using a list comprehension")
-        assert "🔵" in comment
+        assert "[SUGGESTION]" in comment
 
 
 class TestBuildGithubComments:

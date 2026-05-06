@@ -53,7 +53,7 @@ Respond with a JSON object in this exact format:
       "path": "file/path.py",
       "line": 42,
       "side": "RIGHT",
-      "body": "**🔴 Bug**: Clear description of the issue.\\n\\nSuggested fix:\\n```suggestion\\ncorrected code here\\n```",
+      "body": "**[CRITICAL] Bug**: Clear description of the issue.\\n\\nSuggested fix:\\n```suggestion\\ncorrected code here\\n```",
       "severity": "critical|warning|suggestion|info"
     }}
   ],

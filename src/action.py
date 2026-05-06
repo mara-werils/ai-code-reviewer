@@ -90,7 +90,7 @@ async def run_action() -> None:
         # Check if we already reviewed this SHA
         existing = await github.get_existing_reviews(repo, pr_number)
         for review in existing:
-            if review.get("body", "").startswith("## 🔍 AI Code Review") and review.get("commit_id") == pr.head_sha:
+            if review.get("body", "").startswith("## AI Code Review") and review.get("commit_id") == pr.head_sha:
                     logger.info(f"Already reviewed commit {pr.head_sha[:8]}, skipping")
                     return
 
@@ -123,7 +123,7 @@ async def run_action() -> None:
         _set_output("cost_usd", f"{result.cost_usd:.4f}")
 
         logger.info(
-            f"✅ Review complete: {len(result.comments)} comments, "
+            f"Review complete: {len(result.comments)} comments, "
             f"risk={result.risk_level}, cost=${result.cost_usd:.4f}"
         )
 

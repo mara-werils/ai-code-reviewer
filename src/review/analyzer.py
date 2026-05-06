@@ -74,8 +74,8 @@ def build_files_summary(files: list[PRFile]) -> str:
     lines = []
     for f in files:
         status_icon = {
-            "added": "🆕", "modified": "📝", "removed": "🗑️", "renamed": "📛",
-        }.get(f.status, "📄")
+            "added": "[NEW]", "modified": "[MOD]", "removed": "[DEL]", "renamed": "[REN]",
+        }.get(f.status, "[FILE]")
         lines.append(f"- {status_icon} `{f.filename}` (+{f.additions}/-{f.deletions})")
     return "\n".join(lines)
 

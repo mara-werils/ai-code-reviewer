@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🔍 AI Code Reviewer
+# AI Code Reviewer
 
 **AI-powered code review for GitHub pull requests.**
 **One-line setup. Zero config. Works with any LLM.**
@@ -9,7 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/mara-werils/ai-code-reviewer)](https://github.com/mara-werils/ai-code-reviewer/stargazers)
 
-[Quick Start](#-quick-start) · [Examples](#-examples) · [Providers](#-supported-providers) · [Configuration](#%EF%B8%8F-configuration) · [Self-Hosted](#-self-hosted-mode) · [FAQ](#-faq)
+[Quick Start](#quick-start) · [Examples](#examples) · [Providers](#supported-providers) · [Configuration](#configuration) · [Self-Hosted](#self-hosted-mode) · [FAQ](#faq)
 
 </div>
 
@@ -27,13 +27,13 @@
 | **Pricing** | **Free** (bring your key) | $19/user/mo | $19/user/mo | Free (self-host) |
 | **LLM Choice** | **Any** (GPT, Claude, Llama, Gemini, Ollama) | Fixed | Fixed | GPT-4 only |
 | **Setup time** | **30 seconds** | 5 minutes | Built-in | 15 minutes |
-| **Custom instructions** | ✅ `.pr-reviewer.yml` | ✅ | ❌ | ✅ |
-| **Self-hosted** | ✅ | ❌ | ❌ | ✅ |
-| **100% local option** | ✅ (Ollama) | ❌ | ❌ | ❌ |
-| **Multi-language reviews** | ✅ 9 languages | ✅ | ❌ | ❌ |
-| **Open source** | ✅ MIT | ❌ | ❌ | ✅ Apache-2.0 |
+| **Custom instructions** | Yes `.pr-reviewer.yml` | Yes | No | Yes |
+| **Self-hosted** | Yes | No | No | Yes |
+| **100% local option** | Yes (Ollama) | No | No | No |
+| **Multi-language reviews** | Yes, 9 languages | Yes | No | No |
+| **Open source** | Yes, MIT | No | No | Yes, Apache-2.0 |
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Add the workflow (30 seconds)
 
@@ -70,7 +70,7 @@ That's it. The reviewer will comment on your PR automatically.
 
 ---
 
-## 🤖 Supported Providers
+## Supported Providers
 
 Use any LLM. Switch providers with one line.
 
@@ -163,23 +163,23 @@ Get a free API key at [console.groq.com](https://console.groq.com).
 
 ---
 
-## 📋 Examples
+## Examples
 
 ### What the review looks like
 
 The reviewer posts a summary comment + inline comments on specific lines:
 
 **Summary:**
-> ## 🔍 AI Code Review
+> ## AI Code Review
 >
 > This PR adds JWT authentication middleware. The implementation is clean but has a potential token validation bypass in the refresh flow.
 >
-> **✨ Feature** | Risk: 🟡 Medium
+> **Feature** | Risk: [MEDIUM] Medium
 >
-> **3 comments:** 🔴 1 critical · 🟡 1 warning · 🔵 1 suggestion
+> **3 comments:** [CRITICAL] 1 critical · [WARNING] 1 warning · [SUGGESTION] 1 suggestion
 
 **Inline comment:**
-> **🔴 Critical**
+> **[CRITICAL] Critical**
 >
 > The JWT secret is loaded from environment at import time. If the env var is missing, this silently defaults to an empty string, making all tokens valid.
 >
@@ -189,7 +189,7 @@ The reviewer posts a summary comment + inline comments on specific lines:
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 ### Action inputs
 
@@ -250,7 +250,7 @@ ignore_titles:
 
 ---
 
-## 🖥️ CLI
+## CLI
 
 Review PRs locally or in any CI:
 
@@ -275,7 +275,7 @@ pr-reviewer review --repo owner/name --pr 42 --post
 
 ---
 
-## 🏗️ Self-Hosted Mode
+## Self-Hosted Mode
 
 For teams needing full control, RAG-powered codebase understanding, and persistent analytics.
 
@@ -316,7 +316,7 @@ graph LR
 
 ---
 
-## 🤔 FAQ
+## FAQ
 
 <details>
 <summary><b>Is it free?</b></summary>
@@ -359,7 +359,7 @@ Yes! Set `language: 'zh'` (or `ja`, `ko`, `es`, `de`, `fr`, `ru`, `pt`).
 
 ---
 
-## 🛣️ Roadmap
+## Roadmap
 
 - [ ] GitLab integration
 - [ ] Bitbucket integration
@@ -394,7 +394,7 @@ MIT — use it however you want.
 
 <div align="center">
 
-**If this saves you time, consider giving it a ⭐**
+**If this saves you time, consider starring the repo.**
 
 [Report Bug](https://github.com/mara-werils/ai-code-reviewer/issues) · [Request Feature](https://github.com/mara-werils/ai-code-reviewer/issues) · [Discussions](https://github.com/mara-werils/ai-code-reviewer/discussions)
 
