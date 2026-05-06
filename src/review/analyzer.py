@@ -128,7 +128,11 @@ def compute_stats(files: list[PRFile], filtered: list[PRFile]) -> DiffStats:
 
 
 def extract_diff_line_map(patch: str) -> dict[int, str]:
-    """Extract a mapping of new-file line numbers to diff content."""
+    """Extract a mapping of new-file line numbers that appear in the diff.
+
+    Includes both added lines and context lines, since GitHub allows
+    inline comments on any line visible in the diff.
+    """
     line_map: dict[int, str] = {}
     current_line = 0
 
@@ -141,9 +145,11 @@ def extract_diff_line_map(patch: str) -> dict[int, str]:
         if line.startswith("+") and not line.startswith("+++"):
             line_map[current_line] = line[1:]
             current_line += 1
-        elif line.startswith("-"):
-            continue  # Removed line, don't increment
-        else:
+        elif line.startswith("-") and not line.startswith("---"):
+            continue  # Removed line, don't increment new-file counter
+        elif not line.startswith("\\"):
+            # Context line — also valid for comments
+            line_map[current_line] = line[1:] if line.startswith(" ") else line
             current_line += 1
 
     return line_map
