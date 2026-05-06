@@ -37,8 +37,8 @@ LANGUAGE_CONFIG: dict[str, dict[str, list[str]]] = {
 class TreeSitterChunker:
     def __init__(self, language: str) -> None:
         self.language = language
-        self._parser = None
-        self._ts_language = None
+        self._parser: object | None = None
+        self._ts_language: object | None = None
 
     def _ensure_parser(self) -> bool:
         if self._parser is not None:
@@ -155,6 +155,6 @@ class TreeSitterChunker:
     @staticmethod
     def _get_name(node: object) -> str | None:
         for child in node.children:  # type: ignore[attr-defined]
-            if child.type in ("identifier", "property_identifier", "type_identifier"):  # type: ignore[attr-defined]
-                return child.text.decode("utf-8")  # type: ignore[attr-defined]
+            if child.type in ("identifier", "property_identifier", "type_identifier"):
+                return str(child.text.decode("utf-8"))
         return None

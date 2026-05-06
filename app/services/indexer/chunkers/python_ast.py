@@ -32,7 +32,7 @@ class PythonChunker:
         import_lines: list[int] = []
         for node in ast.iter_child_nodes(tree):
             if isinstance(node, (ast.Import, ast.ImportFrom)):
-                import_lines.extend(range(node.lineno, node.end_lineno + 1))  # type: ignore[arg-type]
+                import_lines.extend(range(node.lineno, (node.end_lineno or node.lineno) + 1))
 
         if import_lines:
             start = min(import_lines)
@@ -56,12 +56,12 @@ class PythonChunker:
             if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                 chunk = self._extract_function(file_path, source_lines, node)
                 chunks.append(chunk)
-                covered_lines.update(range(node.lineno, node.end_lineno + 1))  # type: ignore[arg-type]
+                covered_lines.update(range(node.lineno, (node.end_lineno or node.lineno) + 1))
 
             elif isinstance(node, ast.ClassDef):
                 class_chunks = self._extract_class(file_path, source_lines, node)
                 chunks.extend(class_chunks)
-                covered_lines.update(range(node.lineno, node.end_lineno + 1))  # type: ignore[arg-type]
+                covered_lines.update(range(node.lineno, (node.end_lineno or node.lineno) + 1))
 
         # Module-level code (not imports, not functions/classes)
         top_level_lines = []

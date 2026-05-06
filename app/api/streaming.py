@@ -1,5 +1,6 @@
 import asyncio
 import json
+from collections.abc import AsyncGenerator
 
 import structlog
 from fastapi import APIRouter
@@ -16,7 +17,7 @@ router = APIRouter(tags=["streaming"])
 async def stream_review_progress(review_id: str) -> EventSourceResponse:
     settings = get_settings()
 
-    async def event_generator():  # type: ignore[no-untyped-def]
+    async def event_generator() -> AsyncGenerator[dict[str, str], None]:
         redis = Redis.from_url(settings.redis_url, decode_responses=True)
         pubsub = redis.pubsub()
         channel = f"review:{review_id}"

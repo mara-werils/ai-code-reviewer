@@ -290,7 +290,7 @@ class ToolRegistry:
             f"{name}.spec",
         ]
 
-        results = []
+        results: list[Chunk] = []
         for pattern in patterns:
             result = await self._session.execute(
                 select(Chunk)

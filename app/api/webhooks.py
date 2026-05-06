@@ -1,3 +1,5 @@
+from typing import Any
+
 import structlog
 from fastapi import APIRouter, Depends, Header, Request, Response
 from redis.asyncio import Redis
@@ -21,7 +23,7 @@ async def github_webhook(
     x_hub_signature_256: str = Header(...),
     x_github_event: str = Header(...),
     db: AsyncSession = Depends(get_db),
-    redis: Redis = Depends(get_redis),  # type: ignore[type-arg]
+    redis: Redis = Depends(get_redis),
     settings: Settings = Depends(get_cached_settings),
 ) -> dict[str, str]:
     payload = await request.body()
@@ -50,9 +52,9 @@ async def github_webhook(
 
 
 async def _handle_pull_request(
-    body: dict,  # type: ignore[type-arg]
+    body: dict[str, Any],
     db: AsyncSession,
-    redis: Redis,  # type: ignore[type-arg]
+    redis: Redis,
 ) -> dict[str, str]:
     pr = body["pull_request"]
     repo_data = body["repository"]
@@ -102,14 +104,14 @@ async def _handle_pull_request(
         "head_sha": head_sha,
         "installation_id": installation_id,
     }
-    await redis.rpush("queue:reviews", str(task_data))
+    await redis.rpush("queue:reviews", str(task_data))  # type: ignore[misc]
 
     logger.info("review_enqueued", review_id=str(review.id), pr=pr_number)
     return {"status": "queued", "review_id": str(review.id)}
 
 
 async def _handle_review_comment(
-    body: dict,  # type: ignore[type-arg]
+    body: dict[str, Any],
     db: AsyncSession,
 ) -> dict[str, str]:
     comment = body.get("comment", {})

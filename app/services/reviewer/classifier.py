@@ -67,7 +67,7 @@ async def classify_pr(
             response.usage.output_tokens,
         )
         llm_call = LLMCall(
-            review_id=review_id,  # type: ignore[arg-type]
+            review_id=review_id,
             purpose="classification",
             model=CLASSIFICATION_MODEL,
             input_tokens=response.usage.input_tokens,
@@ -90,7 +90,7 @@ async def classify_pr(
     except Exception as e:
         latency_ms = int((time.monotonic() - start) * 1000)
         llm_call = LLMCall(
-            review_id=review_id,  # type: ignore[arg-type]
+            review_id=review_id,
             purpose="classification",
             model=CLASSIFICATION_MODEL,
             input_tokens=0,

@@ -74,7 +74,9 @@ class Chunk(Base):
     content: Mapped[str] = mapped_column(Text, nullable=False)
     content_hash: Mapped[str] = mapped_column(Text, nullable=False)
     embedding = mapped_column(Vector(1536), nullable=True)
-    metadata_: Mapped[dict] = mapped_column("metadata", JSONB, nullable=False, default=dict)  # type: ignore[assignment]
+    metadata_: Mapped[dict[str, object]] = mapped_column(
+        "metadata", JSONB, nullable=False, default=dict
+    )
     indexed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -175,7 +177,7 @@ class AgentToolCall(Base):
         UUID(as_uuid=True), ForeignKey("reviews.id", ondelete="CASCADE"), nullable=False
     )
     tool_name: Mapped[str] = mapped_column(Text, nullable=False)
-    tool_input: Mapped[dict] = mapped_column(JSONB, nullable=False)  # type: ignore[assignment]
+    tool_input: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False)
     tool_output_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     success: Mapped[bool] = mapped_column(Boolean, nullable=False)

@@ -23,7 +23,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             raise
 
 
-async def get_redis() -> AsyncGenerator[Redis, None]:  # type: ignore[type-arg]
+async def get_redis() -> AsyncGenerator[Redis, None]:
     settings = get_cached_settings()
     redis = Redis.from_url(settings.redis_url, decode_responses=True)
     try:

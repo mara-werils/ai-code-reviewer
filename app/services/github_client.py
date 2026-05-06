@@ -31,7 +31,7 @@ class TreeEntry(BaseModel):
 class GitHubClient:
     BASE_URL = "https://api.github.com"
 
-    def __init__(self, redis: Redis | None = None) -> None:  # type: ignore[type-arg]
+    def __init__(self, redis: Redis | None = None) -> None:
         self._settings = get_settings()
         self._redis = redis
         self._client = httpx.AsyncClient(

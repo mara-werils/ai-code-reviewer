@@ -66,7 +66,7 @@ def _parse_diff_by_file(diff: str) -> dict[str, str]:
     return files
 
 
-def build_review_graph(session: AsyncSession) -> StateGraph:
+def build_review_graph(session: AsyncSession) -> StateGraph:  # type: ignore[type-arg]
     settings = get_settings()
 
     async def extract_diff_context(state: ReviewState) -> dict[str, Any]:
@@ -96,8 +96,9 @@ def build_review_graph(session: AsyncSession) -> StateGraph:
 
         # Build query from PR title + identifiers
         query_parts = [state["pr_title"]]
-        if state.get("pr_body"):
-            query_parts.append(state["pr_body"][:500])
+        pr_body = state.get("pr_body")
+        if pr_body:
+            query_parts.append(pr_body[:500])
 
         query = " ".join(query_parts)
         file_paths = [f.filename for f in state["changed_files"]]
@@ -192,7 +193,7 @@ def build_review_graph(session: AsyncSession) -> StateGraph:
                 model=AGENT_MODEL,
                 max_tokens=4096,
                 system=system_content,
-                messages=anthropic_messages,
+                messages=anthropic_messages,  # type: ignore[arg-type]
                 tools=TOOL_DEFINITIONS,  # type: ignore[arg-type]
             )
 
@@ -227,7 +228,7 @@ def build_review_graph(session: AsyncSession) -> StateGraph:
                         {
                             "id": block.id,
                             "name": block.name,
-                            "args": block.input,  # type: ignore[dict-item]
+                            "args": block.input,
                         }
                     )
 
@@ -323,7 +324,7 @@ def build_review_graph(session: AsyncSession) -> StateGraph:
             logger.warning("final_review_parse_failed", error=str(e))
             review = FinalReview(
                 summary=text[:500],
-                risk_level=state.get("risk_level", "medium"),  # type: ignore[arg-type]
+                risk_level=state.get("risk_level", "medium"),
                 comments=[],
             )
 
@@ -376,7 +377,7 @@ def build_review_graph(session: AsyncSession) -> StateGraph:
                 ]
             )
 
-            body = "\n".join(body_parts)
+            body = "\n".join(p for p in body_parts if p is not None)
 
             # Format inline comments
             gh_comments = []

@@ -80,7 +80,7 @@ async def index_repository(
             if not chunker:
                 continue
             try:
-                file_chunks = chunker.chunk(rel_path, content)
+                file_chunks = chunker.chunk(rel_path, content)  # type: ignore[attr-defined]
                 all_chunks.extend(file_chunks)
             except Exception as e:
                 logger.warning("chunk_failed", file=rel_path, error=str(e))
@@ -148,7 +148,7 @@ async def index_repository(
                 existing_chunk.chunk_type = chunk.chunk_type
                 existing_chunk.end_line = chunk.end_line
                 existing_chunk.language = chunk.language
-                existing_chunk.metadata_ = chunk.metadata  # type: ignore[assignment]
+                existing_chunk.metadata_ = chunk.metadata
                 if embedding:
                     existing_chunk.embedding = embedding
             else:
@@ -164,7 +164,7 @@ async def index_repository(
                     content=chunk.content,
                     content_hash=content_hash,
                     embedding=embedding,
-                    metadata_=chunk.metadata,  # type: ignore[assignment]
+                    metadata_=chunk.metadata,
                 )
                 session.add(new_chunk)
 
