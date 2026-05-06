@@ -1,0 +1,38 @@
+# .pr-reviewer.yml — Drop this in your repo root to customize reviews.
+# All settings are optional. Defaults are shown below.
+
+# Review style: concise (default), thorough, or minimal
+# review_style: concise
+
+# Maximum number of comments per review
+# max_comments: 15
+
+# Custom instructions — teach the reviewer about your codebase
+# custom_instructions: |
+#   - We use the Repository pattern — flag direct DB access in handlers
+#   - All new API endpoints must have OpenAPI docs
+#   - We're migrating from JavaScript to TypeScript — flag new .js files
+
+# Language for review comments (en, zh, ja, ko, es, de, fr, ru, pt)
+# review_language: en
+
+# Skip these file patterns
+# ignore_paths:
+#   - "*.lock"
+#   - "*.min.js"
+#   - "vendor/**"
+#   - "generated/**"
+#   - "__snapshots__/**"
+
+# Skip PRs with these words in the title
+# ignore_titles:
+#   - "WIP"
+#   - "DO NOT MERGE"
+#   - "DRAFT"
+
+# Feature toggles
+# auto_summarize: true
+# check_security: true
+# check_performance: true
+# suggest_tests: true
+# label_pr: false

@@ -1,0 +1,29 @@
+name: AI Code Review (Custom)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: your-username/pr-reviewer@v1
+        with:
+          provider: 'openai'
+          review_style: 'thorough'
+          max_comments: '25'
+          suggest_tests: 'true'
+          label_pr: 'true'
+          custom_instructions: |
+            - Our team uses the Repository pattern, flag any direct DB access in controllers
+            - We require 80% test coverage for new features
+            - Flag any use of 'any' type in TypeScript
+            - Security review is critical — we handle PII data
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

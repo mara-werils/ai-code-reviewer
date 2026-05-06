@@ -1,0 +1,230 @@
+"""Core review engine — the brain of the system."""
+
+from __future__ import annotations
+
+import json
+import logging
+import re
+import time
+from dataclasses import dataclass
+
+from src.config import ReviewConfig
+from src.github.client import PRFile, PRInfo
+from src.providers import LLMProvider, LLMResponse, create_provider
+from src.review.analyzer import (
+    build_diff_text,
+    build_files_summary,
+    compute_stats,
+    extract_diff_line_map,
+    filter_files,
+)
+from src.review.prompts import REVIEW_PROMPT, SUMMARY_PROMPT, SYSTEM_PROMPT
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class ReviewComment:
+    path: str
+    line: int
+    side: str
+    body: str
+    severity: str
+
+
+@dataclass
+class ReviewResult:
+    summary: str
+    risk_level: str
+    category: str
+    comments: list[ReviewComment]
+    labels: list[str]
+    cost_usd: float
+    duration_ms: int
+    model: str
+    input_tokens: int
+    output_tokens: int
+
+
+class ReviewEngine:
+    """Main review engine — takes a PR and produces a review."""
+
+    def __init__(self, config: ReviewConfig) -> None:
+        self.config = config
+        self.provider: LLMProvider = create_provider(config)
+
+    async def review_pr(
+        self,
+        pr: PRInfo,
+        files: list[PRFile],
+        diff: str | None = None,
+    ) -> ReviewResult:
+        """Run a full review on a PR."""
+        start_time = time.monotonic()
+
+        # Filter files
+        filtered = filter_files(files, self.config.ignore_paths)
+        if not filtered:
+            return ReviewResult(
+                summary="No reviewable files in this PR (all files match ignore patterns).",
+                risk_level="low",
+                category="chore",
+                comments=[],
+                labels=[],
+                cost_usd=0,
+                duration_ms=0,
+                model=self.provider.name,
+                input_tokens=0,
+                output_tokens=0,
+            )
+
+        compute_stats(files, filtered)
+
+        # Limit files if too many
+        if len(filtered) > self.config.max_files:
+            filtered = filtered[: self.config.max_files]
+
+        # Build diff
+        if not diff:
+            diff = build_diff_text(filtered, max_size=self.config.max_diff_size)
+        else:
+            diff = diff[:self.config.max_diff_size]
+
+        files_summary = build_files_summary(filtered)
+
+        # Build valid line numbers per file
+        valid_lines: dict[str, set[int]] = {}
+        for f in filtered:
+            if f.patch:
+                line_map = extract_diff_line_map(f.patch)
+                valid_lines[f.filename] = set(line_map.keys())
+
+        # Build prompts
+        custom = ""
+        if self.config.custom_instructions:
+            custom = f"\n## Additional Instructions\n{self.config.custom_instructions}"
+
+        system = SYSTEM_PROMPT.format(custom_instructions=custom)
+        user = REVIEW_PROMPT.format(
+            title=pr.title,
+            author=pr.author,
+            body=(pr.body or "No description")[:2000],
+            files_summary=files_summary,
+            diff=diff,
+            max_comments=self.config.max_comments,
+        )
+
+        messages = [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ]
+
+        # Call LLM
+        logger.info(f"Reviewing PR #{pr.number} with {self.provider.name}")
+        response = await self.provider.complete(
+            messages=messages,
+            temperature=0.1,
+            max_tokens=4096,
+            json_mode=True,
+        )
+
+        # Parse response
+        result = self._parse_response(response, valid_lines)
+
+        duration_ms = int((time.monotonic() - start_time) * 1000)
+        result.duration_ms = duration_ms
+        result.cost_usd = response.cost_usd
+        result.model = response.model
+        result.input_tokens = response.input_tokens
+        result.output_tokens = response.output_tokens
+
+        logger.info(
+            f"Review complete: {len(result.comments)} comments, "
+            f"risk={result.risk_level}, cost=${result.cost_usd:.4f}, "
+            f"duration={duration_ms}ms"
+        )
+
+        return result
+
+    def _parse_response(
+        self,
+        response: LLMResponse,
+        valid_lines: dict[str, set[int]],
+    ) -> ReviewResult:
+        """Parse LLM response into structured review."""
+        try:
+            # Try to extract JSON from response
+            text = response.content.strip()
+            json_match = re.search(r"\{.*\}", text, re.DOTALL)
+            if json_match:
+                data = json.loads(json_match.group())
+            else:
+                data = json.loads(text)
+        except (json.JSONDecodeError, ValueError) as e:
+            logger.warning(f"Failed to parse review response as JSON: {e}")
+            return ReviewResult(
+                summary=response.content[:500],
+                risk_level="medium",
+                category="other",
+                comments=[],
+                labels=[],
+                cost_usd=0,
+                duration_ms=0,
+                model="",
+                input_tokens=0,
+                output_tokens=0,
+            )
+
+        comments = []
+        for c in data.get("comments", []):
+            path = c.get("path", "")
+            line = c.get("line", 0)
+
+            # Validate line exists in diff
+            if path in valid_lines and line not in valid_lines[path]:
+                # Find nearest valid line
+                file_lines = valid_lines[path]
+                if file_lines:
+                    line = min(file_lines, key=lambda x: abs(x - line))
+                else:
+                    continue
+
+            comments.append(ReviewComment(
+                path=path,
+                line=line,
+                side=c.get("side", "RIGHT"),
+                body=c.get("body", ""),
+                severity=c.get("severity", "info"),
+            ))
+
+        return ReviewResult(
+            summary=data.get("summary", ""),
+            risk_level=data.get("risk_level", "medium"),
+            category=data.get("category", "other"),
+            comments=comments,
+            labels=data.get("labels", []) if self.config.label_pr else [],
+            cost_usd=0,
+            duration_ms=0,
+            model="",
+            input_tokens=0,
+            output_tokens=0,
+        )
+
+    async def generate_summary(self, pr: PRInfo, files: list[PRFile]) -> str:
+        """Generate a PR summary."""
+        filtered = filter_files(files, self.config.ignore_paths)
+        diff = build_diff_text(filtered, max_size=15000)
+        files_summary = build_files_summary(filtered)
+
+        prompt = SUMMARY_PROMPT.format(
+            title=pr.title,
+            files_summary=files_summary,
+            diff=diff,
+        )
+
+        response = await self.provider.complete(
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.2,
+            max_tokens=1024,
+        )
+        return response.content
