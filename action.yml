@@ -1,5 +1,5 @@
-name: 'AI Code Reviewer'
-description: 'AI-powered code review for pull requests. Supports OpenAI, Anthropic, Groq, Google Gemini, Ollama, and any OpenAI-compatible API.'
+name: 'AI Code Reviewer - Multi-LLM'
+description: 'AI code review for PRs. Works with GPT, Claude, Llama, Gemini, Ollama. Free, open source.'
 author: 'mara-werils'
 
 branding:
