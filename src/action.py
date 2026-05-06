@@ -129,8 +129,9 @@ async def run_action() -> None:
         inline_comments = build_github_review_comments(result)
 
         # Post review
-        try:
-            if inline_comments:
+        if inline_comments:
+            # Try batch review first
+            try:
                 await github.post_review(
                     repo,
                     pr_number,
@@ -140,15 +141,20 @@ async def run_action() -> None:
                     commit_id=pr.head_sha,
                 )
                 logger.info(f"Posted review with {len(inline_comments)} inline comments")
-            else:
+            except Exception as e:
+                logger.warning(f"Batch review failed: {e}")
+                # Fallback: post summary + individual inline comments
                 await github.post_comment(repo, pr_number, body)
-                logger.info("Posted review summary (no inline comments)")
-        except Exception as e:
-            # If inline comments fail (bad line numbers), retry with just the body
-            logger.warning(f"Failed to post inline review: {e}")
-            logger.info("Retrying as plain comment...")
+                posted = await github.post_inline_comments(
+                    repo,
+                    pr_number,
+                    pr.head_sha,
+                    inline_comments,
+                )
+                logger.info(f"Posted summary + {posted}/{len(inline_comments)} inline comments")
+        else:
             await github.post_comment(repo, pr_number, body)
-            logger.info("Posted review as plain comment")
+            logger.info("Posted review summary (no inline comments)")
 
         # Add labels
         if config.label_pr and result.labels:

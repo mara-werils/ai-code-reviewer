@@ -137,6 +137,38 @@ class GitHubAPI:
         resp.raise_for_status()
         return resp.json()["id"]
 
+    async def post_inline_comments(
+        self,
+        repo: str,
+        pr_number: int,
+        commit_id: str,
+        comments: list[dict],
+    ) -> int:
+        """Post inline comments individually using the review comment API."""
+        posted = 0
+        for c in comments:
+            try:
+                resp = await self._client.post(
+                    f"/repos/{repo}/pulls/{pr_number}/comments",
+                    json={
+                        "commit_id": commit_id,
+                        "path": c["path"],
+                        "line": c["line"],
+                        "side": c.get("side", "RIGHT"),
+                        "body": c["body"],
+                    },
+                )
+                if resp.status_code in (200, 201):
+                    posted += 1
+                else:
+                    logger.warning(
+                        f"Failed to post comment on {c['path']}:{c['line']}: "
+                        f"{resp.status_code} {resp.text[:200]}"
+                    )
+            except Exception as e:
+                logger.warning(f"Failed to post comment on {c['path']}:{c['line']}: {e}")
+        return posted
+
     async def post_comment(self, repo: str, pr_number: int, body: str) -> int:
         resp = await self._client.post(
             f"/repos/{repo}/issues/{pr_number}/comments",
