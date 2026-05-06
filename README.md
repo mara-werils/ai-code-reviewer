@@ -15,10 +15,15 @@
 
 ---
 
-<!-- DEMO GIF: Replace with actual recording -->
-<!-- ![Demo](docs/demo.gif) -->
-
 > Open a PR → get an AI code review in 30 seconds. Inline comments with severity levels, security checks, and actionable suggestions.
+
+### Review summary
+
+![Review summary](docs/review-summary.png)
+
+### Inline comments with suggested fixes
+
+![Inline comment](docs/review-inline.png)
 
 ## Why another code review tool?
 
@@ -160,32 +165,6 @@ Get a free API key at [console.groq.com](https://console.groq.com).
     OPENAI_API_KEY: ${{ secrets.YOUR_API_KEY }}
 ```
 </details>
-
----
-
-## Examples
-
-### What the review looks like
-
-The reviewer posts a summary comment + inline comments on specific lines:
-
-**Summary:**
-> ## AI Code Review
->
-> This PR adds JWT authentication middleware. The implementation is clean but has a potential token validation bypass in the refresh flow.
->
-> **Feature** | Risk: [MEDIUM] Medium
->
-> **3 comments:** [CRITICAL] 1 critical · [WARNING] 1 warning · [SUGGESTION] 1 suggestion
-
-**Inline comment:**
-> **[CRITICAL] Critical**
->
-> The JWT secret is loaded from environment at import time. If the env var is missing, this silently defaults to an empty string, making all tokens valid.
->
-> ```suggestion
-> JWT_SECRET = os.environ["JWT_SECRET"]  # Fail fast if missing
-> ```
 
 ---
 
