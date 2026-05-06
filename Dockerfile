@@ -7,10 +7,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 COPY pyproject.toml README.md ./
-RUN pip install --no-cache-dir .
-
 COPY src/ ./src/
 COPY app/ ./app/
 
-# GitHub Action entrypoint
+RUN pip install --no-cache-dir .
+
 ENTRYPOINT ["python", "-m", "src.action"]

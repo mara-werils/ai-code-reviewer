@@ -12,6 +12,8 @@ PRICING = {
     "claude-opus-4-20250514": {"input": 15.00, "output": 75.00},
 }
 
+JSON_SUFFIX = "\n\nIMPORTANT: You MUST respond with ONLY a valid JSON object. No text before or after."
+
 
 class AnthropicProvider(LLMProvider):
     def __init__(self, api_key: str, model: str = "claude-sonnet-4-20250514") -> None:
@@ -29,7 +31,6 @@ class AnthropicProvider(LLMProvider):
         max_tokens: int = 4096,
         json_mode: bool = False,
     ) -> LLMResponse:
-        # Separate system message
         system = ""
         api_messages = []
         for msg in messages:
@@ -37,6 +38,13 @@ class AnthropicProvider(LLMProvider):
                 system = msg["content"]
             else:
                 api_messages.append(msg)
+
+        # Anthropic doesn't have a native json_mode flag —
+        # enforce JSON output via system prompt + prefill.
+        if json_mode:
+            system += JSON_SUFFIX
+            # Prefill assistant response with "{" to force JSON
+            api_messages.append({"role": "assistant", "content": "{"})
 
         kwargs: dict = {
             "model": self._model,
@@ -50,15 +58,16 @@ class AnthropicProvider(LLMProvider):
         resp = await self._client.messages.create(**kwargs)
 
         content = resp.content[0].text if resp.content else ""
-        input_tokens = resp.usage.input_tokens
-        output_tokens = resp.usage.output_tokens
+        # If we prefilled with "{", prepend it back
+        if json_mode:
+            content = "{" + content
 
         return LLMResponse(
             content=content,
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
+            input_tokens=resp.usage.input_tokens,
+            output_tokens=resp.usage.output_tokens,
             model=self._model,
-            cost_usd=self.estimate_cost(input_tokens, output_tokens),
+            cost_usd=self.estimate_cost(resp.usage.input_tokens, resp.usage.output_tokens),
         )
 
     def estimate_cost(self, input_tokens: int, output_tokens: int) -> float:

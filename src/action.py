@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
 import os
 import sys
+import traceback
 from pathlib import Path
 
 from src.config import ReviewConfig
@@ -62,14 +64,29 @@ async def run_action() -> None:
             return
 
     if not config.api_key and config.provider != "ollama":
+        provider = config.provider
+        key_names = {
+            "openai": "OPENAI_API_KEY",
+            "anthropic": "ANTHROPIC_API_KEY",
+            "groq": "GROQ_API_KEY",
+            "google": "GOOGLE_API_KEY",
+        }
+        key_name = key_names.get(provider, f"{provider.upper()}_API_KEY")
         logger.error(
-            f"No API key found for provider '{config.provider}'. "
-            f"Set the appropriate secret (e.g., OPENAI_API_KEY)."
+            f"No API key for provider '{provider}'. "
+            f"Add {key_name} to your repository secrets and pass it via env:\n\n"
+            f"  env:\n"
+            f"    {key_name}: ${{{{ secrets.{key_name} }}}}"
         )
         sys.exit(1)
 
     if not config.github_token:
-        logger.error("GITHUB_TOKEN not set. Required for posting reviews.")
+        logger.error(
+            "GITHUB_TOKEN not set. Add this to your workflow:\n\n"
+            "  permissions:\n"
+            "    contents: read\n"
+            "    pull-requests: write"
+        )
         sys.exit(1)
 
     # Initialize
@@ -80,19 +97,29 @@ async def run_action() -> None:
         # Get PR info
         pr = await github.get_pr(repo, pr_number)
         files = await github.get_pr_files(repo, pr_number)
+
+        if not files:
+            logger.info(f"PR #{pr_number} has no files, skipping")
+            return
+
         diff = await github.get_pr_diff(repo, pr_number)
 
         logger.info(
             f"Reviewing PR #{pr_number}: '{pr.title}' "
-            f"({len(files)} files, +{sum(f.additions for f in files)}/-{sum(f.deletions for f in files)})"
+            f"({len(files)} files, "
+            f"+{sum(f.additions for f in files)}/-{sum(f.deletions for f in files)})"
         )
 
         # Check if we already reviewed this SHA
-        existing = await github.get_existing_reviews(repo, pr_number)
-        for review in existing:
-            if review.get("body", "").startswith("## AI Code Review") and review.get("commit_id") == pr.head_sha:
+        try:
+            existing = await github.get_existing_reviews(repo, pr_number)
+            for review in existing:
+                body = review.get("body") or ""
+                if body.startswith("## AI Code Review") and review.get("commit_id") == pr.head_sha:
                     logger.info(f"Already reviewed commit {pr.head_sha[:8]}, skipping")
                     return
+        except Exception:
+            pass  # Non-critical, proceed with review
 
         # Run review
         result = await engine.review_pr(pr, files, diff)
@@ -102,19 +129,29 @@ async def run_action() -> None:
         inline_comments = build_github_review_comments(result)
 
         # Post review
-        if inline_comments:
-            await github.post_review(
-                repo, pr_number, body, inline_comments, event="COMMENT"
-            )
-            logger.info(f"Posted review with {len(inline_comments)} inline comments")
-        else:
+        try:
+            if inline_comments:
+                await github.post_review(
+                    repo, pr_number, body, inline_comments, event="COMMENT"
+                )
+                logger.info(f"Posted review with {len(inline_comments)} inline comments")
+            else:
+                await github.post_comment(repo, pr_number, body)
+                logger.info("Posted review summary (no inline comments)")
+        except Exception as e:
+            # If inline comments fail (bad line numbers), retry with just the body
+            logger.warning(f"Failed to post inline review: {e}")
+            logger.info("Retrying as plain comment...")
             await github.post_comment(repo, pr_number, body)
-            logger.info("Posted review summary (no inline comments)")
+            logger.info("Posted review as plain comment")
 
         # Add labels
         if config.label_pr and result.labels:
-            await github.add_labels(repo, pr_number, result.labels)
-            logger.info(f"Added labels: {result.labels}")
+            try:
+                await github.add_labels(repo, pr_number, result.labels)
+                logger.info(f"Added labels: {result.labels}")
+            except Exception as e:
+                logger.warning(f"Failed to add labels: {e}")
 
         # Set outputs for GitHub Actions
         _set_output("summary", result.summary)
@@ -127,6 +164,18 @@ async def run_action() -> None:
             f"risk={result.risk_level}, cost=${result.cost_usd:.4f}"
         )
 
+    except Exception as e:
+        logger.error(f"Review failed: {e}")
+        traceback.print_exc()
+        # Try to post a failure comment so the user knows
+        with contextlib.suppress(Exception):
+            await github.post_comment(
+                repo, pr_number,
+                f"## AI Code Review\n\nReview failed: `{type(e).__name__}: {e}`\n\n"
+                f"Check the [Action logs]({os.getenv('GITHUB_SERVER_URL', 'https://github.com')}"
+                f"/{repo}/actions) for details.",
+            )
+        sys.exit(1)
     finally:
         await github.close()
 

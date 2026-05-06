@@ -2,11 +2,22 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
+
+logger = logging.getLogger(__name__)
+
+MODEL_DEFAULTS: dict[str, str] = {
+    "openai": "gpt-4o",
+    "anthropic": "claude-sonnet-4-20250514",
+    "groq": "llama-3.3-70b-versatile",
+    "ollama": "llama3.1:8b",
+    "google": "gemini-2.0-flash",
+}
 
 
 @dataclass
@@ -14,13 +25,13 @@ class ReviewConfig:
     """Configuration for a review run."""
 
     # LLM Provider
-    provider: str = "openai"  # openai, anthropic, groq, ollama, azure, google
+    provider: str = "openai"  # openai, anthropic, groq, ollama, google
     model: str = ""  # auto-selected per provider if empty
     api_key: str = ""
     api_base_url: str = ""
 
     # Review behavior
-    review_language: str = "en"  # Language for review comments
+    review_language: str = "en"
     max_files: int = 50
     max_diff_size: int = 30000  # chars
     ignore_paths: list[str] = field(default_factory=lambda: [
@@ -38,8 +49,8 @@ class ReviewConfig:
     review_style: str = "concise"  # concise, thorough, minimal
     severity_threshold: str = "info"  # info, suggestion, warning, critical
     max_comments: int = 15
-    collapse_below: str = "info"  # Collapse comments below this severity
-    custom_instructions: str = ""  # Additional instructions for the reviewer
+    collapse_below: str = "info"
+    custom_instructions: str = ""
 
     # Features
     auto_summarize: bool = True
@@ -61,19 +72,9 @@ class ReviewConfig:
     # Cost
     cost_limit_usd: float = 1.00
 
-    # Model defaults per provider
-    MODEL_DEFAULTS: dict[str, str] = field(default_factory=lambda: {
-        "openai": "gpt-4o",
-        "anthropic": "claude-sonnet-4-20250514",
-        "groq": "llama-3.3-70b-versatile",
-        "ollama": "llama3.1:8b",
-        "azure": "gpt-4o",
-        "google": "gemini-2.0-flash",
-    })
-
     def __post_init__(self) -> None:
         if not self.model:
-            self.model = self.MODEL_DEFAULTS.get(self.provider, "gpt-4o")
+            self.model = MODEL_DEFAULTS.get(self.provider, "gpt-4o")
 
     @classmethod
     def from_env(cls) -> ReviewConfig:
@@ -86,17 +87,24 @@ class ReviewConfig:
                 provider = "anthropic"
             elif os.getenv("GROQ_API_KEY"):
                 provider = "groq"
+            elif os.getenv("GOOGLE_API_KEY"):
+                provider = "google"
 
         api_key_map = {
             "openai": "OPENAI_API_KEY",
             "anthropic": "ANTHROPIC_API_KEY",
             "groq": "GROQ_API_KEY",
             "google": "GOOGLE_API_KEY",
-            "azure": "AZURE_OPENAI_API_KEY",
             "ollama": "",
         }
         api_key_env = api_key_map.get(provider, "OPENAI_API_KEY")
-        api_key = os.getenv(f"INPUT_{api_key_env}", os.getenv(api_key_env, ""))
+        api_key = os.getenv(api_key_env, "")
+
+        # Safe int parsing
+        try:
+            max_comments = int(os.getenv("INPUT_MAX_COMMENTS", os.getenv("MAX_COMMENTS", "15")))
+        except ValueError:
+            max_comments = 15
 
         config = cls(
             provider=provider,
@@ -106,7 +114,7 @@ class ReviewConfig:
             github_token=os.getenv("GITHUB_TOKEN", ""),
             review_language=os.getenv("INPUT_LANGUAGE", os.getenv("LANGUAGE", "en")),
             review_style=os.getenv("INPUT_REVIEW_STYLE", os.getenv("REVIEW_STYLE", "concise")),
-            max_comments=int(os.getenv("INPUT_MAX_COMMENTS", os.getenv("MAX_COMMENTS", "15"))),
+            max_comments=max_comments,
             custom_instructions=os.getenv("INPUT_CUSTOM_INSTRUCTIONS", ""),
             auto_summarize=os.getenv("INPUT_AUTO_SUMMARIZE", "true").lower() == "true",
             suggest_tests=os.getenv("INPUT_SUGGEST_TESTS", "true").lower() == "true",
@@ -123,11 +131,38 @@ class ReviewConfig:
         if not path.exists():
             return config
 
-        with open(path) as f:
-            data = yaml.safe_load(f) or {}
+        try:
+            with open(path) as f:
+                data = yaml.safe_load(f) or {}
+        except yaml.YAMLError as e:
+            logger.warning(f"Failed to parse {path}: {e}")
+            return config
+
+        field_types = {
+            "max_comments": int,
+            "max_files": int,
+            "max_diff_size": int,
+            "cost_limit_usd": float,
+            "auto_summarize": bool,
+            "suggest_tests": bool,
+            "label_pr": bool,
+            "check_security": bool,
+            "check_performance": bool,
+            "check_correctness": bool,
+            "check_best_practices": bool,
+            "enable_rag": bool,
+        }
 
         for key, value in data.items():
-            if hasattr(config, key):
-                setattr(config, key, value)
+            if not hasattr(config, key) or key.startswith("_"):
+                continue
+            expected = field_types.get(key)
+            if expected and not isinstance(value, expected):
+                try:
+                    value = expected(value)
+                except (ValueError, TypeError):
+                    logger.warning(f"Invalid type for config key '{key}': {value}")
+                    continue
+            setattr(config, key, value)
 
         return config

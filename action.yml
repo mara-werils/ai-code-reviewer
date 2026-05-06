@@ -1,6 +1,6 @@
 name: 'AI Code Reviewer'
-description: 'AI-powered code review that understands your codebase. Supports GPT-4o, Claude, Llama, Gemini, and any OpenAI-compatible API.'
-author: 'pr-reviewer'
+description: 'AI-powered code review for pull requests. Supports OpenAI, Anthropic, Groq, Google Gemini, Ollama, and any OpenAI-compatible API.'
+author: 'mara-werils'
 
 branding:
   icon: 'eye'
@@ -8,7 +8,7 @@ branding:
 
 inputs:
   provider:
-    description: 'LLM provider: openai, anthropic, groq, google, ollama, or any OpenAI-compatible'
+    description: 'LLM provider: openai, anthropic, groq, google, ollama'
     required: false
     default: 'openai'
   model:
@@ -16,11 +16,11 @@ inputs:
     required: false
     default: ''
   api_base_url:
-    description: 'Custom API base URL (for OpenAI-compatible providers)'
+    description: 'Custom API base URL (for OpenAI-compatible providers or Ollama)'
     required: false
     default: ''
   language:
-    description: 'Language for review comments (e.g., en, zh, ja, ko, es, ru)'
+    description: 'Language for review comments (en, zh, ja, ko, es, de, fr, ru, pt)'
     required: false
     default: 'en'
   review_style:
@@ -32,7 +32,7 @@ inputs:
     required: false
     default: '15'
   custom_instructions:
-    description: 'Additional instructions for the reviewer (e.g., "focus on SQL injection")'
+    description: 'Additional instructions for the reviewer'
     required: false
     default: ''
   auto_summarize:
