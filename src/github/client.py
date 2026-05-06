@@ -147,14 +147,15 @@ class GitHubAPI:
         """Post inline comments individually using the review comment API."""
         posted = 0
         for c in comments:
-            payload = {
+            payload: dict = {
                 "commit_id": commit_id,
                 "path": c["path"],
-                "line": c["line"],
-                "side": c.get("side", "RIGHT"),
                 "body": c["body"],
-                "subject_type": "line",
             }
+            if "position" in c:
+                payload["position"] = c["position"]
+            else:
+                payload["position"] = c.get("line", 1)
             try:
                 resp = await self._client.post(
                     f"/repos/{repo}/pulls/{pr_number}/comments",

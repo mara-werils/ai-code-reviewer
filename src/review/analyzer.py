@@ -127,6 +127,38 @@ def compute_stats(files: list[PRFile], filtered: list[PRFile]) -> DiffStats:
     )
 
 
+def extract_diff_position_map(patch: str) -> dict[int, int]:
+    """Map new-file line numbers to diff positions (1-indexed).
+
+    GitHub's "Create a pull request comment" API requires `position`,
+    which is the 1-based index of the line in the unified diff (the
+    patch text), NOT the line number in the file.
+    """
+    line_to_position: dict[int, int] = {}
+    current_line = 0
+    position = 0  # 1-indexed position in the diff
+
+    for line in patch.split("\n"):
+        hunk_match = re.match(r"^@@ -\d+(?:,\d+)? \+(\d+)", line)
+        if hunk_match:
+            current_line = int(hunk_match.group(1))
+            position += 1
+            continue
+
+        position += 1
+
+        if line.startswith("+") and not line.startswith("+++"):
+            line_to_position[current_line] = position
+            current_line += 1
+        elif line.startswith("-") and not line.startswith("---"):
+            continue  # Removed line, don't increment new-file counter
+        elif not line.startswith("\\"):
+            line_to_position[current_line] = position
+            current_line += 1
+
+    return line_to_position
+
+
 def extract_diff_line_map(patch: str) -> dict[int, str]:
     """Extract a mapping of new-file line numbers that appear in the diff.
 

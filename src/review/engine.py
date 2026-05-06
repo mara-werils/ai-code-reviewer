@@ -16,6 +16,7 @@ from src.review.analyzer import (
     build_files_summary,
     compute_stats,
     extract_diff_line_map,
+    extract_diff_position_map,
     filter_files,
 )
 from src.review.prompts import REVIEW_PROMPT, SUMMARY_PROMPT, SYSTEM_PROMPT
@@ -30,6 +31,7 @@ class ReviewComment:
     side: str
     body: str
     severity: str
+    position: int = 0  # 1-indexed position in the unified diff
 
 
 @dataclass
@@ -92,12 +94,14 @@ class ReviewEngine:
 
         files_summary = build_files_summary(filtered)
 
-        # Build valid line numbers per file
+        # Build valid line numbers and diff positions per file
         valid_lines: dict[str, set[int]] = {}
+        position_maps: dict[str, dict[int, int]] = {}
         for f in filtered:
             if f.patch:
                 line_map = extract_diff_line_map(f.patch)
                 valid_lines[f.filename] = set(line_map.keys())
+                position_maps[f.filename] = extract_diff_position_map(f.patch)
 
         # Build prompts
         custom = ""
@@ -129,7 +133,7 @@ class ReviewEngine:
         )
 
         # Parse response
-        result = self._parse_response(response, valid_lines)
+        result = self._parse_response(response, valid_lines, position_maps)
 
         duration_ms = int((time.monotonic() - start_time) * 1000)
         result.duration_ms = duration_ms
@@ -150,6 +154,7 @@ class ReviewEngine:
         self,
         response: LLMResponse,
         valid_lines: dict[str, set[int]],
+        position_maps: dict[str, dict[int, int]] | None = None,
     ) -> ReviewResult:
         """Parse LLM response into structured review."""
         try:
@@ -205,6 +210,11 @@ class ReviewEngine:
                 else:
                     continue
 
+            # Look up diff position for this line
+            position = 0
+            if position_maps and path in position_maps:
+                position = position_maps[path].get(line, 0)
+
             comments.append(
                 ReviewComment(
                     path=path,
@@ -212,6 +222,7 @@ class ReviewEngine:
                     side=c.get("side", "RIGHT"),
                     body=body,
                     severity=c.get("severity", "info"),
+                    position=position,
                 )
             )
 

@@ -97,13 +97,15 @@ def build_github_review_comments(result: ReviewResult) -> list[dict]:
         if not c.line:
             continue  # General comments go in the body
 
-        comments.append(
-            {
-                "path": c.path,
-                "line": c.line,
-                "side": c.side,
-                "body": format_inline_comment(c.severity, c.body),
-            }
-        )
+        comment: dict = {
+            "path": c.path,
+            "body": format_inline_comment(c.severity, c.body),
+        }
+        if c.position:
+            comment["position"] = c.position
+        else:
+            comment["line"] = c.line
+            comment["side"] = c.side
+        comments.append(comment)
 
     return comments
