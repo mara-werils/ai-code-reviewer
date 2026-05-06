@@ -1,0 +1,32 @@
+{
+    "action": "opened",
+    "number": 1,
+    "pull_request": {
+        "number": 1,
+        "title": "Add user authentication module",
+        "body": "This PR adds JWT-based authentication with refresh tokens.",
+        "head": {
+            "sha": "abc123def456789",
+            "ref": "feature/auth"
+        },
+        "base": {
+            "ref": "main",
+            "sha": "base123"
+        },
+        "additions": 250,
+        "deletions": 10,
+        "changed_files": 5
+    },
+    "repository": {
+        "id": 12345,
+        "full_name": "test-owner/test-repo",
+        "default_branch": "main",
+        "private": false
+    },
+    "installation": {
+        "id": 67890
+    },
+    "sender": {
+        "login": "developer123"
+    }
+}
