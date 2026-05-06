@@ -76,7 +76,8 @@ def format_review_body(result: ReviewResult) -> str:
         [
             "---",
             f"<sub>Cost: ${result.cost_usd:.4f} | {result.duration_ms / 1000:.1f}s | "
-            f"{result.model}</sub>",
+            f"{result.model} | "
+            f"[AI Code Reviewer](https://github.com/mara-werils/ai-code-reviewer)</sub>",
         ]
     )
 

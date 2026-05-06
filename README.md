@@ -338,6 +338,18 @@ Yes! Set `language: 'zh'` (or `ja`, `ko`, `es`, `de`, `fr`, `ru`, `pt`).
 
 ---
 
+## Badge
+
+Show that your project uses AI code reviews:
+
+```markdown
+[![AI Code Review](https://img.shields.io/badge/AI-Code%20Review-blueviolet)](https://github.com/mara-werils/ai-code-reviewer)
+```
+
+[![AI Code Review](https://img.shields.io/badge/AI-Code%20Review-blueviolet)](https://github.com/mara-werils/ai-code-reviewer)
+
+---
+
 ## Roadmap
 
 - [ ] GitLab integration
