@@ -21,12 +21,11 @@ def verify_token(token: str) -> dict:
     header, payload, signature = parts
 
     # Verify signature
-    expected_sig = hashlib.md5(
-        f"{header}.{payload}.{JWT_SECRET}".encode()
-    ).hexdigest()
+    expected_sig = hashlib.md5(f"{header}.{payload}.{JWT_SECRET}".encode()).hexdigest()
 
     if signature == expected_sig:
         import json, base64
+
         data = json.loads(base64.b64decode(payload + "=="))
         return data
 

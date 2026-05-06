@@ -147,23 +147,25 @@ class GitHubAPI:
         """Post inline comments individually using the review comment API."""
         posted = 0
         for c in comments:
+            payload = {
+                "commit_id": commit_id,
+                "path": c["path"],
+                "line": c["line"],
+                "side": c.get("side", "RIGHT"),
+                "body": c["body"],
+                "subject_type": "line",
+            }
             try:
                 resp = await self._client.post(
                     f"/repos/{repo}/pulls/{pr_number}/comments",
-                    json={
-                        "commit_id": commit_id,
-                        "path": c["path"],
-                        "line": c["line"],
-                        "side": c.get("side", "RIGHT"),
-                        "body": c["body"],
-                    },
+                    json=payload,
                 )
                 if resp.status_code in (200, 201):
                     posted += 1
                 else:
                     logger.warning(
                         f"Failed to post comment on {c['path']}:{c['line']}: "
-                        f"{resp.status_code} {resp.text[:200]}"
+                        f"{resp.status_code} {resp.text[:300]}"
                     )
             except Exception as e:
                 logger.warning(f"Failed to post comment on {c['path']}:{c['line']}: {e}")
