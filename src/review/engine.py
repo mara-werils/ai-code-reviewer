@@ -179,11 +179,27 @@ class ReviewEngine:
         for c in data.get("comments", []):
             path = c.get("path", "")
             line = c.get("line", 0)
+            body = c.get("body", "")
+
+            if not path or not body:
+                continue
+
+            # Try to match path if LLM returned a partial/wrong path
+            if path not in valid_lines:
+                matched = False
+                for valid_path in valid_lines:
+                    if valid_path.endswith(path) or path.endswith(valid_path):
+                        path = valid_path
+                        matched = True
+                        break
+                if not matched:
+                    # Skip comments for files not in the diff
+                    logger.debug(f"Skipping comment for unknown path: {path}")
+                    continue
 
             # Validate line exists in diff
-            if path in valid_lines and line not in valid_lines[path]:
-                # Find nearest valid line
-                file_lines = valid_lines[path]
+            file_lines = valid_lines.get(path, set())
+            if line not in file_lines:
                 if file_lines:
                     line = min(file_lines, key=lambda x: abs(x - line))
                 else:
@@ -194,7 +210,7 @@ class ReviewEngine:
                     path=path,
                     line=line,
                     side=c.get("side", "RIGHT"),
-                    body=c.get("body", ""),
+                    body=body,
                     severity=c.get("severity", "info"),
                 )
             )

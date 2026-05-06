@@ -131,7 +131,14 @@ async def run_action() -> None:
         # Post review
         try:
             if inline_comments:
-                await github.post_review(repo, pr_number, body, inline_comments, event="COMMENT")
+                await github.post_review(
+                    repo,
+                    pr_number,
+                    body,
+                    inline_comments,
+                    event="COMMENT",
+                    commit_id=pr.head_sha,
+                )
                 logger.info(f"Posted review with {len(inline_comments)} inline comments")
             else:
                 await github.post_comment(repo, pr_number, body)

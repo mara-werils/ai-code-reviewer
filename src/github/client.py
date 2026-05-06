@@ -117,11 +117,14 @@ class GitHubAPI:
         body: str,
         comments: list[dict] | None = None,
         event: str = "COMMENT",
+        commit_id: str | None = None,
     ) -> int:
         payload: dict = {
             "body": body,
             "event": event,
         }
+        if commit_id:
+            payload["commit_id"] = commit_id
         if comments:
             payload["comments"] = comments
 
@@ -129,6 +132,8 @@ class GitHubAPI:
             f"/repos/{repo}/pulls/{pr_number}/reviews",
             json=payload,
         )
+        if resp.status_code == 422:
+            logger.error(f"GitHub rejected review: {resp.text}")
         resp.raise_for_status()
         return resp.json()["id"]
 
