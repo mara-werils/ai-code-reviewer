@@ -164,12 +164,14 @@ class GitHubAPI:
                 if resp.status_code in (200, 201):
                     posted += 1
                 else:
+                    line_info = c.get("line") or c.get("position", "?")
                     logger.warning(
-                        f"Failed to post comment on {c['path']}:{c['line']}: "
+                        f"Failed to post comment on {c['path']}:{line_info}: "
                         f"{resp.status_code} {resp.text[:300]}"
                     )
             except Exception as e:
-                logger.warning(f"Failed to post comment on {c['path']}:{c['line']}: {e}")
+                line_info = c.get("line") or c.get("position", "?")
+                logger.warning(f"Failed to post comment on {c['path']}:{line_info}: {e}")
         return posted
 
     async def post_comment(self, repo: str, pr_number: int, body: str) -> int:
