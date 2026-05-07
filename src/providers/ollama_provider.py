@@ -5,6 +5,7 @@ from __future__ import annotations
 from openai import AsyncOpenAI
 
 from src.providers.base import LLMProvider, LLMResponse
+from src.providers.retry import with_retry
 
 
 class OllamaProvider(LLMProvider):
@@ -25,6 +26,7 @@ class OllamaProvider(LLMProvider):
     def name(self) -> str:
         return f"ollama/{self._model}"
 
+    @with_retry(max_retries=3, base_delay=1.0)
     async def complete(
         self,
         messages: list[dict[str, str]],

@@ -34,6 +34,10 @@
 | **Setup time** | **30 seconds** | 5 minutes | Built-in | 15 minutes |
 | **Custom instructions** | Yes `.pr-reviewer.yml` | Yes | No | Yes |
 | **Self-hosted** | Yes | No | No | Yes |
+| **Retry with backoff** | **Yes** (all providers) | Unknown | N/A | No |
+| **Cost estimation** | **Yes** (pre-review) | No | N/A | No |
+| **Webhook idempotency** | **Yes** (SHA dedup) | Unknown | N/A | No |
+| **Suggested code blocks** | **Yes** (one-click apply) | Yes | No | Yes |
 | **100% local option** | Yes (Ollama) | No | No | No |
 | **Multi-language reviews** | Yes, 9 languages | Yes | No | No |
 | **Open source** | Yes, MIT | No | No | Yes, Apache-2.0 |
@@ -266,11 +270,15 @@ docker-compose up -d
 ```
 
 Self-hosted includes:
-- **AST-based code indexing** — understands functions, classes, imports
-- **Hybrid retrieval** — semantic search + identifier matching
-- **Agentic review** — LangGraph agent with tools to investigate the codebase
-- **Analytics dashboard** — cost tracking, precision metrics, tool usage
-- **Feedback loop** — learns from developer reactions
+- **AST-based code indexing** — understands functions, classes, imports (Python AST + Tree-sitter for JS/TS/Go)
+- **Hybrid retrieval** — semantic vector search + identifier matching + file neighborhood + RRF fusion
+- **Agentic review** — LangGraph agent with 7 tools to investigate the codebase
+- **Retry with exponential backoff** — handles rate limits, timeouts, and transient failures automatically
+- **Webhook idempotency** — deduplicates by PR SHA, prevents duplicate reviews on webhook re-delivery
+- **Cost estimation API** — `POST /api/v1/estimate` predicts cost before running a review
+- **Suggested code blocks** — uses GitHub's `suggestion` syntax for one-click apply
+- **Analytics dashboard** — cost tracking, precision metrics, tool usage distribution
+- **Feedback loop** — learns from developer reactions to comments
 - **SSE streaming** — real-time review progress
 
 ### Architecture

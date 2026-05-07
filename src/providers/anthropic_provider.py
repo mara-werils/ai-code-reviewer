@@ -5,6 +5,7 @@ from __future__ import annotations
 import anthropic
 
 from src.providers.base import LLMProvider, LLMResponse
+from src.providers.retry import with_retry
 
 PRICING = {
     "claude-sonnet-4-20250514": {"input": 3.00, "output": 15.00},
@@ -26,6 +27,7 @@ class AnthropicProvider(LLMProvider):
     def name(self) -> str:
         return f"anthropic/{self._model}"
 
+    @with_retry(max_retries=3, base_delay=1.0)
     async def complete(
         self,
         messages: list[dict[str, str]],

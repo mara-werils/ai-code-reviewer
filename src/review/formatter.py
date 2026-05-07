@@ -85,9 +85,15 @@ def format_review_body(result: ReviewResult) -> str:
 
 
 def format_inline_comment(severity: str, body: str) -> str:
-    """Format an inline review comment."""
+    """Format an inline review comment.
+
+    Preserves GitHub suggestion blocks (```suggestion ... ```) for one-click apply.
+    """
     label = SEVERITY_LABEL.get(severity, "[INFO]")
     sev_name = severity.capitalize()
+
+    # If the body already contains a suggestion block, don't wrap it further
+    # (the LLM is expected to produce valid ```suggestion blocks)
     return f"**{label} {sev_name}**\n\n{body}"
 
 

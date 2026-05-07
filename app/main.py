@@ -7,6 +7,7 @@ from fastapi.responses import HTMLResponse
 from redis.asyncio import Redis
 from sqlalchemy import text
 
+from app.api.estimate import router as estimate_router
 from app.api.repositories import router as repositories_router
 from app.api.stats import router as stats_router
 from app.api.streaming import router as streaming_router
@@ -56,6 +57,7 @@ app.include_router(webhooks_router)
 app.include_router(stats_router)
 app.include_router(repositories_router)
 app.include_router(streaming_router)
+app.include_router(estimate_router)
 
 
 @app.middleware("http")
