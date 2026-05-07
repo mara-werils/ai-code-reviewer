@@ -71,10 +71,7 @@ class TestParseDiffByFile:
         assert "+added line" in result["src/main.py"]
 
     def test_multiple_files(self):
-        diff = (
-            "diff --git a/a.py b/a.py\n+line a\n"
-            "diff --git a/b.py b/b.py\n+line b"
-        )
+        diff = "diff --git a/a.py b/a.py\n+line a\ndiff --git a/b.py b/b.py\n+line b"
         result = _parse_diff_by_file(diff)
         assert "a.py" in result
         assert "b.py" in result

@@ -12,6 +12,7 @@ class TestResponseParsing:
     def setup_method(self):
         # Create a minimal config
         from src.config import ReviewConfig
+
         self.config = ReviewConfig(provider="openai", api_key="test", model="gpt-4o")
         self.engine = ReviewEngine(self.config)
 

@@ -15,7 +15,9 @@ class TestEstimateCalculation:
         output_tokens = min(2000, 500 + 5 * 150)  # 1250
 
         pricing = _PRICING["gpt-4o"]
-        expected_cost = (input_tokens / 1_000_000) * pricing[0] + (output_tokens / 1_000_000) * pricing[1]
+        expected_cost = (input_tokens / 1_000_000) * pricing[0] + (
+            output_tokens / 1_000_000
+        ) * pricing[1]
         assert expected_cost > 0
         assert expected_cost < 0.10  # Should be cheap
 
