@@ -44,7 +44,9 @@ class TestBuildGithubReviewComments:
             risk_level="low",
             category="bugfix",
             comments=[
-                ReviewComment(path="a.py", line=10, side="RIGHT", body="fix this", severity="warning"),
+                ReviewComment(
+                    path="a.py", line=10, side="RIGHT", body="fix this", severity="warning"
+                ),
             ],
             labels=[],
             cost_usd=0,
@@ -63,7 +65,9 @@ class TestBuildGithubReviewComments:
             risk_level="low",
             category="bugfix",
             comments=[
-                ReviewComment(path="a.py", line=10, side="RIGHT", body="fix", severity="warning", position=42),
+                ReviewComment(
+                    path="a.py", line=10, side="RIGHT", body="fix", severity="warning", position=42
+                ),
             ],
             labels=[],
             cost_usd=0,
@@ -82,7 +86,9 @@ class TestBuildGithubReviewComments:
             risk_level="low",
             category="bugfix",
             comments=[
-                ReviewComment(path="a.py", line=10, side="RIGHT", body="fix", severity="warning", position=0),
+                ReviewComment(
+                    path="a.py", line=10, side="RIGHT", body="fix", severity="warning", position=0
+                ),
             ],
             labels=[],
             cost_usd=0,
