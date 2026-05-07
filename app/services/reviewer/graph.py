@@ -7,6 +7,7 @@ import anthropic
 import structlog
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 from langgraph.graph import END, StateGraph
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
@@ -400,8 +401,6 @@ def build_review_graph(session: AsyncSession) -> StateGraph:  # type: ignore[typ
             )
 
             # Save to DB
-            from sqlalchemy import update
-
             await session.execute(
                 update(Review)
                 .where(Review.id == state["review_id"])
@@ -430,8 +429,6 @@ def build_review_graph(session: AsyncSession) -> StateGraph:  # type: ignore[typ
 
         except Exception as e:
             logger.error("post_review_failed", error=str(e))
-            from sqlalchemy import update
-
             await session.execute(
                 update(Review)
                 .where(Review.id == state["review_id"])

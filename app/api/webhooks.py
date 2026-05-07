@@ -84,6 +84,24 @@ async def _handle_pull_request(
         db.add(repo)
         await db.flush()
 
+    # Idempotency: skip if we already have a review for this exact commit
+    existing = await db.execute(
+        select(Review).where(
+            Review.repository_id == repo.id,
+            Review.pr_number == pr_number,
+            Review.pr_head_sha == head_sha,
+            Review.status.notin_(["failed"]),
+        )
+    )
+    if existing.scalar_one_or_none():
+        logger.info(
+            "webhook_deduplicated",
+            repo=repo_full_name,
+            pr=pr_number,
+            sha=head_sha[:8],
+        )
+        return {"status": "already_reviewed", "sha": head_sha[:8]}
+
     # Create review record
     review = Review(
         repository_id=repo.id,

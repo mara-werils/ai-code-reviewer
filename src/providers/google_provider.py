@@ -5,6 +5,7 @@ from __future__ import annotations
 from openai import AsyncOpenAI
 
 from src.providers.base import LLMProvider, LLMResponse
+from src.providers.retry import with_retry
 
 PRICING = {
     "gemini-2.0-flash": {"input": 0.10, "output": 0.40},
@@ -27,6 +28,7 @@ class GoogleProvider(LLMProvider):
     def name(self) -> str:
         return f"google/{self._model}"
 
+    @with_retry(max_retries=3, base_delay=1.0)
     async def complete(
         self,
         messages: list[dict[str, str]],
