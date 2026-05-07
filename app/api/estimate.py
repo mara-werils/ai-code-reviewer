@@ -45,7 +45,7 @@ class EstimateResponse(BaseModel):
     estimated_cost_usd: float
     model: str
     agent_mode: bool
-    breakdown: dict
+    breakdown: dict[str, float]
 
 
 @router.post("/estimate")
