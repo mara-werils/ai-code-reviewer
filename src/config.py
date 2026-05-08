@@ -11,6 +11,12 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
+# Provider-specific diff size limits (conservative, for free tiers)
+_PROVIDER_MAX_DIFF: dict[str, int] = {
+    "groq": 10000,  # Groq free tier: 12k TPM, leave room for system prompt + output
+    "ollama": 12000,  # Local models often have smaller context
+}
+
 MODEL_DEFAULTS: dict[str, str] = {
     "openai": "gpt-4o",
     "anthropic": "claude-sonnet-4-20250514",
@@ -97,6 +103,11 @@ class ReviewConfig:
     def __post_init__(self) -> None:
         if not self.model:
             self.model = MODEL_DEFAULTS.get(self.provider, "gpt-4o")
+
+        # Auto-reduce diff size for providers with tight token limits
+        provider_limit = _PROVIDER_MAX_DIFF.get(self.provider)
+        if provider_limit and self.max_diff_size > provider_limit:
+            self.max_diff_size = provider_limit
 
     @classmethod
     def from_env(cls) -> ReviewConfig:
