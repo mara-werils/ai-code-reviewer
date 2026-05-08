@@ -74,12 +74,13 @@ async def run_action() -> None:
     if yml_path.exists():
         config = ReviewConfig.from_yaml(yml_path, base=config)
 
-    # Skip by title patterns
-    title = pr_data.get("title", "")
-    for pattern in config.ignore_titles:
-        if pattern.lower() in title.lower():
-            logger.info(f"PR title matches ignore pattern '{pattern}', skipping")
-            return
+    # Skip by title patterns (only for PR events, not issue_comment)
+    if pr_data:
+        title = pr_data.get("title", "")
+        for pattern in config.ignore_titles:
+            if pattern.lower() in title.lower():
+                logger.info(f"PR title matches ignore pattern '{pattern}', skipping")
+                return
 
     if not config.api_key and config.provider != "ollama":
         provider = config.provider
