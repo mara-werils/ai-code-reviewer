@@ -1,0 +1,209 @@
+{
+  "name": "ai-code-reviewer",
+  "displayName": "AI Code Reviewer",
+  "description": "AI-powered code review in your editor. Works with GPT-4o, Claude, Llama, Gemini, Ollama. Free & open source.",
+  "version": "0.1.0",
+  "publisher": "mara-werils",
+  "license": "MIT",
+  "icon": "resources/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mara-werils/ai-code-reviewer"
+  },
+  "bugs": {
+    "url": "https://github.com/mara-werils/ai-code-reviewer/issues"
+  },
+  "homepage": "https://github.com/mara-werils/ai-code-reviewer",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters",
+    "Other"
+  ],
+  "keywords": [
+    "code review",
+    "ai",
+    "llm",
+    "gpt",
+    "claude",
+    "llama",
+    "gemini",
+    "ollama",
+    "pull request",
+    "review"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "aiCodeReviewer.reviewFile",
+        "title": "AI Code Reviewer: Review Current File",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "aiCodeReviewer.reviewDiff",
+        "title": "AI Code Reviewer: Review Uncommitted Changes",
+        "icon": "$(git-compare)"
+      },
+      {
+        "command": "aiCodeReviewer.reviewSelection",
+        "title": "AI Code Reviewer: Review Selection",
+        "icon": "$(selection)"
+      },
+      {
+        "command": "aiCodeReviewer.clearDiagnostics",
+        "title": "AI Code Reviewer: Clear Review Comments"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "aiCodeReviewer.reviewSelection",
+          "when": "editorHasSelection",
+          "group": "ai-code-reviewer"
+        },
+        {
+          "command": "aiCodeReviewer.reviewFile",
+          "group": "ai-code-reviewer"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "aiCodeReviewer.reviewFile",
+          "group": "navigation",
+          "when": "editorTextFocus"
+        }
+      ],
+      "scm/title": [
+        {
+          "command": "aiCodeReviewer.reviewDiff",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "AI Code Reviewer",
+      "properties": {
+        "aiCodeReviewer.provider": {
+          "type": "string",
+          "default": "openai",
+          "enum": [
+            "openai",
+            "anthropic",
+            "groq",
+            "google",
+            "ollama"
+          ],
+          "enumDescriptions": [
+            "OpenAI (GPT-4o) — ~$0.05/review",
+            "Anthropic (Claude Sonnet) — ~$0.08/review",
+            "Groq (Llama 3.3 70B) — ~$0.002/review",
+            "Google (Gemini 2.0 Flash) — ~$0.003/review",
+            "Ollama (local, free) — $0.00/review"
+          ],
+          "description": "LLM provider for code review"
+        },
+        "aiCodeReviewer.model": {
+          "type": "string",
+          "default": "",
+          "description": "Model name (leave empty for provider default: gpt-4o, claude-sonnet, llama-3.3-70b, etc.)"
+        },
+        "aiCodeReviewer.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key for the selected provider. Can also use env vars: OPENAI_API_KEY, ANTHROPIC_API_KEY, etc."
+        },
+        "aiCodeReviewer.apiBaseUrl": {
+          "type": "string",
+          "default": "",
+          "description": "Custom API base URL (for Ollama, vLLM, LiteLLM, Azure OpenAI, or any OpenAI-compatible API)"
+        },
+        "aiCodeReviewer.reviewStyle": {
+          "type": "string",
+          "default": "concise",
+          "enum": [
+            "concise",
+            "thorough",
+            "minimal"
+          ],
+          "description": "Review style: concise (default), thorough (detailed), or minimal (critical issues only)"
+        },
+        "aiCodeReviewer.maxComments": {
+          "type": "number",
+          "default": 15,
+          "minimum": 1,
+          "maximum": 50,
+          "description": "Maximum number of review comments per file"
+        },
+        "aiCodeReviewer.customInstructions": {
+          "type": "string",
+          "default": "",
+          "description": "Custom instructions for the reviewer (team conventions, coding standards)",
+          "editPresentation": "multilineText"
+        },
+        "aiCodeReviewer.language": {
+          "type": "string",
+          "default": "en",
+          "enum": ["en", "zh", "ja", "ko", "es", "de", "fr", "ru", "pt"],
+          "enumDescriptions": [
+            "English",
+            "Chinese (中文)",
+            "Japanese (日本語)",
+            "Korean (한국어)",
+            "Spanish (Español)",
+            "German (Deutsch)",
+            "French (Français)",
+            "Russian (Русский)",
+            "Portuguese (Português)"
+          ],
+          "description": "Language for review comments"
+        },
+        "aiCodeReviewer.showInStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show AI Code Reviewer status in the status bar"
+        },
+        "aiCodeReviewer.autoReviewOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically review files on save (experimental)"
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "aiCodeReviewer.reviewFile",
+        "key": "ctrl+shift+r",
+        "mac": "cmd+shift+r",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "aiCodeReviewer.reviewDiff",
+        "key": "ctrl+shift+d",
+        "mac": "cmd+shift+d"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.0",
+    "@vscode/vsce": "^2.22.0"
+  },
+  "dependencies": {}
+}

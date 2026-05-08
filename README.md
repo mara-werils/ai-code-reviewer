@@ -16,7 +16,7 @@
 
 **Used by [X] developers** &middot; **[Y] reviews completed** &middot; **$0.002/review with Groq**
 
-[Quick Start](#-quick-start) &middot; [Providers](#-supported-providers) &middot; [/review Command](#-on-demand-review) &middot; [GitLab](#-gitlab-ci-integration) &middot; [Config](#-configuration) &middot; [Self-Hosted](#-self-hosted-mode) &middot; [CLI](#-cli)
+[Quick Start](#-quick-start) &middot; [Providers](#-supported-providers) &middot; [/review Command](#-on-demand-review) &middot; [GitLab](#-gitlab-ci-integration) &middot; [VS Code](#-vs-code-extension) &middot; [Config](#-configuration) &middot; [Self-Hosted](#-self-hosted-mode) &middot; [CLI](#-cli)
 
 </div>
 
@@ -48,6 +48,7 @@ https://github.com/user-attachments/assets/demo-placeholder
 | **Cost estimation** | **Yes** (pre-review) | No | N/A | No |
 | **100% local option** | **Yes** (Ollama) | No | No | No |
 | **Multi-language reviews** | **Yes** (9 languages) | Yes | No | No |
+| **VS Code extension** | **Yes** | No | Built-in | No |
 | **GitLab CI support** | **Yes** (native) | No | No | Yes |
 | **Self-hosted + RAG** | **Yes** (agentic, AST-indexed) | No | No | Yes |
 | **Retry with backoff** | **Yes** (all providers) | Unknown | N/A | No |
@@ -374,6 +375,41 @@ pr-reviewer review --repo owner/name --pr 42 --post
 
 ---
 
+## VS Code Extension
+
+Review code directly in your editor — no PR needed.
+
+```
+Cmd+Shift+R  →  Review current file
+Cmd+Shift+D  →  Review uncommitted changes
+Right-click  →  Review selection
+```
+
+### Install
+
+Search **"AI Code Reviewer"** in the VS Code Extensions marketplace, or:
+
+```bash
+cd vscode-extension
+npm install && npm run compile
+# Then: Cmd+Shift+P → "Developer: Install Extension from Location..." → select vscode-extension/
+```
+
+### Configure
+
+Open Settings → search "AI Code Reviewer":
+- **Provider**: openai, anthropic, groq, google, ollama
+- **API Key**: your key (or use env vars)
+- **Review Style**: concise, thorough, minimal
+
+Issues appear in the **Problems panel** with severity levels (Error, Warning, Info, Hint).
+
+> Works with the same providers as the GitHub Action. $0.002/review with Groq, $0.00 with Ollama.
+
+See the full docs: [`vscode-extension/README.md`](vscode-extension/README.md)
+
+---
+
 ## Self-Hosted Mode
 
 For teams needing full control, RAG-powered codebase understanding, and persistent analytics.
@@ -498,7 +534,8 @@ Show that your project uses AI code reviews:
 - [ ] PR chat — ask questions about the PR
 - [ ] Auto-fix — apply suggested changes automatically
 - [ ] Learning from feedback
-- [ ] IDE extension (VS Code, JetBrains)
+- [x] VS Code extension
+- [ ] JetBrains plugin
 - [ ] Slack/Discord notifications
 
 ---
