@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2026-05-08
+
+### Added
+- **VS Code extension** — review files, selections, and uncommitted changes directly in the editor
+  - Inline diagnostics in Problems panel with severity levels
+  - Status bar with review progress and cost tracking
+  - Keyboard shortcuts: `Cmd+Shift+R` (review file), `Cmd+Shift+D` (review diff)
+  - Right-click context menu for selection review
+  - Auto-review on save (optional)
+  - All providers supported (OpenAI, Anthropic, Groq, Google, Ollama)
+- **GitLab CI integration** — review merge requests with `--platform gitlab`
+  - Full GitLab API client (MR info, inline comments, discussions, labels)
+  - GitLab CI template (`examples/gitlab-ci.yml`)
+  - Self-hosted GitLab support via `GITLAB_URL`
+- **On-demand `/review` command** — type `/review` in any PR comment to trigger a review
+  - Emoji reaction feedback (eyes on start, rocket on success)
+  - Works alongside automatic reviews
+- **Viral review footer** — branded badge with CTA in every review comment
+- **SEO blog posts** — CodeRabbit alternative comparison, free AI code review guide
+- **Launch materials** — Product Hunt, Hacker News, Twitter thread, awesome-lists plan
+- **Community setup** — Discord badge, FUNDING.yml for GitHub Sponsors
+- **8 new unit tests** for GitLab client (117 total, all passing)
+
 ## [0.3.0] - 2026-05-06
 
 ### Added

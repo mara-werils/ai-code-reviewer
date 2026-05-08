@@ -1,9 +1,12 @@
-name: 'AI Code Reviewer - Multi-LLM'
-description: 'AI code review for PRs. Works with GPT, Claude, Llama, Gemini, Ollama. Free, open source.'
+name: 'AI Code Reviewer'
+description: >
+  Automated AI code review for pull requests. Works with any LLM: GPT-4o, Claude, Llama, Gemini, Ollama.
+  Posts inline comments with severity levels, security checks, suggested fixes, and risk assessment.
+  One-line setup, zero config. Free and open source.
 author: 'mara-werils'
 
 branding:
-  icon: 'eye'
+  icon: 'code'
   color: 'purple'
 
 inputs:
@@ -20,7 +23,7 @@ inputs:
     required: false
     default: ''
   api_base_url:
-    description: 'Custom API base URL (for OpenAI-compatible providers or Ollama)'
+    description: 'Custom API base URL (for OpenAI-compatible providers, Ollama, vLLM, LiteLLM)'
     required: false
     default: ''
   language:
@@ -32,23 +35,23 @@ inputs:
     required: false
     default: 'concise'
   max_comments:
-    description: 'Maximum number of review comments'
+    description: 'Maximum number of review comments (1-50)'
     required: false
     default: '15'
   custom_instructions:
-    description: 'Additional instructions for the reviewer'
+    description: 'Additional instructions for the reviewer (team conventions, coding standards)'
     required: false
     default: ''
   auto_summarize:
-    description: 'Add PR summary'
+    description: 'Add a PR summary with risk assessment'
     required: false
     default: 'true'
   suggest_tests:
-    description: 'Suggest missing tests'
+    description: 'Suggest missing test coverage'
     required: false
     default: 'true'
   label_pr:
-    description: 'Automatically label PR by type'
+    description: 'Automatically label PR by type (bugfix, feature, refactor, etc.)'
     required: false
     default: 'false'
 
@@ -58,7 +61,7 @@ outputs:
   risk_level:
     description: 'Risk level: low, medium, high'
   comments_count:
-    description: 'Number of review comments'
+    description: 'Number of review comments posted'
   cost_usd:
     description: 'Cost of the review in USD'
 

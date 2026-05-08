@@ -87,6 +87,10 @@ class ReviewConfig:
     # GitHub
     github_token: str = ""
 
+    # GitLab
+    gitlab_token: str = ""
+    gitlab_url: str = "https://gitlab.com"
+
     # Cost
     cost_limit_usd: float = 1.00
 
@@ -130,6 +134,8 @@ class ReviewConfig:
             api_key=api_key,
             api_base_url=os.getenv("INPUT_API_BASE_URL", os.getenv("API_BASE_URL", "")),
             github_token=os.getenv("GITHUB_TOKEN", ""),
+            gitlab_token=os.getenv("GITLAB_TOKEN", ""),
+            gitlab_url=os.getenv("GITLAB_URL", os.getenv("CI_SERVER_URL", "https://gitlab.com")),
             review_language=os.getenv("INPUT_LANGUAGE", os.getenv("LANGUAGE", "en")),
             review_style=os.getenv("INPUT_REVIEW_STYLE", os.getenv("REVIEW_STYLE", "concise")),
             max_comments=max_comments,

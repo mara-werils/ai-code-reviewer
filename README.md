@@ -1,46 +1,71 @@
 <div align="center">
 
+<img src="docs/logo.png" alt="AI Code Reviewer" width="120" />
+
 # AI Code Reviewer
 
-**AI-powered code review for GitHub pull requests.**
-**One-line setup. Zero config. Works with any LLM.**
+### AI-powered code review for GitHub pull requests.
+### One-line setup. Zero config. Works with any LLM.
 
-[![CI](https://github.com/mara-werils/ai-code-reviewer/actions/workflows/ci.yml/badge.svg)](https://github.com/mara-werils/ai-code-reviewer/actions)
+[![GitHub stars](https://img.shields.io/github/stars/mara-werils/ai-code-reviewer?style=social)](https://github.com/mara-werils/ai-code-reviewer/stargazers)
+[![CI](https://img.shields.io/github/actions/workflow/status/mara-werils/ai-code-reviewer/ci.yml?label=CI&logo=github)](https://github.com/mara-werils/ai-code-reviewer/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/mara-werils/ai-code-reviewer)](https://github.com/mara-werils/ai-code-reviewer/stargazers)
+[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-AI%20Code%20Reviewer-blueviolet?logo=github)](https://github.com/marketplace/actions/ai-code-reviewer)
+[![PyPI](https://img.shields.io/pypi/v/pr-reviewer?logo=pypi&logoColor=white)](https://pypi.org/project/pr-reviewer/)
+[![Discord](https://img.shields.io/discord/YOUR_SERVER_ID?logo=discord&logoColor=white&label=Discord&color=5865F2)](https://discord.gg/YOUR_INVITE_LINK)
 
-[Quick Start](#quick-start) · [Examples](#examples) · [Providers](#supported-providers) · [Configuration](#configuration) · [Self-Hosted](#self-hosted-mode) · [FAQ](#faq)
+**Used by [X] developers** &middot; **[Y] reviews completed** &middot; **$0.002/review with Groq**
+
+[Quick Start](#-quick-start) &middot; [Providers](#-supported-providers) &middot; [/review Command](#-on-demand-review) &middot; [GitLab](#-gitlab-ci-integration) &middot; [VS Code](#-vs-code-extension) &middot; [Config](#-configuration) &middot; [Self-Hosted](#-self-hosted-mode) &middot; [CLI](#-cli)
 
 </div>
 
 ---
 
-> Open a PR → get an AI code review in 30 seconds. Inline comments with severity levels, security checks, and actionable suggestions.
+<div align="center">
 
-### Review summary
+<!-- Replace with actual demo GIF: asciinema or screen recording of a PR getting reviewed -->
+<!-- To record: open a PR, wait for review, screen-record the result -->
 
-![Review summary](docs/review-summary.png)
+https://github.com/user-attachments/assets/demo-placeholder
 
-### Inline comments with suggested fixes
+**Open a PR. Get AI review in 30 seconds. Inline comments with suggested fixes.**
 
-![Inline comment](docs/review-inline.png)
+</div>
 
-## Why another code review tool?
+---
+
+## Why teams choose AI Code Reviewer
 
 | | AI Code Reviewer | CodeRabbit | GitHub Copilot | PR-Agent |
 |---|---|---|---|---|
 | **Pricing** | **Free** (bring your key) | $19/user/mo | $19/user/mo | Free (self-host) |
-| **LLM Choice** | **Any** (GPT, Claude, Llama, Gemini, Ollama) | Fixed | Fixed | GPT-4 only |
-| **Setup time** | **30 seconds** | 5 minutes | Built-in | 15 minutes |
-| **Custom instructions** | Yes `.pr-reviewer.yml` | Yes | No | Yes |
-| **Self-hosted** | Yes | No | No | Yes |
-| **Retry with backoff** | **Yes** (all providers) | Unknown | N/A | No |
-| **Cost estimation** | **Yes** (pre-review) | No | N/A | No |
-| **Webhook idempotency** | **Yes** (SHA dedup) | Unknown | N/A | No |
+| **LLM choice** | **Any** (GPT, Claude, Llama, Gemini, Ollama) | Fixed | Fixed | GPT-4 only |
+| **Setup** | **30 seconds** | 5 minutes | Built-in | 15 minutes |
+| **On-demand `/review`** | **Yes** | Yes | No | Yes |
+| **Custom instructions** | **Yes** `.pr-reviewer.yml` | Yes | No | Yes |
 | **Suggested code blocks** | **Yes** (one-click apply) | Yes | No | Yes |
-| **100% local option** | Yes (Ollama) | No | No | No |
-| **Multi-language reviews** | Yes, 9 languages | Yes | No | No |
-| **Open source** | Yes, MIT | No | No | Yes, Apache-2.0 |
+| **Cost estimation** | **Yes** (pre-review) | No | N/A | No |
+| **100% local option** | **Yes** (Ollama) | No | No | No |
+| **Multi-language reviews** | **Yes** (9 languages) | Yes | No | No |
+| **VS Code extension** | **Yes** | No | Built-in | No |
+| **GitLab CI support** | **Yes** (native) | No | No | Yes |
+| **Self-hosted + RAG** | **Yes** (agentic, AST-indexed) | No | No | Yes |
+| **Retry with backoff** | **Yes** (all providers) | Unknown | N/A | No |
+| **Webhook idempotency** | **Yes** (SHA dedup) | Unknown | N/A | No |
+| **Open source** | **MIT** | No | No | Apache-2.0 |
+
+---
+
+## Review summary
+
+![Review summary](docs/review-summary.png)
+
+## Inline comments with suggested fixes
+
+![Inline comment](docs/review-inline.png)
+
+---
 
 ## Quick Start
 
@@ -71,24 +96,88 @@ jobs:
 
 ### 2. Add your API key
 
-Go to **Settings → Secrets → Actions** and add `OPENAI_API_KEY`.
+Go to **Settings > Secrets > Actions** and add your API key.
 
 ### 3. Open a PR
 
-That's it. The reviewer will comment on your PR automatically.
+That's it. AI review lands in 30 seconds.
+
+> **Want the cheapest option?** Use Groq with Llama 3.3 — it's **$0.002/review** with a [free API key](https://console.groq.com).
+
+---
+
+## On-Demand Review
+
+Type **`/review`** in any PR comment to trigger a review on demand.
+
+```yaml
+# Add to your workflow to enable /review command
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  issue_comment:
+    types: [created]
+
+jobs:
+  auto-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mara-werils/ai-code-reviewer@v1
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+  on-demand:
+    if: >
+      github.event_name == 'issue_comment' &&
+      github.event.issue.pull_request &&
+      startsWith(github.event.comment.body, '/review')
+    runs-on: ubuntu-latest
+    steps:
+      - name: React to comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'eyes'
+            });
+      - name: Get PR ref
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            core.setOutput('head_ref', pr.data.head.ref);
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr.outputs.head_ref }}
+      - uses: mara-werils/ai-code-reviewer@v1
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+```
+
+See the full example: [`examples/on-demand-review.yml`](examples/on-demand-review.yml)
 
 ---
 
 ## Supported Providers
 
-Use any LLM. Switch providers with one line.
+Use **any LLM**. Switch providers with one line.
 
-| Provider | Model | Cost per review* | Setup |
+| Provider | Model | Cost/review* | Setup |
 |---|---|---|---|
-| **OpenAI** | GPT-4o | ~$0.05 | `OPENAI_API_KEY` |
-| **Anthropic** | Claude Sonnet | ~$0.08 | `ANTHROPIC_API_KEY` |
 | **Groq** | Llama 3.3 70B | ~**$0.002** | `GROQ_API_KEY` ([free tier](https://console.groq.com)) |
 | **Google** | Gemini 2.0 Flash | ~$0.003 | `GOOGLE_API_KEY` |
+| **OpenAI** | GPT-4o | ~$0.05 | `OPENAI_API_KEY` |
+| **Anthropic** | Claude Sonnet | ~$0.08 | `ANTHROPIC_API_KEY` |
 | **Ollama** | Any local model | **$0.00** | [Setup guide](#ollama-local) |
 | **Azure OpenAI** | GPT-4o | ~$0.05 | `AZURE_OPENAI_API_KEY` + `API_BASE_URL` |
 | **Any OpenAI-compatible** | Any | Varies | `OPENAI_API_KEY` + `API_BASE_URL` |
@@ -96,6 +185,20 @@ Use any LLM. Switch providers with one line.
 *Estimated for a ~200 line PR.
 
 ### Provider examples
+
+<details>
+<summary><b>Groq (Llama 3.3 — nearly free, recommended to start)</b></summary>
+
+```yaml
+- uses: mara-werils/ai-code-reviewer@v1
+  with:
+    provider: 'groq'
+  env:
+    GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+```
+
+Get a free API key at [console.groq.com](https://console.groq.com).
+</details>
 
 <details>
 <summary><b>OpenAI (GPT-4o)</b></summary>
@@ -117,20 +220,6 @@ Use any LLM. Switch providers with one line.
   env:
     ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 ```
-</details>
-
-<details>
-<summary><b>Groq (Llama — nearly free)</b></summary>
-
-```yaml
-- uses: mara-werils/ai-code-reviewer@v1
-  with:
-    provider: 'groq'
-  env:
-    GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-```
-
-Get a free API key at [console.groq.com](https://console.groq.com).
 </details>
 
 <details>
@@ -172,6 +261,34 @@ Get a free API key at [console.groq.com](https://console.groq.com).
 
 ---
 
+## GitLab CI Integration
+
+Works with GitLab merge requests via the CLI. Add to your `.gitlab-ci.yml`:
+
+```yaml
+ai-code-review:
+  stage: test
+  image: python:3.11-slim
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script:
+    - pip install --quiet pr-reviewer
+    - pr-reviewer review
+        --platform gitlab
+        --repo "$CI_PROJECT_PATH"
+        --mr "$CI_MERGE_REQUEST_IID"
+        --post
+  allow_failure: true
+```
+
+**Required CI/CD variables:** `GITLAB_TOKEN` (api scope) + your LLM API key (`OPENAI_API_KEY`, `GROQ_API_KEY`, etc.)
+
+> Works with self-hosted GitLab too — set `GITLAB_URL` to your instance URL.
+
+See the full template: [`examples/gitlab-ci.yml`](examples/gitlab-ci.yml)
+
+---
+
 ## Configuration
 
 ### Action inputs
@@ -182,13 +299,13 @@ Get a free API key at [console.groq.com](https://console.groq.com).
     # LLM provider (openai, anthropic, groq, google, ollama)
     provider: 'openai'
 
-    # Specific model (auto-selected if empty)
+    # Specific model (auto-selected per provider if empty)
     model: ''
 
     # Review style: concise, thorough, minimal
     review_style: 'concise'
 
-    # Max comments per review
+    # Max comments per review (1-50)
     max_comments: '15'
 
     # Review comment language (en, zh, ja, ko, es, de, fr, ru, pt)
@@ -258,6 +375,41 @@ pr-reviewer review --repo owner/name --pr 42 --post
 
 ---
 
+## VS Code Extension
+
+Review code directly in your editor — no PR needed.
+
+```
+Cmd+Shift+R  →  Review current file
+Cmd+Shift+D  →  Review uncommitted changes
+Right-click  →  Review selection
+```
+
+### Install
+
+Search **"AI Code Reviewer"** in the VS Code Extensions marketplace, or:
+
+```bash
+cd vscode-extension
+npm install && npm run compile
+# Then: Cmd+Shift+P → "Developer: Install Extension from Location..." → select vscode-extension/
+```
+
+### Configure
+
+Open Settings → search "AI Code Reviewer":
+- **Provider**: openai, anthropic, groq, google, ollama
+- **API Key**: your key (or use env vars)
+- **Review Style**: concise, thorough, minimal
+
+Issues appear in the **Problems panel** with severity levels (Error, Warning, Info, Hint).
+
+> Works with the same providers as the GitHub Action. $0.002/review with Groq, $0.00 with Ollama.
+
+See the full docs: [`vscode-extension/README.md`](vscode-extension/README.md)
+
+---
+
 ## Self-Hosted Mode
 
 For teams needing full control, RAG-powered codebase understanding, and persistent analytics.
@@ -269,17 +421,18 @@ cp .env.example .env  # Edit with your keys
 docker-compose up -d
 ```
 
-Self-hosted includes:
-- **AST-based code indexing** — understands functions, classes, imports (Python AST + Tree-sitter for JS/TS/Go)
-- **Hybrid retrieval** — semantic vector search + identifier matching + file neighborhood + RRF fusion
-- **Agentic review** — LangGraph agent with 7 tools to investigate the codebase
-- **Retry with exponential backoff** — handles rate limits, timeouts, and transient failures automatically
-- **Webhook idempotency** — deduplicates by PR SHA, prevents duplicate reviews on webhook re-delivery
-- **Cost estimation API** — `POST /api/v1/estimate` predicts cost before running a review
-- **Suggested code blocks** — uses GitHub's `suggestion` syntax for one-click apply
-- **Analytics dashboard** — cost tracking, precision metrics, tool usage distribution
-- **Feedback loop** — learns from developer reactions to comments
-- **SSE streaming** — real-time review progress
+### What you get
+
+| Feature | Description |
+|---|---|
+| **Agentic review** | LangGraph agent with 7 tools to investigate the codebase |
+| **AST-based indexing** | Understands functions, classes, imports (Python AST + Tree-sitter for JS/TS/Go) |
+| **Hybrid retrieval** | Semantic vector search + identifier matching + file neighborhood + RRF fusion |
+| **Cost tracking** | Per-repository budgets and analytics dashboard |
+| **Feedback loop** | Learns from developer reactions to comments |
+| **SSE streaming** | Real-time review progress |
+| **Webhook idempotency** | SHA-based deduplication prevents duplicate reviews |
+| **Retry + backoff** | Handles rate limits, timeouts, and transient failures automatically |
 
 ### Architecture
 
@@ -308,13 +461,13 @@ graph LR
 <details>
 <summary><b>Is it free?</b></summary>
 
-The tool itself is 100% free and open source. You pay only for LLM API calls. With Groq's free tier or Ollama, the total cost is $0.
+The tool itself is 100% free and open source (MIT). You pay only for LLM API calls. With Groq's free tier or Ollama, the total cost is $0.
 </details>
 
 <details>
 <summary><b>Is my code sent to third parties?</b></summary>
 
-Your code is sent to whichever LLM provider you choose (OpenAI, Anthropic, etc.). If you need full privacy, use Ollama with a local model — nothing leaves your network.
+Your code is sent to whichever LLM provider you choose. If you need full privacy, use Ollama with a local model — nothing leaves your network.
 </details>
 
 <details>
@@ -326,7 +479,7 @@ Yes. The GitHub Action uses your repository's built-in `GITHUB_TOKEN`, which has
 <details>
 <summary><b>Can I use it with GitLab / Bitbucket?</b></summary>
 
-Not yet. GitHub is supported first. GitLab and Bitbucket support is on the roadmap.
+**GitLab is fully supported!** Use the CLI in your `.gitlab-ci.yml` with `--platform gitlab`. See the [GitLab CI Integration](#gitlab-ci-integration) section. Bitbucket support is on the roadmap.
 </details>
 
 <details>
@@ -342,6 +495,16 @@ Not yet. GitHub is supported first. GitLab and Bitbucket support is on the roadm
 <summary><b>Can I review in Chinese / Japanese / Korean / Spanish?</b></summary>
 
 Yes! Set `language: 'zh'` (or `ja`, `ko`, `es`, `de`, `fr`, `ru`, `pt`).
+</details>
+
+<details>
+<summary><b>How is this different from PR-Agent?</b></summary>
+
+- **Multi-LLM**: Works with any LLM, not just GPT-4. Switch with one line.
+- **Simpler setup**: One workflow file, no config needed.
+- **Cheaper**: Groq at $0.002/review vs GPT-4 at ~$0.10/review.
+- **Cost estimation**: Know the cost before running a review.
+- **Better reliability**: Retry with exponential backoff, webhook idempotency.
 </details>
 
 ---
@@ -360,12 +523,19 @@ Show that your project uses AI code reviews:
 
 ## Roadmap
 
-- [ ] GitLab integration
+- [x] Multi-LLM support (GPT, Claude, Llama, Gemini, Ollama)
+- [x] Inline comments with suggested fixes
+- [x] On-demand `/review` command
+- [x] Self-hosted mode with RAG
+- [x] CLI tool
+- [x] Cost estimation
+- [x] GitLab integration
 - [ ] Bitbucket integration
 - [ ] PR chat — ask questions about the PR
 - [ ] Auto-fix — apply suggested changes automatically
-- [ ] Learning from feedback — improve reviews based on resolved/dismissed comments
-- [ ] IDE extension (VS Code, JetBrains)
+- [ ] Learning from feedback
+- [x] VS Code extension
+- [ ] JetBrains plugin
 - [ ] Slack/Discord notifications
 
 ---
@@ -375,7 +545,6 @@ Show that your project uses AI code reviews:
 Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ```bash
-# Development setup
 git clone https://github.com/mara-werils/ai-code-reviewer.git
 cd ai-code-reviewer
 pip install -e ".[dev]"
@@ -393,8 +562,8 @@ MIT — use it however you want.
 
 <div align="center">
 
-**If this saves you time, consider starring the repo.**
+**If this saves you time, [give it a star](https://github.com/mara-werils/ai-code-reviewer). It helps others find the project.**
 
-[Report Bug](https://github.com/mara-werils/ai-code-reviewer/issues) · [Request Feature](https://github.com/mara-werils/ai-code-reviewer/issues) · [Discussions](https://github.com/mara-werils/ai-code-reviewer/discussions)
+[Report Bug](https://github.com/mara-werils/ai-code-reviewer/issues) &middot; [Request Feature](https://github.com/mara-werils/ai-code-reviewer/issues) &middot; [Discord](https://discord.gg/YOUR_INVITE_LINK) &middot; [Discussions](https://github.com/mara-werils/ai-code-reviewer/discussions)
 
 </div>

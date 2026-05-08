@@ -4,6 +4,7 @@ Usage:
     pr-reviewer review --repo owner/name --pr 42
     pr-reviewer review --repo owner/name --pr 42 --provider groq
     pr-reviewer review --diff ./changes.diff
+    pr-reviewer review --repo group/project --mr 42 --platform gitlab
 """
 
 from __future__ import annotations
@@ -15,6 +16,7 @@ import sys
 
 from src.config import ReviewConfig
 from src.github.client import GitHubAPI
+from src.gitlab.client import GitLabAPI
 from src.review.engine import ReviewEngine
 from src.review.formatter import format_review_body
 
@@ -37,6 +39,9 @@ async def cmd_review(args: argparse.Namespace) -> None:
 
     engine = ReviewEngine(config)
 
+    platform = getattr(args, "platform", "github") or "github"
+    mr_number = args.mr or args.pr  # --mr alias for GitLab
+
     if args.diff:
         # Review from local diff file
         with open(args.diff) as f:
@@ -57,9 +62,28 @@ async def cmd_review(args: argparse.Namespace) -> None:
         )
         files = []  # No file info for local diff
         result = await engine.review_pr(pr, files, diff)
+    elif platform == "gitlab":
+        # Review from GitLab MR
+        if not args.repo or not mr_number:
+            logger.error("--repo and --mr (or --pr) are required for GitLab")
+            sys.exit(1)
+
+        gitlab_token = config.gitlab_token
+        if not gitlab_token:
+            logger.error("GITLAB_TOKEN environment variable required")
+            sys.exit(1)
+
+        gitlab = GitLabAPI(gitlab_token, base_url=config.gitlab_url)
+        try:
+            pr = await gitlab.get_mr(args.repo, mr_number)
+            files = await gitlab.get_mr_files(args.repo, mr_number)
+            diff = await gitlab.get_mr_diff(args.repo, mr_number)
+            result = await engine.review_pr(pr, files, diff)
+        finally:
+            await gitlab.close()
     else:
         # Review from GitHub PR
-        if not args.repo or not args.pr:
+        if not args.repo or not mr_number:
             logger.error("Either --diff or --repo + --pr are required")
             sys.exit(1)
 
@@ -69,9 +93,9 @@ async def cmd_review(args: argparse.Namespace) -> None:
 
         github = GitHubAPI(config.github_token)
         try:
-            pr = await github.get_pr(args.repo, args.pr)
-            files = await github.get_pr_files(args.repo, args.pr)
-            diff = await github.get_pr_diff(args.repo, args.pr)
+            pr = await github.get_pr(args.repo, mr_number)
+            files = await github.get_pr_files(args.repo, mr_number)
+            diff = await github.get_pr_diff(args.repo, mr_number)
             result = await engine.review_pr(pr, files, diff)
         finally:
             await github.close()
@@ -80,19 +104,32 @@ async def cmd_review(args: argparse.Namespace) -> None:
     body = format_review_body(result)
     print(body)
 
-    if args.post and args.repo and args.pr:
-        github = GitHubAPI(config.github_token)
-        try:
-            from src.review.formatter import build_github_review_comments
+    if args.post and args.repo and mr_number:
+        from src.review.formatter import build_github_review_comments
 
-            inline = build_github_review_comments(result)
-            if inline:
-                await github.post_review(args.repo, args.pr, body, inline)
-            else:
-                await github.post_comment(args.repo, args.pr, body)
-            logger.info(f"Posted review to PR #{args.pr}")
-        finally:
-            await github.close()
+        if platform == "gitlab":
+            gitlab = GitLabAPI(config.gitlab_token, base_url=config.gitlab_url)
+            try:
+                inline = build_github_review_comments(result)
+                await gitlab.post_mr_note(args.repo, mr_number, body)
+                if inline:
+                    await gitlab.post_inline_comments(
+                        args.repo, mr_number, pr.head_sha, pr.base_sha, inline
+                    )
+                logger.info(f"Posted review to MR !{mr_number}")
+            finally:
+                await gitlab.close()
+        else:
+            github = GitHubAPI(config.github_token)
+            try:
+                inline = build_github_review_comments(result)
+                if inline:
+                    await github.post_review(args.repo, mr_number, body, inline)
+                else:
+                    await github.post_comment(args.repo, mr_number, body)
+                logger.info(f"Posted review to PR #{mr_number}")
+            finally:
+                await github.close()
 
     print(
         f"\n---\nCost: ${result.cost_usd:.4f} | Model: {result.model} | Duration: {result.duration_ms}ms"
@@ -108,14 +145,23 @@ def main() -> None:
 
     # review command
     review_parser = subparsers.add_parser("review", help="Review a PR or diff")
-    review_parser.add_argument("--repo", help="GitHub repo (owner/name)")
-    review_parser.add_argument("--pr", type=int, help="PR number")
+    review_parser.add_argument(
+        "--repo", help="Repository (owner/name for GitHub, group/project for GitLab)"
+    )
+    review_parser.add_argument("--pr", type=int, help="PR number (GitHub)")
+    review_parser.add_argument("--mr", type=int, help="MR number (GitLab)")
     review_parser.add_argument("--diff", help="Path to local diff file")
     review_parser.add_argument("--title", help="PR title (for local diff)")
+    review_parser.add_argument(
+        "--platform",
+        choices=["github", "gitlab"],
+        default="github",
+        help="Platform (default: github)",
+    )
     review_parser.add_argument("--provider", help="LLM provider (openai, anthropic, groq, ollama)")
     review_parser.add_argument("--model", help="Model name override")
     review_parser.add_argument("--api-key", help="API key (or use env var)")
-    review_parser.add_argument("--post", action="store_true", help="Post review to GitHub")
+    review_parser.add_argument("--post", action="store_true", help="Post review to GitHub/GitLab")
 
     args = parser.parse_args()
 

@@ -1,3 +1,5 @@
+# On-demand review: type /review in any PR comment to trigger AI review
+# Also supports automatic review on PR open/update
 name: AI Code Review
 
 on:
@@ -12,20 +14,17 @@ permissions:
 
 jobs:
   # Automatic review on PR events
-  review:
+  auto-review:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: mara-werils/ai-code-reviewer@v1
-        with:
-          provider: 'groq'
-          review_style: 'thorough'
         env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-  # On-demand review via /review comment
-  on-demand:
+  # On-demand review triggered by /review comment
+  on-demand-review:
     if: >
       github.event_name == 'issue_comment' &&
       github.event.issue.pull_request &&
@@ -42,7 +41,8 @@ jobs:
               comment_id: context.payload.comment.id,
               content: 'eyes'
             });
-      - name: Get PR ref
+
+      - name: Get PR head ref
         id: pr
         uses: actions/github-script@v7
         with:
@@ -53,12 +53,23 @@ jobs:
               pull_number: context.issue.number
             });
             core.setOutput('head_ref', pr.data.head.ref);
+
       - uses: actions/checkout@v4
         with:
           ref: ${{ steps.pr.outputs.head_ref }}
+
       - uses: mara-werils/ai-code-reviewer@v1
-        with:
-          provider: 'groq'
-          review_style: 'thorough'
         env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+      - name: React success
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'rocket'
+            });
