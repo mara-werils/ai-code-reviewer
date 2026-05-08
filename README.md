@@ -16,7 +16,7 @@
 
 **Used by [X] developers** &middot; **[Y] reviews completed** &middot; **$0.002/review with Groq**
 
-[Quick Start](#-quick-start) &middot; [Playground](#-try-it-online-no-install) &middot; [Pre-Commit](#-pre-commit-hook) &middot; [Providers](#-supported-providers) &middot; [/review](#-on-demand-review) &middot; [GitLab](#-gitlab-ci-integration) &middot; [VS Code](#-vs-code-extension) &middot; [Self-Hosted](#-self-hosted-mode) &middot; [CLI](#-cli)
+[Quick Start](#-quick-start) &middot; [/fix](#-auto-fix-with-fix) &middot; [Playground](#-try-it-online-no-install) &middot; [Pre-Commit](#-pre-commit-hook) &middot; [Providers](#-supported-providers) &middot; [/review](#-on-demand-review) &middot; [GitLab](#-gitlab-ci-integration) &middot; [VS Code](#-vs-code-extension) &middot; [Self-Hosted](#-self-hosted-mode)
 
 </div>
 
@@ -48,6 +48,7 @@ https://github.com/user-attachments/assets/demo-placeholder
 | **Cost estimation** | **Yes** (pre-review) | No | N/A | No |
 | **100% local option** | **Yes** (Ollama) | No | No | No |
 | **Multi-language reviews** | **Yes** (9 languages) | Yes | No | No |
+| **Auto-fix `/fix`** | **Yes** (commits fixes to PR) | No | No | No |
 | **Web playground** | **Yes** (try without install) | No | No | No |
 | **Pre-commit hook** | **Yes** (block before PR) | No | No | No |
 | **VS Code extension** | **Yes** | No | Built-in | No |
@@ -105,6 +106,36 @@ Go to **Settings > Secrets > Actions** and add your API key.
 That's it. AI review lands in 30 seconds.
 
 > **Want the cheapest option?** Use Groq with Llama 3.3 — it's **$0.002/review** with a [free API key](https://console.groq.com).
+
+---
+
+## Auto-Fix with `/fix`
+
+Type **`/fix`** in any PR comment after a review — AI reads the review comments, generates fixes, and commits them directly to your branch.
+
+```
+You:  /fix
+AI:   👀 Analyzing 3 issues from the review...
+AI:   ## AI Code Fix
+      Applied 3 fixes across 2 files.
+
+      ### src/db.py
+      - Fixed SQL injection by using parameterized query
+      - Added input validation for user_id
+        Commit: abc1234
+
+      ### src/api.py
+      - Added null check before accessing response.data
+        Commit: def5678
+```
+
+How it works:
+1. AI collects all `[CRITICAL]` and `[WARNING]` comments from the last review
+2. For each file: reads the current content, generates fixed version via LLM
+3. Commits each fix directly to the PR branch
+4. Posts a summary of what was fixed and what was skipped
+
+> Requires `contents: write` permission. Add `/fix` support with the [on-demand workflow](examples/on-demand-review.yml).
 
 ---
 
@@ -595,7 +626,7 @@ Show that your project uses AI code reviews:
 - [x] GitLab integration
 - [ ] Bitbucket integration
 - [ ] PR chat — ask questions about the PR
-- [ ] Auto-fix — apply suggested changes automatically
+- [x] Auto-fix `/fix` — AI commits fixes directly to your PR branch
 - [ ] Learning from feedback
 - [x] VS Code extension
 - [ ] JetBrains plugin
