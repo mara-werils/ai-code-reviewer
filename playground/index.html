@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Code Reviewer — Try It Free</title>
+    <meta name="description" content="Paste any GitHub PR URL and get an AI code review in seconds. Free, no signup required.">
+    <meta property="og:title" content="AI Code Reviewer — Try It Free">
+    <meta property="og:description" content="Paste any GitHub PR URL and get an AI code review in seconds. Free, no signup.">
+    <meta property="og:type" content="website">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 720px;
+            width: 100%;
+            padding: 0 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 60px 0 30px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        h1 span { color: #a78bfa; }
+
+        .subtitle {
+            color: #8b949e;
+            font-size: 1.1rem;
+            margin-bottom: 24px;
+        }
+
+        .badge-row {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .badge {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            color: #8b949e;
+        }
+
+        .badge b { color: #e6edf3; }
+
+        /* Input area */
+        .input-section {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: #e6edf3;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #a78bfa;
+        }
+
+        input[type="text"]::placeholder {
+            color: #484f58;
+        }
+
+        button {
+            background: #a78bfa;
+            color: #0d1117;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        button:hover { background: #c4b5fd; }
+        button:disabled {
+            background: #30363d;
+            color: #484f58;
+            cursor: not-allowed;
+        }
+
+        .hint {
+            color: #484f58;
+            font-size: 0.82rem;
+            margin-top: 10px;
+        }
+
+        /* Results */
+        .result-section {
+            display: none;
+            margin-bottom: 40px;
+        }
+
+        .result-section.visible { display: block; }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .result-header h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .result-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 0.82rem;
+            color: #8b949e;
+        }
+
+        .result-meta span b { color: #e6edf3; }
+
+        .result-body {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 20px;
+            font-size: 0.92rem;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        .result-body h2 { font-size: 1.1rem; margin: 16px 0 8px; }
+        .result-body h2:first-child { margin-top: 0; }
+        .result-body blockquote {
+            border-left: 3px solid #a78bfa;
+            padding-left: 12px;
+            color: #8b949e;
+            margin: 8px 0;
+        }
+        .result-body code {
+            background: #0d1117;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+        .result-body pre {
+            background: #0d1117;
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 8px 0;
+        }
+        .result-body table { width: 100%; border-collapse: collapse; }
+        .result-body td, .result-body th {
+            padding: 6px 8px;
+            border-bottom: 1px solid #30363d;
+            text-align: left;
+        }
+
+        .comment-card {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 10px;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 0.82rem;
+        }
+
+        .comment-path { color: #a78bfa; font-family: monospace; }
+
+        .severity-critical { color: #f85149; font-weight: 700; }
+        .severity-warning { color: #d29922; font-weight: 600; }
+        .severity-suggestion { color: #3fb950; }
+        .severity-info { color: #8b949e; }
+
+        .comment-body {
+            color: #c9d1d9;
+            line-height: 1.5;
+        }
+
+        /* Error */
+        .error {
+            background: #1c0f0f;
+            border: 1px solid #f8514933;
+            border-radius: 8px;
+            padding: 14px;
+            color: #f85149;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #8b949e;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #30363d;
+            border-top-color: #a78bfa;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 12px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* CTA */
+        .cta {
+            text-align: center;
+            padding: 40px 0;
+            border-top: 1px solid #30363d;
+            margin-top: 20px;
+        }
+
+        .cta h3 { margin-bottom: 8px; }
+        .cta p { color: #8b949e; margin-bottom: 16px; }
+
+        .cta-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .cta-buttons a {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: #a78bfa;
+            color: #0d1117;
+        }
+
+        .btn-secondary {
+            background: #161b22;
+            border: 1px solid #30363d;
+            color: #e6edf3;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #484f58;
+            font-size: 0.82rem;
+        }
+
+        footer a { color: #8b949e; text-decoration: none; }
+        footer a:hover { color: #a78bfa; }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 1.6rem; }
+            .input-row { flex-direction: column; }
+            header { padding: 40px 0 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><span>AI Code Reviewer</span> Playground</h1>
+            <p class="subtitle">Paste any GitHub PR URL. Get an AI review in seconds. Free.</p>
+            <div class="badge-row">
+                <span class="badge"><b>$0.001</b>/review</span>
+                <span class="badge"><b>5</b> LLM providers</span>
+                <span class="badge"><b>MIT</b> licensed</span>
+                <span class="badge"><b>No signup</b> required</span>
+            </div>
+        </header>
+
+        <div class="input-section">
+            <div class="input-row">
+                <input type="text" id="pr-url" placeholder="https://github.com/owner/repo/pull/123" autofocus>
+                <button id="review-btn" onclick="runReview()">Review</button>
+            </div>
+            <p class="hint">Works with any public GitHub pull request. Reviews are powered by Llama 3.3 70B via Groq.</p>
+        </div>
+
+        <div id="loading" class="loading" style="display:none">
+            <div class="spinner"></div>
+            <p>Reviewing PR... usually takes 5-15 seconds</p>
+        </div>
+
+        <div id="error-section" class="result-section">
+            <div class="error" id="error-msg"></div>
+        </div>
+
+        <div id="result-section" class="result-section">
+            <div class="result-header">
+                <h2>Review Result</h2>
+                <div class="result-meta">
+                    <span>Cost: <b id="meta-cost">—</b></span>
+                    <span>Time: <b id="meta-time">—</b></span>
+                    <span>Model: <b id="meta-model">—</b></span>
+                </div>
+            </div>
+
+            <div id="summary-card" class="comment-card" style="margin-bottom:16px">
+                <div class="comment-body" id="summary-text"></div>
+            </div>
+
+            <div id="comments-list"></div>
+        </div>
+
+        <div class="cta">
+            <h3>Add AI reviews to your repo in 30 seconds</h3>
+            <p>One workflow file. Zero config. Works with GPT-4o, Claude, Llama, Gemini, Ollama.</p>
+            <div class="cta-buttons">
+                <a href="https://github.com/mara-werils/ai-code-reviewer#quick-start" class="btn-primary" target="_blank">Get Started</a>
+                <a href="https://github.com/mara-werils/ai-code-reviewer" class="btn-secondary" target="_blank">Star on GitHub</a>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <a href="https://github.com/mara-werils/ai-code-reviewer">AI Code Reviewer</a> — free, open source, MIT licensed.
+    </footer>
+
+    <script>
+    const input = document.getElementById('pr-url');
+    const btn = document.getElementById('review-btn');
+    const loading = document.getElementById('loading');
+    const errorSection = document.getElementById('error-section');
+    const errorMsg = document.getElementById('error-msg');
+    const resultSection = document.getElementById('result-section');
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') runReview();
+    });
+
+    async function runReview() {
+        const url = input.value.trim();
+        if (!url) { input.focus(); return; }
+
+        // Reset
+        errorSection.classList.remove('visible');
+        resultSection.classList.remove('visible');
+        loading.style.display = 'block';
+        btn.disabled = true;
+        btn.textContent = 'Reviewing...';
+
+        try {
+            const resp = await fetch('/api/review', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url }),
+            });
+
+            const data = await resp.json();
+
+            if (!resp.ok) {
+                throw new Error(data.error || `HTTP ${resp.status}`);
+            }
+
+            // Show result
+            document.getElementById('meta-cost').textContent = `$${data.cost_usd.toFixed(4)}`;
+            document.getElementById('meta-time').textContent = `${(data.duration_ms / 1000).toFixed(1)}s`;
+            document.getElementById('meta-model').textContent = data.model;
+
+            const risk = data.risk_level;
+            const riskColor = risk === 'high' ? '#f85149' : risk === 'medium' ? '#d29922' : '#3fb950';
+            document.getElementById('summary-text').innerHTML =
+                `<strong style="color:${riskColor}">${risk.toUpperCase()} risk</strong> · ${data.category} · ${data.comments_count} comments<br><br>${escapeHtml(data.summary)}`;
+
+            // Comments
+            const list = document.getElementById('comments-list');
+            list.innerHTML = '';
+
+            if (data.comments.length === 0) {
+                list.innerHTML = '<div class="comment-card"><div class="comment-body" style="color:#3fb950">No issues found. This PR looks good!</div></div>';
+            } else {
+                data.comments.forEach(c => {
+                    const card = document.createElement('div');
+                    card.className = 'comment-card';
+                    card.innerHTML = `
+                        <div class="comment-header">
+                            <span class="comment-path">${escapeHtml(c.path)}:${c.line}</span>
+                            <span class="severity-${c.severity}">${c.severity.toUpperCase()}</span>
+                        </div>
+                        <div class="comment-body">${escapeHtml(c.body)}</div>
+                    `;
+                    list.appendChild(card);
+                });
+            }
+
+            resultSection.classList.add('visible');
+
+        } catch (e) {
+            errorMsg.textContent = e.message;
+            errorSection.classList.add('visible');
+        } finally {
+            loading.style.display = 'none';
+            btn.disabled = false;
+            btn.textContent = 'Review';
+        }
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+    </script>
+</body>
+</html>

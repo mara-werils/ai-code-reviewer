@@ -1,0 +1,9 @@
+- id: ai-code-review
+  name: AI Code Review
+  description: Review staged changes with AI before committing. Works with GPT-4o, Claude, Llama, Gemini, Ollama.
+  entry: pr-reviewer-hook
+  language: python
+  stages: [pre-commit]
+  pass_filenames: false
+  always_run: true
+  additional_dependencies: []
