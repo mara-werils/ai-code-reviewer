@@ -39,15 +39,22 @@ async def run_action() -> None:
     comment_data = event.get("comment")
     repo = event["repository"]["full_name"]
 
-    if comment_data and event.get("issue", {}).get("pull_request"):
-        # On-demand review triggered by /review comment
-        comment_body = (comment_data.get("body") or "").strip()
-        if not comment_body.startswith("/review"):
-            logger.info("Comment does not start with /review, skipping")
-            return
+    is_fix_command = False
 
-        pr_number = event["issue"]["number"]
-        logger.info(f"On-demand review triggered by /review comment on PR #{pr_number}")
+    if comment_data and event.get("issue", {}).get("pull_request"):
+        # On-demand command triggered by /review or /fix comment
+        comment_body = (comment_data.get("body") or "").strip()
+
+        if comment_body.startswith("/fix"):
+            is_fix_command = True
+            pr_number = event["issue"]["number"]
+            logger.info(f"/fix command triggered on PR #{pr_number}")
+        elif comment_body.startswith("/review"):
+            pr_number = event["issue"]["number"]
+            logger.info(f"On-demand review triggered by /review comment on PR #{pr_number}")
+        else:
+            logger.info("Comment is not a /review or /fix command, skipping")
+            return
     elif pr_data:
         pr_number = pr_data["number"]
 
@@ -102,11 +109,38 @@ async def run_action() -> None:
 
     # Initialize
     github = GitHubAPI(config.github_token)
-    engine = ReviewEngine(config)
 
     try:
         # Get PR info
         pr = await github.get_pr(repo, pr_number)
+
+        # --- /fix command ---
+        if is_fix_command:
+            from src.review.fixer import format_fix_comment, run_fix
+
+            logger.info(f"Running /fix on PR #{pr_number}")
+            fix_summary = await run_fix(
+                github=github,
+                config=config,
+                repo=repo,
+                pr_number=pr_number,
+                head_ref=pr.head_ref,
+                head_sha=pr.head_sha,
+            )
+
+            comment_body = format_fix_comment(fix_summary)
+            await github.post_comment(repo, pr_number, comment_body)
+
+            logger.info(
+                f"/fix complete: {fix_summary.files_fixed} files fixed, "
+                f"{fix_summary.total_applied} fixes applied, "
+                f"cost=${fix_summary.cost_usd:.4f}"
+            )
+            return
+
+        # --- /review and auto-review ---
+        engine = ReviewEngine(config)
+
         files = await github.get_pr_files(repo, pr_number)
 
         if not files:
@@ -192,14 +226,15 @@ async def run_action() -> None:
         )
 
     except Exception as e:
-        logger.error(f"Review failed: {e}")
+        cmd = "/fix" if is_fix_command else "Review"
+        logger.error(f"{cmd} failed: {e}")
         traceback.print_exc()
         # Try to post a failure comment so the user knows
         with contextlib.suppress(Exception):
             await github.post_comment(
                 repo,
                 pr_number,
-                f"## AI Code Review\n\nReview failed: `{type(e).__name__}: {e}`\n\n"
+                f"## AI Code {cmd}\n\n{cmd} failed: `{type(e).__name__}: {e}`\n\n"
                 f"Check the [Action logs]({os.getenv('GITHUB_SERVER_URL', 'https://github.com')}"
                 f"/{repo}/actions) for details.",
             )

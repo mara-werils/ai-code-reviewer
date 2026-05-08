@@ -1,19 +1,19 @@
-name: "On-Demand AI Review"
+name: "On-Demand AI Review & Fix"
 
 on:
   issue_comment:
     types: [created]
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
 
 jobs:
   review:
-    # Only run on PR comments that start with /review
+    # Run on PR comments that start with /review or /fix
     if: >
       github.event.issue.pull_request &&
-      startsWith(github.event.comment.body, '/review')
+      (startsWith(github.event.comment.body, '/review') || startsWith(github.event.comment.body, '/fix'))
     runs-on: ubuntu-latest
     steps:
       - name: React to comment

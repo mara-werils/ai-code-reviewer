@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import logging
 from dataclasses import dataclass
 
@@ -195,6 +196,71 @@ class GitHubAPI:
         )
         resp.raise_for_status()
         return resp.json()
+
+    async def get_review_comments(self, repo: str, pr_number: int) -> list[dict]:
+        """Get all review comments (inline comments) on a PR."""
+        comments: list[dict] = []
+        page = 1
+        while True:
+            resp = await self._client.get(
+                f"/repos/{repo}/pulls/{pr_number}/comments",
+                params={"per_page": 100, "page": page},
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            if not data:
+                break
+            comments.extend(data)
+            if len(data) < 100:
+                break
+            page += 1
+        return comments
+
+    async def get_issue_comments(self, repo: str, pr_number: int) -> list[dict]:
+        """Get all issue-level comments on a PR."""
+        resp = await self._client.get(
+            f"/repos/{repo}/issues/{pr_number}/comments",
+            params={"per_page": 100},
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+    async def get_file_sha(self, repo: str, path: str, ref: str) -> str:
+        """Get the blob SHA for a file (needed for updates via Contents API)."""
+        resp = await self._client.get(
+            f"/repos/{repo}/contents/{path}",
+            params={"ref": ref},
+        )
+        if resp.status_code == 404:
+            return ""
+        resp.raise_for_status()
+        return resp.json().get("sha", "")
+
+    async def create_or_update_file(
+        self,
+        repo: str,
+        path: str,
+        content: str,
+        message: str,
+        branch: str,
+        file_sha: str = "",
+    ) -> str:
+        """Create or update a file via the Contents API. Returns the new commit SHA."""
+        encoded = base64.b64encode(content.encode()).decode()
+        payload: dict = {
+            "message": message,
+            "content": encoded,
+            "branch": branch,
+        }
+        if file_sha:
+            payload["sha"] = file_sha
+
+        resp = await self._client.put(
+            f"/repos/{repo}/contents/{path}",
+            json=payload,
+        )
+        resp.raise_for_status()
+        return resp.json()["commit"]["sha"]
 
     async def close(self) -> None:
         await self._client.aclose()
