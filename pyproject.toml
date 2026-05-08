@@ -8,17 +8,32 @@ packages = ["src", "app"]
 [project]
 name = "pr-reviewer"
 version = "0.4.0"
-description = "AI-powered code review that understands your codebase. One-line GitHub Action setup. Supports GPT-4o, Claude, Llama, Gemini."
+description = "AI-powered code review for GitHub & GitLab. Works with any LLM: GPT-4o, Claude, Llama, Gemini, Ollama. Free, open source."
 readme = "README.md"
 requires-python = ">=3.11,<3.15"
 license = "MIT"
+keywords = ["code-review", "ai", "llm", "github", "gitlab", "gpt", "claude", "llama", "pre-commit"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Testing",
+]
 
 dependencies = [
     "httpx>=0.27.0",
     "openai>=1.55.0",
     "anthropic>=0.39.0",
     "pyyaml>=6.0",
-    # Self-hosted mode (optional heavy deps)
+]
+
+[project.optional-dependencies]
+selfhosted = [
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.30.0",
     "pydantic>=2.9.0",
@@ -41,9 +56,12 @@ dependencies = [
     "tree-sitter-typescript>=0.23.0",
     "sse-starlette>=2.0.0",
 ]
-
-[project.optional-dependencies]
+playground = [
+    "starlette>=0.27.0",
+    "uvicorn>=0.30.0",
+]
 dev = [
+    "pr-reviewer[selfhosted]",
     "pytest>=8.3.0",
     "pytest-asyncio>=0.24.0",
     "pytest-cov>=6.0.0",
@@ -57,6 +75,12 @@ dev = [
 [project.scripts]
 pr-reviewer = "src.cli:main"
 pr-reviewer-hook = "src.hook:main"
+
+[project.urls]
+Homepage = "https://github.com/mara-werils/ai-code-reviewer"
+Repository = "https://github.com/mara-werils/ai-code-reviewer"
+Issues = "https://github.com/mara-werils/ai-code-reviewer/issues"
+Changelog = "https://github.com/mara-werils/ai-code-reviewer/blob/main/CHANGELOG.md"
 
 [tool.ruff]
 target-version = "py311"
