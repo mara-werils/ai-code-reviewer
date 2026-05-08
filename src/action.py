@@ -34,18 +34,29 @@ async def run_action() -> None:
     with open(event_path) as f:
         event = json.load(f)
 
-    # Check if this is a PR event
+    # Detect event type: pull_request or issue_comment (/review command)
     pr_data = event.get("pull_request")
-    if not pr_data:
-        logger.info("Not a pull_request event, skipping")
-        return
-
-    pr_number = pr_data["number"]
+    comment_data = event.get("comment")
     repo = event["repository"]["full_name"]
 
-    # Skip drafts
-    if pr_data.get("draft", False):
-        logger.info(f"PR #{pr_number} is a draft, skipping")
+    if comment_data and event.get("issue", {}).get("pull_request"):
+        # On-demand review triggered by /review comment
+        comment_body = (comment_data.get("body") or "").strip()
+        if not comment_body.startswith("/review"):
+            logger.info("Comment does not start with /review, skipping")
+            return
+
+        pr_number = event["issue"]["number"]
+        logger.info(f"On-demand review triggered by /review comment on PR #{pr_number}")
+    elif pr_data:
+        pr_number = pr_data["number"]
+
+        # Skip drafts
+        if pr_data.get("draft", False):
+            logger.info(f"PR #{pr_number} is a draft, skipping")
+            return
+    else:
+        logger.info("Not a pull_request or /review comment event, skipping")
         return
 
     # Load config
@@ -110,16 +121,21 @@ async def run_action() -> None:
             f"+{sum(f.additions for f in files)}/-{sum(f.deletions for f in files)})"
         )
 
-        # Check if we already reviewed this SHA
-        try:
-            existing = await github.get_existing_reviews(repo, pr_number)
-            for review in existing:
-                body = review.get("body") or ""
-                if body.startswith("## AI Code Review") and review.get("commit_id") == pr.head_sha:
-                    logger.info(f"Already reviewed commit {pr.head_sha[:8]}, skipping")
-                    return
-        except Exception:
-            pass  # Non-critical, proceed with review
+        # Check if we already reviewed this SHA (skip for on-demand /review)
+        is_on_demand = comment_data is not None
+        if not is_on_demand:
+            try:
+                existing = await github.get_existing_reviews(repo, pr_number)
+                for review in existing:
+                    body = review.get("body") or ""
+                    if (
+                        body.startswith("## AI Code Review")
+                        and review.get("commit_id") == pr.head_sha
+                    ):
+                        logger.info(f"Already reviewed commit {pr.head_sha[:8]}, skipping")
+                        return
+            except Exception:
+                pass  # Non-critical, proceed with review
 
         # Run review
         result = await engine.review_pr(pr, files, diff)

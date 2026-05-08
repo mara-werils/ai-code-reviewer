@@ -71,13 +71,28 @@ def format_review_body(result: ReviewResult) -> str:
         parts.append("**No issues found.** This PR looks good!")
         parts.append("")
 
-    # Footer
+    # Footer with branding
     parts.extend(
         [
             "---",
-            f"<sub>Cost: ${result.cost_usd:.4f} | {result.duration_ms / 1000:.1f}s | "
-            f"{result.model} | "
-            f"[AI Code Reviewer](https://github.com/mara-werils/ai-code-reviewer)</sub>",
+            "<table><tr>"
+            "<td>"
+            '<a href="https://github.com/mara-werils/ai-code-reviewer">'
+            '<img src="https://img.shields.io/badge/Reviewed%20by-AI%20Code%20Reviewer-blueviolet?style=flat-square&logo=github" alt="AI Code Reviewer" />'
+            "</a>"
+            "</td>"
+            "<td>"
+            f"<sub>${result.cost_usd:.4f} | {result.duration_ms / 1000:.1f}s | {result.model}</sub>"
+            "</td>"
+            "</tr></table>",
+            "",
+            "<sub>",
+            "**Free & open source** \u2014 "
+            "Works with GPT, Claude, Llama, Gemini, Ollama. "
+            "[Add to your repo in 30s](https://github.com/mara-werils/ai-code-reviewer#quick-start) "
+            "\u00b7 "
+            "[Star on GitHub](https://github.com/mara-werils/ai-code-reviewer)",
+            "</sub>",
         ]
     )
 
