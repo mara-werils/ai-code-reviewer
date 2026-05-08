@@ -2,6 +2,8 @@
 
 Thanks for considering contributing! Here's how to get started.
 
+Join the community: [Discord](https://discord.gg/YOUR_INVITE_LINK) | [GitHub Discussions](https://github.com/mara-werils/ai-code-reviewer/discussions)
+
 ## Development Setup
 
 ```bash
@@ -26,6 +28,7 @@ src/                    # Lightweight action + CLI (no heavy deps)
 ├── config.py           # Configuration management
 ├── providers/          # LLM providers (OpenAI, Anthropic, Groq, etc.)
 ├── github/             # GitHub API client
+├── gitlab/             # GitLab API client
 └── review/             # Core review engine
     ├── engine.py       # Main review logic
     ├── analyzer.py     # Diff analysis

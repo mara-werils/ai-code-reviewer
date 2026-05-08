@@ -12,10 +12,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![GitHub Marketplace](https://img.shields.io/badge/Marketplace-AI%20Code%20Reviewer-blueviolet?logo=github)](https://github.com/marketplace/actions/ai-code-reviewer)
 [![PyPI](https://img.shields.io/pypi/v/pr-reviewer?logo=pypi&logoColor=white)](https://pypi.org/project/pr-reviewer/)
+[![Discord](https://img.shields.io/discord/YOUR_SERVER_ID?logo=discord&logoColor=white&label=Discord&color=5865F2)](https://discord.gg/YOUR_INVITE_LINK)
 
 **Used by [X] developers** &middot; **[Y] reviews completed** &middot; **$0.002/review with Groq**
 
-[Quick Start](#-quick-start) &middot; [Providers](#-supported-providers) &middot; [/review Command](#-on-demand-review) &middot; [Config](#-configuration) &middot; [Self-Hosted](#-self-hosted-mode) &middot; [CLI](#-cli)
+[Quick Start](#-quick-start) &middot; [Providers](#-supported-providers) &middot; [/review Command](#-on-demand-review) &middot; [GitLab](#-gitlab-ci-integration) &middot; [Config](#-configuration) &middot; [Self-Hosted](#-self-hosted-mode) &middot; [CLI](#-cli)
 
 </div>
 
@@ -47,6 +48,7 @@ https://github.com/user-attachments/assets/demo-placeholder
 | **Cost estimation** | **Yes** (pre-review) | No | N/A | No |
 | **100% local option** | **Yes** (Ollama) | No | No | No |
 | **Multi-language reviews** | **Yes** (9 languages) | Yes | No | No |
+| **GitLab CI support** | **Yes** (native) | No | No | Yes |
 | **Self-hosted + RAG** | **Yes** (agentic, AST-indexed) | No | No | Yes |
 | **Retry with backoff** | **Yes** (all providers) | Unknown | N/A | No |
 | **Webhook idempotency** | **Yes** (SHA dedup) | Unknown | N/A | No |
@@ -258,6 +260,34 @@ Get a free API key at [console.groq.com](https://console.groq.com).
 
 ---
 
+## GitLab CI Integration
+
+Works with GitLab merge requests via the CLI. Add to your `.gitlab-ci.yml`:
+
+```yaml
+ai-code-review:
+  stage: test
+  image: python:3.11-slim
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script:
+    - pip install --quiet pr-reviewer
+    - pr-reviewer review
+        --platform gitlab
+        --repo "$CI_PROJECT_PATH"
+        --mr "$CI_MERGE_REQUEST_IID"
+        --post
+  allow_failure: true
+```
+
+**Required CI/CD variables:** `GITLAB_TOKEN` (api scope) + your LLM API key (`OPENAI_API_KEY`, `GROQ_API_KEY`, etc.)
+
+> Works with self-hosted GitLab too — set `GITLAB_URL` to your instance URL.
+
+See the full template: [`examples/gitlab-ci.yml`](examples/gitlab-ci.yml)
+
+---
+
 ## Configuration
 
 ### Action inputs
@@ -413,7 +443,7 @@ Yes. The GitHub Action uses your repository's built-in `GITHUB_TOKEN`, which has
 <details>
 <summary><b>Can I use it with GitLab / Bitbucket?</b></summary>
 
-Not yet. GitHub is supported first. GitLab and Bitbucket support is on the roadmap.
+**GitLab is fully supported!** Use the CLI in your `.gitlab-ci.yml` with `--platform gitlab`. See the [GitLab CI Integration](#gitlab-ci-integration) section. Bitbucket support is on the roadmap.
 </details>
 
 <details>
@@ -463,7 +493,7 @@ Show that your project uses AI code reviews:
 - [x] Self-hosted mode with RAG
 - [x] CLI tool
 - [x] Cost estimation
-- [ ] GitLab integration
+- [x] GitLab integration
 - [ ] Bitbucket integration
 - [ ] PR chat — ask questions about the PR
 - [ ] Auto-fix — apply suggested changes automatically
@@ -497,6 +527,6 @@ MIT — use it however you want.
 
 **If this saves you time, [give it a star](https://github.com/mara-werils/ai-code-reviewer). It helps others find the project.**
 
-[Report Bug](https://github.com/mara-werils/ai-code-reviewer/issues) &middot; [Request Feature](https://github.com/mara-werils/ai-code-reviewer/issues) &middot; [Discussions](https://github.com/mara-werils/ai-code-reviewer/discussions)
+[Report Bug](https://github.com/mara-werils/ai-code-reviewer/issues) &middot; [Request Feature](https://github.com/mara-werils/ai-code-reviewer/issues) &middot; [Discord](https://discord.gg/YOUR_INVITE_LINK) &middot; [Discussions](https://github.com/mara-werils/ai-code-reviewer/discussions)
 
 </div>

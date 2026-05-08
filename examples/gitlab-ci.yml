@@ -1,0 +1,29 @@
+# GitLab CI template for AI Code Reviewer
+# Add this to your .gitlab-ci.yml or include it as a template
+#
+# Required CI/CD variables:
+#   GITLAB_TOKEN    — GitLab personal access token (api scope)
+#   OPENAI_API_KEY  — Or any other LLM provider key (ANTHROPIC_API_KEY, GROQ_API_KEY, etc.)
+#
+# Usage: copy this file to your repo as .gitlab-ci.yml or include it
+
+ai-code-review:
+  stage: test
+  image: python:3.11-slim
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  variables:
+    PROVIDER: "openai"  # Change to: anthropic, groq, google, ollama
+    # MODEL: ""         # Optional: override default model
+    # REVIEW_STYLE: "concise"  # Options: concise, thorough, minimal
+    # MAX_COMMENTS: "15"
+    # LANGUAGE: "en"    # Options: en, zh, ja, ko, es, de, fr, ru, pt
+  script:
+    - pip install --quiet pr-reviewer
+    - pr-reviewer review
+        --platform gitlab
+        --repo "$CI_PROJECT_PATH"
+        --mr "$CI_MERGE_REQUEST_IID"
+        --provider "$PROVIDER"
+        --post
+  allow_failure: true  # Don't block MR on review failure
