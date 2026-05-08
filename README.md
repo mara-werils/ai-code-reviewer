@@ -16,7 +16,7 @@
 
 **Used by [X] developers** &middot; **[Y] reviews completed** &middot; **$0.002/review with Groq**
 
-[Quick Start](#-quick-start) &middot; [Providers](#-supported-providers) &middot; [/review Command](#-on-demand-review) &middot; [GitLab](#-gitlab-ci-integration) &middot; [VS Code](#-vs-code-extension) &middot; [Config](#-configuration) &middot; [Self-Hosted](#-self-hosted-mode) &middot; [CLI](#-cli)
+[Quick Start](#-quick-start) &middot; [Playground](#-try-it-online-no-install) &middot; [Pre-Commit](#-pre-commit-hook) &middot; [Providers](#-supported-providers) &middot; [/review](#-on-demand-review) &middot; [GitLab](#-gitlab-ci-integration) &middot; [VS Code](#-vs-code-extension) &middot; [Self-Hosted](#-self-hosted-mode) &middot; [CLI](#-cli)
 
 </div>
 
@@ -48,6 +48,8 @@ https://github.com/user-attachments/assets/demo-placeholder
 | **Cost estimation** | **Yes** (pre-review) | No | N/A | No |
 | **100% local option** | **Yes** (Ollama) | No | No | No |
 | **Multi-language reviews** | **Yes** (9 languages) | Yes | No | No |
+| **Web playground** | **Yes** (try without install) | No | No | No |
+| **Pre-commit hook** | **Yes** (block before PR) | No | No | No |
 | **VS Code extension** | **Yes** | No | Built-in | No |
 | **GitLab CI support** | **Yes** (native) | No | No | Yes |
 | **Self-hosted + RAG** | **Yes** (agentic, AST-indexed) | No | No | Yes |
@@ -103,6 +105,67 @@ Go to **Settings > Secrets > Actions** and add your API key.
 That's it. AI review lands in 30 seconds.
 
 > **Want the cheapest option?** Use Groq with Llama 3.3 — it's **$0.002/review** with a [free API key](https://console.groq.com).
+
+---
+
+## Try It Online (No Install)
+
+Paste any public GitHub PR URL and get an AI review instantly:
+
+```bash
+# Self-host the playground
+git clone https://github.com/mara-werils/ai-code-reviewer.git
+cd ai-code-reviewer
+pip install . uvicorn starlette
+export GROQ_API_KEY=gsk_...
+export GITHUB_TOKEN=ghp_...
+uvicorn playground.app:app --port 8000
+
+# Or with Docker
+docker build -t pr-reviewer-playground playground/
+docker run -p 8000:8000 -e GROQ_API_KEY=gsk_... -e GITHUB_TOKEN=ghp_... pr-reviewer-playground
+```
+
+Open http://localhost:8000 — paste a PR URL, get a review. Share the link with your team.
+
+---
+
+## Pre-Commit Hook
+
+Review code before every commit. Catches issues before they reach the PR.
+
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/mara-werils/ai-code-reviewer
+    rev: v0.4.0
+    hooks:
+      - id: ai-code-review
+```
+
+```bash
+# Install and run
+pip install pre-commit
+pre-commit install
+
+# Now every git commit runs AI review on staged changes
+git commit -m "feat: add new endpoint"
+# AI Code Review: scanning 3 files (42 lines changed)...
+# CRITICAL src/api.py:15
+#   SQL injection vulnerability: user input passed directly to query
+# Commit blocked: 1 issue(s) at or above threshold.
+```
+
+### Configuration
+
+| Env Variable | Default | Description |
+|---|---|---|
+| `PROVIDER` | auto-detect | LLM provider |
+| `SEVERITY_THRESHOLD` | `critical` | Block on: critical, warning, suggestion |
+| `MAX_COMMENTS` | `10` | Max review comments |
+| `REVIEW_STYLE` | `concise` | Review depth |
+
+> Set `SEVERITY_THRESHOLD=warning` to also block on warnings. Use `--no-verify` to skip in a hurry.
 
 ---
 
