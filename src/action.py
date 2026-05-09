@@ -215,6 +215,36 @@ async def run_action() -> None:
             except Exception as e:
                 logger.warning(f"Failed to add labels: {e}")
 
+        # Log review for analytics dashboard
+        try:
+            from src.dashboard.review_log import ReviewLogEntry, load_log, save_log
+
+            log = load_log()
+            severity_counts = {}
+            for c in result.comments:
+                severity_counts[c.severity] = severity_counts.get(c.severity, 0) + 1
+
+            log.add(ReviewLogEntry(
+                pr_number=pr_number,
+                title=pr.title,
+                author=pr.author,
+                repo=repo,
+                risk_level=result.risk_level,
+                category=result.category,
+                comments_count=len(result.comments),
+                cost_usd=result.cost_usd,
+                duration_ms=result.duration_ms,
+                model=result.model,
+                provider=config.provider,
+                files_changed=len(files),
+                lines_added=sum(f.additions for f in files),
+                lines_deleted=sum(f.deletions for f in files),
+                severity_counts=severity_counts,
+            ))
+            save_log(log)
+        except Exception as e:
+            logger.debug(f"Review logging skipped: {e}")
+
         # Set outputs for GitHub Actions
         _set_output("summary", result.summary)
         _set_output("risk_level", result.risk_level)

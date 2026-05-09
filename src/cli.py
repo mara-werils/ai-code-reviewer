@@ -163,10 +163,22 @@ def main() -> None:
     review_parser.add_argument("--api-key", help="API key (or use env var)")
     review_parser.add_argument("--post", action="store_true", help="Post review to GitHub/GitLab")
 
+    # dashboard command
+    dash_parser = subparsers.add_parser("dashboard", help="Launch analytics dashboard")
+    dash_parser.add_argument("--port", type=int, default=8000, help="Port (default: 8000)")
+    dash_parser.add_argument("--host", default="127.0.0.1", help="Host (default: 127.0.0.1)")
+
     args = parser.parse_args()
 
     if args.command == "review":
         asyncio.run(cmd_review(args))
+    elif args.command == "dashboard":
+        import uvicorn
+
+        from src.dashboard.server import app as dashboard_app
+
+        logger.info(f"Dashboard: http://{args.host}:{args.port}")
+        uvicorn.run(dashboard_app, host=args.host, port=args.port, log_level="info")
     else:
         parser.print_help()
 
