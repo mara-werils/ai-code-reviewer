@@ -16,7 +16,7 @@
 
 **Used by [X] developers** &middot; **[Y] reviews completed** &middot; **$0.002/review with Groq**
 
-[Quick Start](#-quick-start) &middot; [GitHub App](#-github-app) &middot; [/fix](#-auto-fix-with-fix) &middot; [Security Scanner](#-security-scanner) &middot; [PR Chat](#-pr-chat--talk-to-the-reviewer) &middot; [/generate-tests](#-ai-test-generation-with-generate-tests) &middot; [Rules Engine](#-review-rules-engine) &middot; [Playground](#-try-it-online-no-install) &middot; [Pre-Commit](#-pre-commit-hook) &middot; [Providers](#-supported-providers) &middot; [/review](#-on-demand-review) &middot; [GitLab](#-gitlab-ci-integration) &middot; [VS Code](#-vs-code-extension) &middot; [Self-Hosted](#-self-hosted-mode)
+[Quick Start](#-quick-start) &middot; [GitHub App](#-github-app) &middot; [/fix](#-auto-fix-with-fix) &middot; [Security Scanner](#-security-scanner) &middot; [PR Chat](#-pr-chat--talk-to-the-reviewer) &middot; [/generate-tests](#-ai-test-generation-with-generate-tests) &middot; [Rules Engine](#-review-rules-engine) &middot; [Playground](#-try-it-online-no-install) &middot; [Pre-Commit](#-pre-commit-hook) &middot; [Providers](#-supported-providers) &middot; [/review](#-on-demand-review) &middot; [GitLab](#-gitlab-ci-integration) &middot; [Bitbucket](#-bitbucket-pipelines-integration) &middot; [VS Code](#-vs-code-extension) &middot; [Self-Hosted](#-self-hosted-mode)
 
 </div>
 
@@ -59,6 +59,7 @@ https://github.com/user-attachments/assets/demo-placeholder
 | **Pre-commit hook** | **Yes** (block before PR) | No | No | No |
 | **VS Code extension** | **Yes** | No | Built-in | No |
 | **GitLab CI support** | **Yes** (native) | No | No | Yes |
+| **Bitbucket Pipelines** | **Yes** (native) | No | No | No |
 | **Self-hosted + RAG** | **Yes** (agentic, AST-indexed) | No | No | Yes |
 | **Retry with backoff** | **Yes** (all providers) | Unknown | N/A | No |
 | **Webhook idempotency** | **Yes** (SHA dedup) | Unknown | N/A | No |
@@ -660,6 +661,38 @@ See the full template: [`examples/gitlab-ci.yml`](examples/gitlab-ci.yml)
 
 ---
 
+## Bitbucket Pipelines Integration
+
+Works with Bitbucket Cloud pull requests via the CLI. Add to your `bitbucket-pipelines.yml`:
+
+```yaml
+image: python:3.11-slim
+
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: AI Code Review
+          script:
+            - pip install pr-reviewer
+            - pr-reviewer review
+                --platform bitbucket
+                --repo $BITBUCKET_WORKSPACE/$BITBUCKET_REPO_SLUG
+                --pr $BITBUCKET_PR_ID
+                --bb-username $BITBUCKET_USERNAME
+                --bb-app-password $BITBUCKET_APP_PASSWORD
+                --post
+```
+
+**Required repository variables:**
+- `BITBUCKET_USERNAME` — your Bitbucket username
+- `BITBUCKET_APP_PASSWORD` — [create here](https://bitbucket.org/account/settings/app-passwords/) (needs Repositories: read, Pull requests: write)
+- Your LLM API key (`GROQ_API_KEY`, `OPENAI_API_KEY`, etc.)
+
+See the full template: [`examples/bitbucket-pipelines.yml`](examples/bitbucket-pipelines.yml)
+
+---
+
 ## Configuration
 
 ### Action inputs
@@ -850,7 +883,7 @@ Yes. The GitHub Action uses your repository's built-in `GITHUB_TOKEN`, which has
 <details>
 <summary><b>Can I use it with GitLab / Bitbucket?</b></summary>
 
-**GitLab is fully supported!** Use the CLI in your `.gitlab-ci.yml` with `--platform gitlab`. See the [GitLab CI Integration](#gitlab-ci-integration) section. Bitbucket support is on the roadmap.
+**Both are fully supported!** Use the CLI with `--platform gitlab` or `--platform bitbucket`. See [GitLab CI Integration](#gitlab-ci-integration) and [Bitbucket Pipelines Integration](#bitbucket-pipelines-integration).
 </details>
 
 <details>
@@ -901,7 +934,7 @@ Show that your project uses AI code reviews:
 - [x] CLI tool
 - [x] Cost estimation
 - [x] GitLab integration
-- [ ] Bitbucket integration
+- [x] Bitbucket integration — native Bitbucket Cloud API + Pipelines support
 - [x] PR chat — ask questions, reply to review comments, `/ask` command
 - [x] Auto-fix `/fix` — AI commits fixes directly to your PR branch
 - [x] Learning from feedback — self-calibrating reviews based on team reactions

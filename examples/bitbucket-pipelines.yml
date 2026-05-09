@@ -1,0 +1,29 @@
+# Bitbucket Pipelines — AI Code Review on every pull request
+#
+# Setup:
+# 1. Add repository variables in Bitbucket Settings → Pipelines → Repository variables:
+#    - GROQ_API_KEY (or OPENAI_API_KEY, ANTHROPIC_API_KEY, etc.)
+#    - BITBUCKET_USERNAME (your Bitbucket username)
+#    - BITBUCKET_APP_PASSWORD (create at: https://bitbucket.org/account/settings/app-passwords/)
+#      Required permissions: Repositories (read), Pull requests (write)
+#
+# 2. Copy this file to bitbucket-pipelines.yml in your repo root
+# 3. Open a pull request — AI review lands in ~30 seconds
+
+image: python:3.11-slim
+
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: AI Code Review
+          script:
+            - pip install pr-reviewer
+            - pr-reviewer bitbucket
+                --workspace $BITBUCKET_WORKSPACE
+                --repo-slug $BITBUCKET_REPO_SLUG
+                --pr-id $BITBUCKET_PR_ID
+                --username $BITBUCKET_USERNAME
+                --app-password $BITBUCKET_APP_PASSWORD
+          after-script:
+            - echo "Review complete"
