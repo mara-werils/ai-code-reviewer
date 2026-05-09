@@ -1,0 +1,41 @@
+# Example .pr-reviewer-deps.yml
+# Place this file in your repository root to enable cross-repo impact analysis.
+#
+# When a PR changes files matching `depends_on` patterns, the review will
+# warn about potentially affected downstream repositories.
+
+dependencies:
+  # Frontend app consumes backend API schemas and routes
+  - repo: myorg/frontend
+    depends_on:
+      - "src/api/schemas/*.py"
+      - "src/api/routes/*.py"
+      - "openapi.yaml"
+    description: "Frontend app consumes these API endpoints and schemas"
+
+  # Mobile app uses API v2 and protobuf definitions
+  - repo: myorg/mobile-app
+    depends_on:
+      - "src/api/v2/**"
+      - "proto/*.proto"
+    description: "Mobile app uses API v2 and protobuf contracts"
+
+  # Shared library used by multiple services
+  - repo: myorg/shared-utils
+    depends_on:
+      - "packages/core/src/**"
+      - "packages/types/src/**"
+    description: "Shared library imported by 5+ microservices"
+
+  # Infrastructure repo depends on Terraform modules
+  - repo: myorg/infrastructure
+    depends_on:
+      - "terraform/modules/**"
+      - "docker-compose*.yml"
+    description: "Infrastructure deployment configs and Terraform modules"
+
+  # Documentation site auto-generates from source
+  - repo: myorg/docs
+    depends_on:
+      - "src/**/*.py"
+    description: "API docs are auto-generated from Python docstrings"

@@ -13,6 +13,7 @@ from pathlib import Path
 
 from src.config import ReviewConfig
 from src.github.client import GitHubAPI
+from src.review.chat import ChatEngine, format_chat_response
 from src.review.engine import ReviewEngine
 from src.review.formatter import build_github_review_comments, format_review_body
 
@@ -34,15 +35,44 @@ async def run_action() -> None:
     with open(event_path) as f:
         event = json.load(f)
 
-    # Detect event type: pull_request or issue_comment (/review command)
+    # Detect event type
     pr_data = event.get("pull_request")
     comment_data = event.get("comment")
     repo = event["repository"]["full_name"]
+    event_name = os.getenv("GITHUB_EVENT_NAME", "")
 
     is_fix_command = False
+    is_ask_command = False
+    is_chat_reply = False
+    is_test_gen_command = False
+    ask_question = ""
+    chat_comment_id = 0
+    chat_user_message = ""
 
-    if comment_data and event.get("issue", {}).get("pull_request"):
-        # On-demand command triggered by /review or /fix comment
+    if event_name == "pull_request_review_comment" and comment_data:
+        # Reply to a review comment thread — potential chat interaction
+        comment_body = (comment_data.get("body") or "").strip()
+        comment_user = comment_data.get("user", {}).get("login", "")
+        in_reply_to = comment_data.get("in_reply_to_id")
+
+        # Skip bot's own comments to avoid infinite loops
+        if comment_user.endswith("[bot]") or _is_bot_user(comment_user):
+            logger.info("Ignoring bot's own comment to avoid loop")
+            return
+
+        if in_reply_to:
+            # This is a reply in a thread — check if the thread involves our bot
+            is_chat_reply = True
+            chat_comment_id = in_reply_to
+            chat_user_message = comment_body
+            pr_number = event.get("pull_request", {}).get("number", 0)
+            logger.info(f"Chat reply detected on PR #{pr_number}, thread #{in_reply_to}")
+        else:
+            logger.info("Review comment is not a thread reply, skipping")
+            return
+
+    elif comment_data and event.get("issue", {}).get("pull_request"):
+        # On-demand command triggered by /review, /fix, or /ask comment
         comment_body = (comment_data.get("body") or "").strip()
 
         if comment_body.startswith("/fix"):
@@ -52,8 +82,20 @@ async def run_action() -> None:
         elif comment_body.startswith("/review"):
             pr_number = event["issue"]["number"]
             logger.info(f"On-demand review triggered by /review comment on PR #{pr_number}")
+        elif comment_body.startswith("/ask"):
+            is_ask_command = True
+            ask_question = comment_body[4:].strip()
+            if not ask_question:
+                logger.info("/ask command with no question, skipping")
+                return
+            pr_number = event["issue"]["number"]
+            logger.info(f"/ask command triggered on PR #{pr_number}")
+        elif comment_body.startswith("/generate-tests"):
+            is_test_gen_command = True
+            pr_number = event["issue"]["number"]
+            logger.info(f"/generate-tests command triggered on PR #{pr_number}")
         else:
-            logger.info("Comment is not a /review or /fix command, skipping")
+            logger.info("Comment is not a recognized command, skipping")
             return
     elif pr_data:
         pr_number = pr_data["number"]
@@ -63,7 +105,7 @@ async def run_action() -> None:
             logger.info(f"PR #{pr_number} is a draft, skipping")
             return
     else:
-        logger.info("Not a pull_request or /review comment event, skipping")
+        logger.info("Not a recognized event, skipping")
         return
 
     # Load config
@@ -114,6 +156,80 @@ async def run_action() -> None:
     try:
         # Get PR info
         pr = await github.get_pr(repo, pr_number)
+
+        # --- Chat: reply to review comment thread ---
+        if is_chat_reply:
+            bot_username = os.getenv("GITHUB_ACTOR", "github-actions[bot]")
+            chat_engine = ChatEngine(config)
+
+            chat_result = await chat_engine.reply_to_thread(
+                github=github,
+                repo=repo,
+                pr=pr,
+                comment_id=chat_comment_id,
+                user_message=chat_user_message,
+                bot_username=bot_username,
+            )
+
+            reply_body = format_chat_response(chat_result)
+            await github.reply_to_review_comment(repo, pr_number, chat_comment_id, reply_body)
+
+            logger.info(
+                f"Chat reply posted on PR #{pr_number}, "
+                f"cost=${chat_result.cost_usd:.4f}"
+            )
+            return
+
+        # --- /ask command ---
+        if is_ask_command:
+            files = await github.get_pr_files(repo, pr_number)
+            diff = await github.get_pr_diff(repo, pr_number)
+
+            chat_engine = ChatEngine(config)
+            chat_result = await chat_engine.answer_question(
+                pr=pr,
+                files=files,
+                diff=diff,
+                user_message=ask_question,
+            )
+
+            reply_body = format_chat_response(chat_result)
+            await github.post_comment(repo, pr_number, reply_body)
+
+            logger.info(
+                f"/ask answered on PR #{pr_number}, "
+                f"cost=${chat_result.cost_usd:.4f}"
+            )
+            return
+
+        # --- /generate-tests command ---
+        if is_test_gen_command:
+            from src.review.test_generator import (
+                format_test_gen_comment,
+                generate_tests,
+            )
+
+            files = await github.get_pr_files(repo, pr_number)
+            logger.info(f"Running /generate-tests on PR #{pr_number}")
+
+            test_summary = await generate_tests(
+                github=github,
+                config=config,
+                repo=repo,
+                pr_number=pr_number,
+                head_ref=pr.head_ref,
+                files=files,
+            )
+
+            comment_body = format_test_gen_comment(test_summary)
+            await github.post_comment(repo, pr_number, comment_body)
+
+            logger.info(
+                f"/generate-tests complete: {test_summary.total_tests} tests "
+                f"in {test_summary.files_with_tests} files, "
+                f"cost=${test_summary.cost_usd:.4f}"
+            )
+            return
 
         # --- /fix command ---
         if is_fix_command:
@@ -175,9 +291,91 @@ async def run_action() -> None:
         # Run review
         result = await engine.review_pr(pr, files, diff)
 
+        # Run rules engine (deterministic, team-defined rules)
+        from src.review.rules import evaluate_rules, format_rule_violations, load_rules
+
+        rules_config = load_rules()
+        rule_violations = evaluate_rules(rules_config, files)
+        rule_comments = format_rule_violations(rule_violations)
+
+        if rule_violations:
+            logger.info(f"Rules engine found {len(rule_violations)} violations")
+
+        # Run security scanner
+        from src.review.security import (
+            format_security_findings,
+            format_security_summary,
+            scan_diff,
+        )
+
+        security_findings = scan_diff(files, enabled=config.check_security)
+        security_comments = format_security_findings(security_findings)
+        security_summary = format_security_summary(security_findings)
+
+        if security_findings:
+            logger.info(f"Security scanner found {len(security_findings)} issues")
+
+        # Check cross-repo impact
+        from src.review.multi_repo import (
+            analyze_cross_repo_impact,
+            format_cross_repo_comment,
+            load_deps,
+        )
+
+        deps_config = load_deps()
+        cross_repo_impacts = analyze_cross_repo_impact(files, deps_config)
+        cross_repo_section = format_cross_repo_comment(cross_repo_impacts)
+
+        if cross_repo_impacts:
+            logger.info(
+                f"Cross-repo impact: {len(cross_repo_impacts)} dependent repos affected"
+            )
+
+        # Analyze monorepo impact
+        from src.review.monorepo import (
+            analyze_monorepo_impact,
+            format_impact_comment,
+            load_monorepo_config,
+        )
+
+        monorepo_config = load_monorepo_config()
+        monorepo_analysis = analyze_monorepo_impact(files, monorepo_config)
+        monorepo_section = format_impact_comment(monorepo_analysis)
+
+        if monorepo_analysis.total_packages_affected > 0:
+            logger.info(
+                f"Monorepo impact: {monorepo_analysis.total_packages_affected} packages affected"
+            )
+
         # Format output
         body = format_review_body(result)
+        if security_summary:
+            body += "\n" + security_summary
+        if cross_repo_section:
+            body += "\n" + cross_repo_section
+        if monorepo_section:
+            body += "\n" + monorepo_section
         inline_comments = build_github_review_comments(result)
+
+        # Merge rule-based comments into inline comments
+        for rc in rule_comments:
+            inline_comments.append(
+                {
+                    "path": rc["path"],
+                    "line": rc["line"],
+                    "body": rc["body"],
+                }
+            )
+
+        # Merge security comments into inline comments
+        for sc in security_comments:
+            inline_comments.append(
+                {
+                    "path": sc["path"],
+                    "line": sc["line"],
+                    "body": sc["body"],
+                }
+            )
 
         # Post review
         if inline_comments:
@@ -215,6 +413,59 @@ async def run_action() -> None:
             except Exception as e:
                 logger.warning(f"Failed to add labels: {e}")
 
+        # Collect feedback from previous reviews (reactions on old comments)
+        try:
+            from src.review.feedback import (
+                collect_feedback_from_reactions,
+                load_feedback,
+                save_feedback,
+            )
+
+            prev_comments = await github.get_review_comments(repo, pr_number)
+            bot_user = os.getenv("GITHUB_ACTOR", "github-actions[bot]")
+            new_feedback = collect_feedback_from_reactions(prev_comments, bot_user)
+
+            if new_feedback:
+                store = load_feedback()
+                store.repo = repo
+                for entry in new_feedback:
+                    entry.pr_number = pr_number
+                    store.add(entry)
+                save_feedback(store)
+                logger.info(f"Collected {len(new_feedback)} feedback signals")
+        except Exception as e:
+            logger.debug(f"Feedback collection skipped: {e}")
+
+        # Log review for analytics dashboard
+        try:
+            from src.dashboard.review_log import ReviewLogEntry, load_log, save_log
+
+            log = load_log()
+            severity_counts = {}
+            for c in result.comments:
+                severity_counts[c.severity] = severity_counts.get(c.severity, 0) + 1
+
+            log.add(ReviewLogEntry(
+                pr_number=pr_number,
+                title=pr.title,
+                author=pr.author,
+                repo=repo,
+                risk_level=result.risk_level,
+                category=result.category,
+                comments_count=len(result.comments),
+                cost_usd=result.cost_usd,
+                duration_ms=result.duration_ms,
+                model=result.model,
+                provider=config.provider,
+                files_changed=len(files),
+                lines_added=sum(f.additions for f in files),
+                lines_deleted=sum(f.deletions for f in files),
+                severity_counts=severity_counts,
+            ))
+            save_log(log)
+        except Exception as e:
+            logger.debug(f"Review logging skipped: {e}")
+
         # Set outputs for GitHub Actions
         _set_output("summary", result.summary)
         _set_output("risk_level", result.risk_level)
@@ -242,6 +493,12 @@ async def run_action() -> None:
         sys.exit(1)
     finally:
         await github.close()
+
+
+def _is_bot_user(username: str) -> bool:
+    """Check if a username belongs to a GitHub Actions bot."""
+    bot_names = {"github-actions", "github-actions[bot]", "dependabot", "dependabot[bot]"}
+    return username.lower() in bot_names
 
 
 def _set_output(name: str, value: str) -> None:

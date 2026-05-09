@@ -1,0 +1,23 @@
+{
+  "name": "AI Code Reviewer",
+  "url": "https://github.com/mara-werils/ai-code-reviewer",
+  "hook_attributes": {
+    "url": "https://YOUR_SERVER_URL/webhooks/github",
+    "active": true
+  },
+  "redirect_url": "https://YOUR_SERVER_URL/setup/callback",
+  "description": "AI-powered code review for pull requests. Supports GPT, Claude, Llama, Gemini, and Ollama. Auto-review, /fix, /ask, /generate-tests, and more.",
+  "public": true,
+  "default_events": [
+    "pull_request",
+    "issue_comment",
+    "pull_request_review_comment",
+    "installation"
+  ],
+  "default_permissions": {
+    "contents": "write",
+    "issues": "write",
+    "pull_requests": "write",
+    "metadata": "read"
+  }
+}

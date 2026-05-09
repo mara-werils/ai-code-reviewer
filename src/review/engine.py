@@ -108,6 +108,14 @@ class ReviewEngine:
         if self.config.custom_instructions:
             custom = f"\n## Additional Instructions\n{self.config.custom_instructions}"
 
+        # Inject learned feedback patterns
+        from src.review.feedback import build_learning_prompt, load_feedback
+
+        feedback_store = load_feedback()
+        learning_context = build_learning_prompt(feedback_store)
+        if learning_context:
+            custom += learning_context
+
         system = SYSTEM_PROMPT.format(custom_instructions=custom)
         user = REVIEW_PROMPT.format(
             title=pr.title,
