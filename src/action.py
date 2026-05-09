@@ -331,12 +331,30 @@ async def run_action() -> None:
                 f"Cross-repo impact: {len(cross_repo_impacts)} dependent repos affected"
             )
 
+        # Analyze monorepo impact
+        from src.review.monorepo import (
+            analyze_monorepo_impact,
+            format_impact_comment,
+            load_monorepo_config,
+        )
+
+        monorepo_config = load_monorepo_config()
+        monorepo_analysis = analyze_monorepo_impact(files, monorepo_config)
+        monorepo_section = format_impact_comment(monorepo_analysis)
+
+        if monorepo_analysis.total_packages_affected > 0:
+            logger.info(
+                f"Monorepo impact: {monorepo_analysis.total_packages_affected} packages affected"
+            )
+
         # Format output
         body = format_review_body(result)
         if security_summary:
             body += "\n" + security_summary
         if cross_repo_section:
             body += "\n" + cross_repo_section
+        if monorepo_section:
+            body += "\n" + monorepo_section
         inline_comments = build_github_review_comments(result)
 
         # Merge rule-based comments into inline comments
