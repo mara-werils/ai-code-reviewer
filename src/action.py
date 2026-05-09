@@ -44,6 +44,7 @@ async def run_action() -> None:
     is_fix_command = False
     is_ask_command = False
     is_chat_reply = False
+    is_test_gen_command = False
     ask_question = ""
     chat_comment_id = 0
     chat_user_message = ""
@@ -89,8 +90,12 @@ async def run_action() -> None:
                 return
             pr_number = event["issue"]["number"]
             logger.info(f"/ask command triggered on PR #{pr_number}")
+        elif comment_body.startswith("/generate-tests"):
+            is_test_gen_command = True
+            pr_number = event["issue"]["number"]
+            logger.info(f"/generate-tests command triggered on PR #{pr_number}")
         else:
-            logger.info("Comment is not a /review, /fix, or /ask command, skipping")
+            logger.info("Comment is not a recognized command, skipping")
             return
     elif pr_data:
         pr_number = pr_data["number"]
@@ -194,6 +199,35 @@ async def run_action() -> None:
             logger.info(
                 f"/ask answered on PR #{pr_number}, "
                 f"cost=${chat_result.cost_usd:.4f}"
+            )
+            return
+
+        # --- /generate-tests command ---
+        if is_test_gen_command:
+            from src.review.test_generator import (
+                format_test_gen_comment,
+                generate_tests,
+            )
+
+            files = await github.get_pr_files(repo, pr_number)
+            logger.info(f"Running /generate-tests on PR #{pr_number}")
+
+            test_summary = await generate_tests(
+                github=github,
+                config=config,
+                repo=repo,
+                pr_number=pr_number,
+                head_ref=pr.head_ref,
+                files=files,
+            )
+
+            comment_body = format_test_gen_comment(test_summary)
+            await github.post_comment(repo, pr_number, comment_body)
+
+            logger.info(
+                f"/generate-tests complete: {test_summary.total_tests} tests "
+                f"in {test_summary.files_with_tests} files, "
+                f"cost=${test_summary.cost_usd:.4f}"
             )
             return
 

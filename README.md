@@ -16,7 +16,7 @@
 
 **Used by [X] developers** &middot; **[Y] reviews completed** &middot; **$0.002/review with Groq**
 
-[Quick Start](#-quick-start) &middot; [/fix](#-auto-fix-with-fix) &middot; [PR Chat](#-pr-chat--talk-to-the-reviewer) &middot; [Playground](#-try-it-online-no-install) &middot; [Pre-Commit](#-pre-commit-hook) &middot; [Providers](#-supported-providers) &middot; [/review](#-on-demand-review) &middot; [GitLab](#-gitlab-ci-integration) &middot; [VS Code](#-vs-code-extension) &middot; [Self-Hosted](#-self-hosted-mode)
+[Quick Start](#-quick-start) &middot; [/fix](#-auto-fix-with-fix) &middot; [PR Chat](#-pr-chat--talk-to-the-reviewer) &middot; [/generate-tests](#-ai-test-generation-with-generate-tests) &middot; [Playground](#-try-it-online-no-install) &middot; [Pre-Commit](#-pre-commit-hook) &middot; [Providers](#-supported-providers) &middot; [/review](#-on-demand-review) &middot; [GitLab](#-gitlab-ci-integration) &middot; [VS Code](#-vs-code-extension) &middot; [Self-Hosted](#-self-hosted-mode)
 
 </div>
 
@@ -50,6 +50,7 @@ https://github.com/user-attachments/assets/demo-placeholder
 | **Multi-language reviews** | **Yes** (9 languages) | Yes | No | No |
 | **Auto-fix `/fix`** | **Yes** (commits fixes to PR) | No | No | No |
 | **PR Chat `/ask`** | **Yes** (threaded conversations) | No | No | No |
+| **AI Test Gen `/generate-tests`** | **Yes** (commits tests to PR) | No | No | No |
 | **Web playground** | **Yes** (try without install) | No | No | No |
 | **Pre-commit hook** | **Yes** (block before PR) | No | No | No |
 | **VS Code extension** | **Yes** | No | Built-in | No |
@@ -190,6 +191,55 @@ on:
 ```
 
 > PR Chat works with all providers. Cost is ~$0.001-0.01 per reply depending on the context size.
+
+---
+
+## AI Test Generation with `/generate-tests`
+
+Type **`/generate-tests`** in any PR comment — AI analyzes your changed code and **generates unit tests, then commits them** directly to your PR branch.
+
+```
+You:  /generate-tests
+AI:   ## AI Test Generator
+
+      Generated 5 tests across 2 files for 3 source files.
+
+      ### src/validator.py
+      Created: tests/unit/test_validator.py
+
+      - test_validate_email_valid_address
+      - test_validate_email_missing_at_symbol
+      - test_validate_email_empty_string
+      Commit: abc1234
+
+      ### src/api/handlers.py
+      Updated: tests/unit/api/test_handlers.py
+
+      - test_create_user_returns_201
+      - test_create_user_duplicate_returns_409
+      Commit: def5678
+```
+
+How it works:
+1. Identifies testable source files from the PR diff (skips configs, docs, generated files, test files)
+2. For each file: reads content + diff, detects test framework, finds existing tests
+3. Generates tests via LLM — respects project conventions, adds to existing test files
+4. Commits each test file to the PR branch
+5. Posts a summary of what was generated
+
+### Supported languages
+
+Python (pytest), TypeScript/JavaScript (Jest/Vitest), Go (testing), Rust, Java (JUnit), Kotlin, Ruby (RSpec), PHP (PHPUnit), C# (xUnit), C/C++ (Google Test), Swift (XCTest).
+
+### Smart conventions
+
+- **Python**: `src/api.py` → `tests/unit/test_api.py`
+- **Go**: `pkg/handler.go` → `pkg/handler_test.go`
+- **TypeScript**: `src/components/Button.tsx` → `src/__tests__/components/Button.test.ts`
+- **Java/Kotlin**: `src/main/java/Service.java` → `src/test/java/ServiceTest.java`
+- If tests already exist, new tests are **added** to the existing file
+
+> Requires `contents: write` permission. Works with the same workflow as `/fix` — add `/generate-tests` to the `issue_comment` trigger.
 
 ---
 
