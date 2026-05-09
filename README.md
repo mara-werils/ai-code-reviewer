@@ -56,6 +56,7 @@ https://github.com/user-attachments/assets/demo-placeholder
 | **Security Scanner (SAST)** | **Yes** (built-in, 20+ rules) | No | No | No |
 | **Self-learning** | **Yes** (learns from team feedback) | No | No | No |
 | **Analytics Dashboard** | **Yes** (web UI, no DB) | No | No | No |
+| **Multi-repo impact** | **Yes** (cross-repo warnings) | No | No | No |
 | **Web playground** | **Yes** (try without install) | No | No | No |
 | **Pre-commit hook** | **Yes** (block before PR) | No | No | No |
 | **VS Code extension** | **Yes** | No | Built-in | No |
