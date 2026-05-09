@@ -16,7 +16,7 @@
 
 **Used by [X] developers** &middot; **[Y] reviews completed** &middot; **$0.002/review with Groq**
 
-[Quick Start](#-quick-start) &middot; [/fix](#-auto-fix-with-fix) &middot; [PR Chat](#-pr-chat--talk-to-the-reviewer) &middot; [/generate-tests](#-ai-test-generation-with-generate-tests) &middot; [Playground](#-try-it-online-no-install) &middot; [Pre-Commit](#-pre-commit-hook) &middot; [Providers](#-supported-providers) &middot; [/review](#-on-demand-review) &middot; [GitLab](#-gitlab-ci-integration) &middot; [VS Code](#-vs-code-extension) &middot; [Self-Hosted](#-self-hosted-mode)
+[Quick Start](#-quick-start) &middot; [/fix](#-auto-fix-with-fix) &middot; [PR Chat](#-pr-chat--talk-to-the-reviewer) &middot; [/generate-tests](#-ai-test-generation-with-generate-tests) &middot; [Rules Engine](#-review-rules-engine) &middot; [Playground](#-try-it-online-no-install) &middot; [Pre-Commit](#-pre-commit-hook) &middot; [Providers](#-supported-providers) &middot; [/review](#-on-demand-review) &middot; [GitLab](#-gitlab-ci-integration) &middot; [VS Code](#-vs-code-extension) &middot; [Self-Hosted](#-self-hosted-mode)
 
 </div>
 
@@ -51,6 +51,7 @@ https://github.com/user-attachments/assets/demo-placeholder
 | **Auto-fix `/fix`** | **Yes** (commits fixes to PR) | No | No | No |
 | **PR Chat `/ask`** | **Yes** (threaded conversations) | No | No | No |
 | **AI Test Gen `/generate-tests`** | **Yes** (commits tests to PR) | No | No | No |
+| **Rules Engine** | **Yes** (declarative YAML rules) | No | No | No |
 | **Web playground** | **Yes** (try without install) | No | No | No |
 | **Pre-commit hook** | **Yes** (block before PR) | No | No | No |
 | **VS Code extension** | **Yes** | No | Built-in | No |
@@ -240,6 +241,76 @@ Python (pytest), TypeScript/JavaScript (Jest/Vitest), Go (testing), Rust, Java (
 - If tests already exist, new tests are **added** to the existing file
 
 > Requires `contents: write` permission. Works with the same workflow as `/fix` — add `/generate-tests` to the `issue_comment` trigger.
+
+---
+
+## Review Rules Engine
+
+Define **deterministic, team-specific review rules** as code in `.pr-reviewer-rules.yml`. Rules run alongside AI review — no LLM needed, instant, zero cost.
+
+### Quick start
+
+Create `.pr-reviewer-rules.yml` in your repo root:
+
+```yaml
+rules:
+  # Pattern rule: regex matched against added lines
+  - name: no-raw-sql
+    pattern: "execute\\(.*SELECT|INSERT|UPDATE|DELETE"
+    severity: critical
+    message: "Use ORM instead of raw SQL to prevent injection."
+    include_files: "src/**/*.py"
+
+  # File-match rule: require tests when API changes
+  - name: require-tests-for-api
+    when:
+      files_match: "src/api/**/*.py"
+      no_files_match: "tests/**/test_*.py"
+    severity: warning
+    message: "API changes should include test coverage."
+
+  # Catch debug statements
+  - name: no-debugger
+    pattern: "debugger;|pdb\\.set_trace|breakpoint\\(\\)"
+    severity: critical
+    message: "Remove debugger before merging."
+
+  # Catch hardcoded secrets
+  - name: no-hardcoded-secrets
+    pattern: "(?:api_key|secret|password|token)\\s*=\\s*[\"'][^\"']{8,}"
+    severity: critical
+    message: "Use environment variables instead of hardcoded secrets."
+```
+
+### Rule types
+
+| Type | Trigger | Use case |
+|------|---------|----------|
+| **Pattern** | Regex matches an added line in the diff | Catch raw SQL, debug statements, secrets, TODOs |
+| **File match** | Files matching a glob are changed, but counter-files are absent | Require tests for API changes, changelog for features |
+
+### Rule options
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `name` | Yes | Unique rule identifier |
+| `pattern` | For pattern rules | Regex to match against added lines |
+| `when.files_match` | For file-match rules | Glob for triggering files |
+| `when.no_files_match` | No | Glob for counter-files (rule passes if these exist) |
+| `severity` | No | `critical`, `warning`, `suggestion`, `info` (default: `warning`) |
+| `message` | No | Comment body when rule triggers |
+| `include_files` | No | Only check files matching this glob |
+| `exclude_files` | No | Skip files matching this glob |
+
+### How it works
+
+1. Rules are loaded from `.pr-reviewer-rules.yml` at review time
+2. Pattern rules scan every added line in the diff against the regex
+3. File-match rules check the list of changed files against the glob
+4. Violations are posted as inline comments alongside AI review comments
+5. No LLM calls needed — rules are instant and free
+
+> See [examples/pr-reviewer-rules.yml](examples/pr-reviewer-rules.yml) for a comprehensive example with 12 ready-to-use rules.
 
 ---
 
