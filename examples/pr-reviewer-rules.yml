@@ -1,0 +1,71 @@
+# Example .pr-reviewer-rules.yml
+# Place this file in your repository root as .pr-reviewer-rules.yml
+# Rules run alongside AI review — deterministic, team-defined checks.
+
+rules:
+  # ── Pattern rules: regex matched against added lines ─────────────────────
+
+  - name: no-raw-sql
+    pattern: "execute\\(.*(?:SELECT|INSERT|UPDATE|DELETE)"
+    severity: critical
+    message: "Use ORM queries instead of raw SQL to prevent SQL injection."
+    include_files: "src/**/*.py"
+    exclude_files: "tests/**"
+
+  - name: no-hardcoded-secrets
+    pattern: "(?:api_key|secret|password|token)\\s*=\\s*[\"'][^\"']{8,}"
+    severity: critical
+    message: "Hardcoded secret detected. Use environment variables or a secrets manager."
+
+  - name: no-console-log
+    pattern: "console\\.log\\("
+    severity: warning
+    message: "Remove console.log() before merging."
+    include_files: "src/**/*.{ts,tsx,js,jsx}"
+    exclude_files: "src/**/*.test.*"
+
+  - name: no-print-debug
+    pattern: "^\\s*print\\("
+    severity: warning
+    message: "Remove debug print() statements."
+    include_files: "**/*.py"
+    exclude_files: "tests/**"
+
+  - name: no-todo-in-production
+    pattern: "TODO|FIXME|HACK|XXX"
+    severity: info
+    message: "Found a TODO/FIXME comment. Consider resolving before merge or creating an issue."
+    exclude_files: "tests/**"
+
+  - name: no-debugger
+    pattern: "debugger;|import pdb|pdb\\.set_trace|breakpoint\\(\\)"
+    severity: critical
+    message: "Debugger statement found. Remove before merging."
+
+  - name: no-wildcard-import
+    pattern: "from .+ import \\*"
+    severity: suggestion
+    message: "Avoid wildcard imports — they pollute the namespace and make dependencies unclear."
+    include_files: "**/*.py"
+
+  # ── File-match rules: structural checks ─────────────────────────────────
+
+  - name: require-tests-for-api
+    when:
+      files_match: "src/api/**/*.py"
+      no_files_match: "tests/**/test_*.py"
+    severity: warning
+    message: "API changes should include test coverage. Add or update tests."
+
+  - name: require-migration-review
+    when:
+      files_match: "alembic/versions/*.py"
+    severity: warning
+    message: "Database migration detected — ensure it's reviewed by a DBA or senior engineer."
+
+  - name: require-changelog-for-features
+    when:
+      files_match: "src/**/*.py"
+      no_files_match: "CHANGELOG.md"
+    severity: info
+    message: "Consider updating CHANGELOG.md when adding new features."

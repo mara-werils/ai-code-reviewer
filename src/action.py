@@ -175,9 +175,29 @@ async def run_action() -> None:
         # Run review
         result = await engine.review_pr(pr, files, diff)
 
+        # Run rules engine (deterministic, team-defined rules)
+        from src.review.rules import evaluate_rules, format_rule_violations, load_rules
+
+        rules_config = load_rules()
+        rule_violations = evaluate_rules(rules_config, files)
+        rule_comments = format_rule_violations(rule_violations)
+
+        if rule_violations:
+            logger.info(f"Rules engine found {len(rule_violations)} violations")
+
         # Format output
         body = format_review_body(result)
         inline_comments = build_github_review_comments(result)
+
+        # Merge rule-based comments into inline comments
+        for rc in rule_comments:
+            inline_comments.append(
+                {
+                    "path": rc["path"],
+                    "line": rc["line"],
+                    "body": rc["body"],
+                }
+            )
 
         # Post review
         if inline_comments:
