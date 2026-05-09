@@ -175,8 +175,26 @@ async def run_action() -> None:
         # Run review
         result = await engine.review_pr(pr, files, diff)
 
+        # Check cross-repo impact
+        from src.review.multi_repo import (
+            analyze_cross_repo_impact,
+            format_cross_repo_comment,
+            load_deps,
+        )
+
+        deps_config = load_deps()
+        cross_repo_impacts = analyze_cross_repo_impact(files, deps_config)
+        cross_repo_section = format_cross_repo_comment(cross_repo_impacts)
+
+        if cross_repo_impacts:
+            logger.info(
+                f"Cross-repo impact: {len(cross_repo_impacts)} dependent repos affected"
+            )
+
         # Format output
         body = format_review_body(result)
+        if cross_repo_section:
+            body += "\n" + cross_repo_section
         inline_comments = build_github_review_comments(result)
 
         # Post review

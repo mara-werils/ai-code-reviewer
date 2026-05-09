@@ -49,6 +49,7 @@ https://github.com/user-attachments/assets/demo-placeholder
 | **100% local option** | **Yes** (Ollama) | No | No | No |
 | **Multi-language reviews** | **Yes** (9 languages) | Yes | No | No |
 | **Auto-fix `/fix`** | **Yes** (commits fixes to PR) | No | No | No |
+| **Multi-repo impact** | **Yes** (cross-repo warnings) | No | No | No |
 | **Web playground** | **Yes** (try without install) | No | No | No |
 | **Pre-commit hook** | **Yes** (block before PR) | No | No | No |
 | **VS Code extension** | **Yes** | No | Built-in | No |
