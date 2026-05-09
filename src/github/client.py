@@ -262,5 +262,56 @@ class GitHubAPI:
         resp.raise_for_status()
         return resp.json()["commit"]["sha"]
 
+    async def get_review_comment(self, repo: str, comment_id: int) -> dict:
+        """Get a single review comment by ID."""
+        resp = await self._client.get(f"/repos/{repo}/pulls/comments/{comment_id}")
+        resp.raise_for_status()
+        return resp.json()
+
+    async def get_review_comment_thread(
+        self, repo: str, pr_number: int, comment_id: int
+    ) -> list[dict]:
+        """Get all comments in a review comment thread (same in_reply_to chain).
+
+        Returns comments sorted chronologically.
+        """
+        all_comments = await self.get_review_comments(repo, pr_number)
+
+        # Find the root comment ID (thread anchor)
+        target = None
+        for c in all_comments:
+            if c["id"] == comment_id:
+                target = c
+                break
+
+        if not target:
+            return []
+
+        # The root is either this comment or the one it replies to
+        root_id = target.get("in_reply_to_id") or target["id"]
+
+        # Collect all comments in this thread
+        thread = []
+        for c in all_comments:
+            if c["id"] == root_id or c.get("in_reply_to_id") == root_id:
+                thread.append(c)
+
+        thread.sort(key=lambda c: c.get("created_at", ""))
+        return thread
+
+    async def reply_to_review_comment(
+        self, repo: str, pr_number: int, comment_id: int, body: str
+    ) -> int:
+        """Reply to a review comment (creates a comment in the same thread)."""
+        resp = await self._client.post(
+            f"/repos/{repo}/pulls/{pr_number}/comments",
+            json={
+                "body": body,
+                "in_reply_to": comment_id,
+            },
+        )
+        resp.raise_for_status()
+        return resp.json()["id"]
+
     async def close(self) -> None:
         await self._client.aclose()

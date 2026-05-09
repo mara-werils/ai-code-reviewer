@@ -16,7 +16,7 @@
 
 **Used by [X] developers** &middot; **[Y] reviews completed** &middot; **$0.002/review with Groq**
 
-[Quick Start](#-quick-start) &middot; [/fix](#-auto-fix-with-fix) &middot; [Playground](#-try-it-online-no-install) &middot; [Pre-Commit](#-pre-commit-hook) &middot; [Providers](#-supported-providers) &middot; [/review](#-on-demand-review) &middot; [GitLab](#-gitlab-ci-integration) &middot; [VS Code](#-vs-code-extension) &middot; [Self-Hosted](#-self-hosted-mode)
+[Quick Start](#-quick-start) &middot; [/fix](#-auto-fix-with-fix) &middot; [PR Chat](#-pr-chat--talk-to-the-reviewer) &middot; [Playground](#-try-it-online-no-install) &middot; [Pre-Commit](#-pre-commit-hook) &middot; [Providers](#-supported-providers) &middot; [/review](#-on-demand-review) &middot; [GitLab](#-gitlab-ci-integration) &middot; [VS Code](#-vs-code-extension) &middot; [Self-Hosted](#-self-hosted-mode)
 
 </div>
 
@@ -49,6 +49,7 @@ https://github.com/user-attachments/assets/demo-placeholder
 | **100% local option** | **Yes** (Ollama) | No | No | No |
 | **Multi-language reviews** | **Yes** (9 languages) | Yes | No | No |
 | **Auto-fix `/fix`** | **Yes** (commits fixes to PR) | No | No | No |
+| **PR Chat `/ask`** | **Yes** (threaded conversations) | No | No | No |
 | **Web playground** | **Yes** (try without install) | No | No | No |
 | **Pre-commit hook** | **Yes** (block before PR) | No | No | No |
 | **VS Code extension** | **Yes** | No | Built-in | No |
@@ -136,6 +137,59 @@ How it works:
 4. Posts a summary of what was fixed and what was skipped
 
 > Requires `contents: write` permission. Add `/fix` support with the [on-demand workflow](examples/on-demand-review.yml).
+
+---
+
+## PR Chat — Talk to the Reviewer
+
+**Two ways to chat with the AI reviewer directly in your PR:**
+
+### 1. Reply to any review comment
+
+When the AI leaves an inline comment, simply **reply to it** — the bot responds in the same thread with full context of the file, diff, and conversation history.
+
+```
+AI:     [WARNING] Missing null check — `get_user()` can return None
+You:    Why? We validate upstream in the middleware.
+AI:     The middleware validates the token format, but doesn't check if the
+        user still exists in the database. Between validation and this call,
+        the user could be deleted. Add: `if not user: raise HTTPException(404)`
+You:    Good point. Can you suggest a fix?
+AI:     ```suggestion
+        user = get_user(id)
+        if user is None:
+            raise HTTPException(status_code=404, detail="User not found")
+        return user.name
+        ```
+```
+
+### 2. `/ask` — ask any question about the PR
+
+Type **`/ask <question>`** in any PR comment to ask a question about the changes:
+
+```
+You:    /ask What's the impact of this change on the existing API contract?
+AI:     This PR changes the `GET /users/{id}` response shape by adding a
+        `metadata` field. Existing clients that use strict deserialization
+        will need updates. Consider versioning the endpoint or making the
+        field optional with a default.
+```
+
+### Enable PR Chat
+
+Add `pull_request_review_comment` trigger to your workflow:
+
+```yaml
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:     # <-- enables chat replies
+    types: [created]
+```
+
+> PR Chat works with all providers. Cost is ~$0.001-0.01 per reply depending on the context size.
 
 ---
 
@@ -625,7 +679,7 @@ Show that your project uses AI code reviews:
 - [x] Cost estimation
 - [x] GitLab integration
 - [ ] Bitbucket integration
-- [ ] PR chat — ask questions about the PR
+- [x] PR chat — ask questions, reply to review comments, `/ask` command
 - [x] Auto-fix `/fix` — AI commits fixes directly to your PR branch
 - [ ] Learning from feedback
 - [x] VS Code extension

@@ -13,6 +13,7 @@ from pathlib import Path
 
 from src.config import ReviewConfig
 from src.github.client import GitHubAPI
+from src.review.chat import ChatEngine, format_chat_response
 from src.review.engine import ReviewEngine
 from src.review.formatter import build_github_review_comments, format_review_body
 
@@ -34,15 +35,43 @@ async def run_action() -> None:
     with open(event_path) as f:
         event = json.load(f)
 
-    # Detect event type: pull_request or issue_comment (/review command)
+    # Detect event type
     pr_data = event.get("pull_request")
     comment_data = event.get("comment")
     repo = event["repository"]["full_name"]
+    event_name = os.getenv("GITHUB_EVENT_NAME", "")
 
     is_fix_command = False
+    is_ask_command = False
+    is_chat_reply = False
+    ask_question = ""
+    chat_comment_id = 0
+    chat_user_message = ""
 
-    if comment_data and event.get("issue", {}).get("pull_request"):
-        # On-demand command triggered by /review or /fix comment
+    if event_name == "pull_request_review_comment" and comment_data:
+        # Reply to a review comment thread — potential chat interaction
+        comment_body = (comment_data.get("body") or "").strip()
+        comment_user = comment_data.get("user", {}).get("login", "")
+        in_reply_to = comment_data.get("in_reply_to_id")
+
+        # Skip bot's own comments to avoid infinite loops
+        if comment_user.endswith("[bot]") or _is_bot_user(comment_user):
+            logger.info("Ignoring bot's own comment to avoid loop")
+            return
+
+        if in_reply_to:
+            # This is a reply in a thread — check if the thread involves our bot
+            is_chat_reply = True
+            chat_comment_id = in_reply_to
+            chat_user_message = comment_body
+            pr_number = event.get("pull_request", {}).get("number", 0)
+            logger.info(f"Chat reply detected on PR #{pr_number}, thread #{in_reply_to}")
+        else:
+            logger.info("Review comment is not a thread reply, skipping")
+            return
+
+    elif comment_data and event.get("issue", {}).get("pull_request"):
+        # On-demand command triggered by /review, /fix, or /ask comment
         comment_body = (comment_data.get("body") or "").strip()
 
         if comment_body.startswith("/fix"):
@@ -52,8 +81,16 @@ async def run_action() -> None:
         elif comment_body.startswith("/review"):
             pr_number = event["issue"]["number"]
             logger.info(f"On-demand review triggered by /review comment on PR #{pr_number}")
+        elif comment_body.startswith("/ask"):
+            is_ask_command = True
+            ask_question = comment_body[4:].strip()
+            if not ask_question:
+                logger.info("/ask command with no question, skipping")
+                return
+            pr_number = event["issue"]["number"]
+            logger.info(f"/ask command triggered on PR #{pr_number}")
         else:
-            logger.info("Comment is not a /review or /fix command, skipping")
+            logger.info("Comment is not a /review, /fix, or /ask command, skipping")
             return
     elif pr_data:
         pr_number = pr_data["number"]
@@ -63,7 +100,7 @@ async def run_action() -> None:
             logger.info(f"PR #{pr_number} is a draft, skipping")
             return
     else:
-        logger.info("Not a pull_request or /review comment event, skipping")
+        logger.info("Not a recognized event, skipping")
         return
 
     # Load config
@@ -114,6 +151,51 @@ async def run_action() -> None:
     try:
         # Get PR info
         pr = await github.get_pr(repo, pr_number)
+
+        # --- Chat: reply to review comment thread ---
+        if is_chat_reply:
+            bot_username = os.getenv("GITHUB_ACTOR", "github-actions[bot]")
+            chat_engine = ChatEngine(config)
+
+            chat_result = await chat_engine.reply_to_thread(
+                github=github,
+                repo=repo,
+                pr=pr,
+                comment_id=chat_comment_id,
+                user_message=chat_user_message,
+                bot_username=bot_username,
+            )
+
+            reply_body = format_chat_response(chat_result)
+            await github.reply_to_review_comment(repo, pr_number, chat_comment_id, reply_body)
+
+            logger.info(
+                f"Chat reply posted on PR #{pr_number}, "
+                f"cost=${chat_result.cost_usd:.4f}"
+            )
+            return
+
+        # --- /ask command ---
+        if is_ask_command:
+            files = await github.get_pr_files(repo, pr_number)
+            diff = await github.get_pr_diff(repo, pr_number)
+
+            chat_engine = ChatEngine(config)
+            chat_result = await chat_engine.answer_question(
+                pr=pr,
+                files=files,
+                diff=diff,
+                user_message=ask_question,
+            )
+
+            reply_body = format_chat_response(chat_result)
+            await github.post_comment(repo, pr_number, reply_body)
+
+            logger.info(
+                f"/ask answered on PR #{pr_number}, "
+                f"cost=${chat_result.cost_usd:.4f}"
+            )
+            return
 
         # --- /fix command ---
         if is_fix_command:
@@ -242,6 +324,12 @@ async def run_action() -> None:
         sys.exit(1)
     finally:
         await github.close()
+
+
+def _is_bot_user(username: str) -> bool:
+    """Check if a username belongs to a GitHub Actions bot."""
+    bot_names = {"github-actions", "github-actions[bot]", "dependabot", "dependabot[bot]"}
+    return username.lower() in bot_names
 
 
 def _set_output(name: str, value: str) -> None:
