@@ -49,6 +49,7 @@ https://github.com/user-attachments/assets/demo-placeholder
 | **100% local option** | **Yes** (Ollama) | No | No | No |
 | **Multi-language reviews** | **Yes** (9 languages) | Yes | No | No |
 | **Auto-fix `/fix`** | **Yes** (commits fixes to PR) | No | No | No |
+| **Self-learning** | **Yes** (learns from team feedback) | No | No | No |
 | **Web playground** | **Yes** (try without install) | No | No | No |
 | **Pre-commit hook** | **Yes** (block before PR) | No | No | No |
 | **VS Code extension** | **Yes** | No | Built-in | No |
@@ -627,7 +628,7 @@ Show that your project uses AI code reviews:
 - [ ] Bitbucket integration
 - [ ] PR chat — ask questions about the PR
 - [x] Auto-fix `/fix` — AI commits fixes directly to your PR branch
-- [ ] Learning from feedback
+- [x] Learning from feedback — self-calibrating reviews based on team reactions
 - [x] VS Code extension
 - [ ] JetBrains plugin
 - [ ] Slack/Discord notifications

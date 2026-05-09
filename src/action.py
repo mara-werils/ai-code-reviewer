@@ -215,6 +215,29 @@ async def run_action() -> None:
             except Exception as e:
                 logger.warning(f"Failed to add labels: {e}")
 
+        # Collect feedback from previous reviews (reactions on old comments)
+        try:
+            from src.review.feedback import (
+                collect_feedback_from_reactions,
+                load_feedback,
+                save_feedback,
+            )
+
+            prev_comments = await github.get_review_comments(repo, pr_number)
+            bot_user = os.getenv("GITHUB_ACTOR", "github-actions[bot]")
+            new_feedback = collect_feedback_from_reactions(prev_comments, bot_user)
+
+            if new_feedback:
+                store = load_feedback()
+                store.repo = repo
+                for entry in new_feedback:
+                    entry.pr_number = pr_number
+                    store.add(entry)
+                save_feedback(store)
+                logger.info(f"Collected {len(new_feedback)} feedback signals")
+        except Exception as e:
+            logger.debug(f"Feedback collection skipped: {e}")
+
         # Set outputs for GitHub Actions
         _set_output("summary", result.summary)
         _set_output("risk_level", result.risk_level)
