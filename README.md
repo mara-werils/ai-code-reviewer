@@ -55,6 +55,7 @@ https://github.com/user-attachments/assets/demo-placeholder
 | **Rules Engine** | **Yes** (declarative YAML rules) | No | No | No |
 | **Security Scanner (SAST)** | **Yes** (built-in, 20+ rules) | No | No | No |
 | **Self-learning** | **Yes** (learns from team feedback) | No | No | No |
+| **Analytics Dashboard** | **Yes** (web UI, no DB) | No | No | No |
 | **Web playground** | **Yes** (try without install) | No | No | No |
 | **Pre-commit hook** | **Yes** (block before PR) | No | No | No |
 | **VS Code extension** | **Yes** | No | Built-in | No |
