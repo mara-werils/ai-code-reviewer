@@ -16,7 +16,7 @@
 
 **Used by [X] developers** &middot; **[Y] reviews completed** &middot; **$0.002/review with Groq**
 
-[Quick Start](#-quick-start) &middot; [/fix](#-auto-fix-with-fix) &middot; [PR Chat](#-pr-chat--talk-to-the-reviewer) &middot; [/generate-tests](#-ai-test-generation-with-generate-tests) &middot; [Rules Engine](#-review-rules-engine) &middot; [Playground](#-try-it-online-no-install) &middot; [Pre-Commit](#-pre-commit-hook) &middot; [Providers](#-supported-providers) &middot; [/review](#-on-demand-review) &middot; [GitLab](#-gitlab-ci-integration) &middot; [VS Code](#-vs-code-extension) &middot; [Self-Hosted](#-self-hosted-mode)
+[Quick Start](#-quick-start) &middot; [GitHub App](#-github-app) &middot; [/fix](#-auto-fix-with-fix) &middot; [PR Chat](#-pr-chat--talk-to-the-reviewer) &middot; [/generate-tests](#-ai-test-generation-with-generate-tests) &middot; [Rules Engine](#-review-rules-engine) &middot; [Playground](#-try-it-online-no-install) &middot; [Pre-Commit](#-pre-commit-hook) &middot; [Providers](#-supported-providers) &middot; [/review](#-on-demand-review) &middot; [GitLab](#-gitlab-ci-integration) &middot; [VS Code](#-vs-code-extension) &middot; [Self-Hosted](#-self-hosted-mode)
 
 </div>
 
@@ -41,6 +41,7 @@ https://github.com/user-attachments/assets/demo-placeholder
 |---|---|---|---|---|
 | **Pricing** | **Free** (bring your key) | $19/user/mo | $19/user/mo | Free (self-host) |
 | **LLM choice** | **Any** (GPT, Claude, Llama, Gemini, Ollama) | Fixed | Fixed | GPT-4 only |
+| **GitHub App mode** | **Yes** (1-click install) | Yes | Built-in | No |
 | **Setup** | **30 seconds** | 5 minutes | Built-in | 15 minutes |
 | **On-demand `/review`** | **Yes** | Yes | No | Yes |
 | **Custom instructions** | **Yes** `.pr-reviewer.yml` | Yes | No | Yes |
@@ -109,6 +110,69 @@ Go to **Settings > Secrets > Actions** and add your API key.
 That's it. AI review lands in 30 seconds.
 
 > **Want the cheapest option?** Use Groq with Llama 3.3 — it's **$0.002/review** with a [free API key](https://console.groq.com).
+
+---
+
+## GitHub App
+
+**Install as a GitHub App instead of a GitHub Action** — no YAML editing, works across all repos, 1-click install.
+
+### Why GitHub App over Action?
+
+| | GitHub App | GitHub Action |
+|---|---|---|
+| **Setup** | Install → done | Edit YAML per repo |
+| **Multi-repo** | One install covers all repos | YAML in each repo |
+| **Commands** | All work out of the box | Needs workflow config |
+| **Hosting** | Your server (Docker/Fly.io) | GitHub-hosted runners |
+| **Cost** | Your server + LLM API | Free runners + LLM API |
+
+### Quick setup (5 minutes)
+
+```bash
+# Interactive setup
+./scripts/setup-github-app.sh
+```
+
+Or manually:
+
+**1. Create a GitHub App** at [github.com/settings/apps/new](https://github.com/settings/apps/new):
+- Webhook URL: `https://YOUR_SERVER/webhooks/github`
+- Permissions: Contents (R/W), Pull requests (R/W), Issues (R/W), Metadata (R)
+- Events: Pull request, Issue comment, PR review comment
+
+**2. Download the private key** and save as `private-key.pem`
+
+**3. Deploy:**
+
+```bash
+# Docker (simplest)
+export GITHUB_APP_ID=your_app_id
+export GITHUB_WEBHOOK_SECRET=your_secret
+export GROQ_API_KEY=gsk_...   # or OPENAI_API_KEY, etc.
+docker compose -f docker-compose.app.yml up -d
+
+# Fly.io (free tier available)
+fly launch --config fly.toml
+fly secrets set GITHUB_APP_ID=... GITHUB_WEBHOOK_SECRET=... \
+  GITHUB_PRIVATE_KEY="$(cat private-key.pem)" GROQ_API_KEY=...
+fly deploy
+```
+
+**4. Install the App** on your repos — open a PR, get a review.
+
+### Supported commands
+
+All commands work automatically with the GitHub App:
+
+| Command | What it does |
+|---------|-------------|
+| _auto_ | Reviews every PR on open/push |
+| `/review` | Trigger review on demand |
+| `/fix` | Auto-fix review comments |
+| `/ask <question>` | Ask a question about the PR |
+| `/generate-tests` | Generate tests for changed files |
+| _reply to bot_ | Continue conversation in thread |
 
 ---
 
