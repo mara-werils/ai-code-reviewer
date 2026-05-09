@@ -54,6 +54,7 @@ https://github.com/user-attachments/assets/demo-placeholder
 | **AI Test Gen `/generate-tests`** | **Yes** (commits tests to PR) | No | No | No |
 | **Rules Engine** | **Yes** (declarative YAML rules) | No | No | No |
 | **Security Scanner (SAST)** | **Yes** (built-in, 20+ rules) | No | No | No |
+| **Self-learning** | **Yes** (learns from team feedback) | No | No | No |
 | **Web playground** | **Yes** (try without install) | No | No | No |
 | **Pre-commit hook** | **Yes** (block before PR) | No | No | No |
 | **VS Code extension** | **Yes** | No | Built-in | No |
@@ -903,7 +904,7 @@ Show that your project uses AI code reviews:
 - [ ] Bitbucket integration
 - [x] PR chat — ask questions, reply to review comments, `/ask` command
 - [x] Auto-fix `/fix` — AI commits fixes directly to your PR branch
-- [ ] Learning from feedback
+- [x] Learning from feedback — self-calibrating reviews based on team reactions
 - [x] VS Code extension
 - [ ] JetBrains plugin
 - [ ] Slack/Discord notifications
