@@ -301,8 +301,24 @@ async def run_action() -> None:
         if rule_violations:
             logger.info(f"Rules engine found {len(rule_violations)} violations")
 
+        # Run security scanner
+        from src.review.security import (
+            format_security_findings,
+            format_security_summary,
+            scan_diff,
+        )
+
+        security_findings = scan_diff(files, enabled=config.check_security)
+        security_comments = format_security_findings(security_findings)
+        security_summary = format_security_summary(security_findings)
+
+        if security_findings:
+            logger.info(f"Security scanner found {len(security_findings)} issues")
+
         # Format output
         body = format_review_body(result)
+        if security_summary:
+            body += "\n" + security_summary
         inline_comments = build_github_review_comments(result)
 
         # Merge rule-based comments into inline comments
@@ -312,6 +328,16 @@ async def run_action() -> None:
                     "path": rc["path"],
                     "line": rc["line"],
                     "body": rc["body"],
+                }
+            )
+
+        # Merge security comments into inline comments
+        for sc in security_comments:
+            inline_comments.append(
+                {
+                    "path": sc["path"],
+                    "line": sc["line"],
+                    "body": sc["body"],
                 }
             )
 
