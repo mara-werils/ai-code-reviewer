@@ -16,7 +16,7 @@
 
 **Used by [X] developers** &middot; **[Y] reviews completed** &middot; **$0.002/review with Groq**
 
-[Quick Start](#-quick-start) &middot; [/fix](#-auto-fix-with-fix) &middot; [Playground](#-try-it-online-no-install) &middot; [Pre-Commit](#-pre-commit-hook) &middot; [Providers](#-supported-providers) &middot; [/review](#-on-demand-review) &middot; [GitLab](#-gitlab-ci-integration) &middot; [VS Code](#-vs-code-extension) &middot; [Self-Hosted](#-self-hosted-mode)
+[Quick Start](#-quick-start) &middot; [/fix](#-auto-fix-with-fix) &middot; [Security Scanner](#-security-scanner) &middot; [Playground](#-try-it-online-no-install) &middot; [Pre-Commit](#-pre-commit-hook) &middot; [Providers](#-supported-providers) &middot; [/review](#-on-demand-review) &middot; [GitLab](#-gitlab-ci-integration) &middot; [VS Code](#-vs-code-extension) &middot; [Self-Hosted](#-self-hosted-mode)
 
 </div>
 
@@ -49,6 +49,7 @@ https://github.com/user-attachments/assets/demo-placeholder
 | **100% local option** | **Yes** (Ollama) | No | No | No |
 | **Multi-language reviews** | **Yes** (9 languages) | Yes | No | No |
 | **Auto-fix `/fix`** | **Yes** (commits fixes to PR) | No | No | No |
+| **Security Scanner (SAST)** | **Yes** (built-in, 20+ rules) | No | No | No |
 | **Web playground** | **Yes** (try without install) | No | No | No |
 | **Pre-commit hook** | **Yes** (block before PR) | No | No | No |
 | **VS Code extension** | **Yes** | No | Built-in | No |
@@ -136,6 +137,42 @@ How it works:
 4. Posts a summary of what was fixed and what was skipped
 
 > Requires `contents: write` permission. Add `/fix` support with the [on-demand workflow](examples/on-demand-review.yml).
+
+---
+
+## Security Scanner
+
+**Built-in SAST** that runs on every PR — catches vulnerabilities before they reach production. **Zero LLM cost**, instant, deterministic.
+
+### What it detects
+
+| Category | Examples | Severity |
+|----------|----------|----------|
+| **SQL Injection** | f-strings in `execute()`, `fmt.Sprintf` in Go queries | Critical |
+| **XSS** | `innerHTML`, `dangerouslySetInnerHTML`, `mark_safe()` | High |
+| **Hardcoded Secrets** | API keys, passwords, AWS creds, private keys | Critical |
+| **Command Injection** | `os.system()`, `eval()`, `shell=True` | Critical |
+| **Path Traversal** | File operations with user input | High |
+| **SSRF** | HTTP requests with user-controlled URLs | High |
+| **Insecure Crypto** | MD5/SHA1 for security, `Math.random()` for tokens | Medium |
+| **Insecure Deserialization** | `pickle.loads()`, `yaml.load()` without SafeLoader | Critical/High |
+| **Auth Issues** | CORS wildcard, JWT without verification, debug mode | Medium/High |
+| **Go-specific** | `InsecureSkipVerify`, SQL with `fmt.Sprintf` | Critical/High |
+
+### How it works
+
+- Runs automatically alongside AI review (no extra config)
+- Scans only added/modified lines in the diff
+- Language-aware: Go rules only fire on `.go` files, etc.
+- Skips test files for rules like debug statements and `Math.random()`
+- Findings appear as inline comments + a summary in the review body
+- Controlled by `check_security: true` in `.pr-reviewer.yml` (enabled by default)
+
+### 20+ built-in rules
+
+All rules are pattern-based (regex) and cover **OWASP Top 10** vulnerabilities across Python, JavaScript/TypeScript, Go, Java, Ruby, PHP, and more.
+
+> The security scanner is **free** — no LLM calls needed. It runs in milliseconds alongside your AI review.
 
 ---
 
