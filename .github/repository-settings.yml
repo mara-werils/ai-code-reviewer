@@ -1,0 +1,33 @@
+# GitHub repository settings (for probot/settings or manual reference)
+# Apply these topics and settings after pushing
+
+repository:
+  name: ai-code-reviewer
+  description: "AI-powered code review for GitHub, GitLab & Bitbucket. Works with any LLM. Free, open source. Drop-in CodeRabbit alternative."
+  homepage: https://github.com/mara-werils/ai-code-reviewer
+  topics:
+    - ai
+    - code-review
+    - github-action
+    - llm
+    - gpt
+    - claude
+    - llama
+    - ollama
+    - gemini
+    - pull-request
+    - devtools
+    - sast
+    - security
+    - pre-commit
+    - gitlab
+    - bitbucket
+    - coderabbit-alternative
+    - developer-tools
+    - automation
+    - open-source
+  has_issues: true
+  has_projects: false
+  has_wiki: false
+  has_discussions: true
+  default_branch: main
