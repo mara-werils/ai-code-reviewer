@@ -1,0 +1,29 @@
+title: "[Rules] "
+labels: ["rules-engine"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share your custom review rules or request rules for common patterns.
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      options:
+        - Sharing my rules (for others to use)
+        - Requesting a built-in rule
+    validations:
+      required: true
+  - type: textarea
+    id: rules
+    attributes:
+      label: Rules
+      description: Share your .pr-reviewer-rules.yml or describe the rule you'd like
+      render: yaml
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: What does this rule catch? Why is it useful?
