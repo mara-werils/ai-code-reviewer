@@ -2,11 +2,34 @@ name: Feature Request
 description: Suggest an idea for AI Code Reviewer
 labels: ["enhancement"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        We love feature ideas! Check the [roadmap](https://github.com/mara-werils/ai-code-reviewer#roadmap) first to see if it's already planned.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which area does this feature relate to?
+      options:
+        - Review quality (smarter comments)
+        - New command (like /fix, /ask)
+        - New platform (Jenkins, Azure DevOps, etc.)
+        - New LLM provider
+        - Rules engine
+        - Security scanner
+        - CLI
+        - VS Code / IDE extension
+        - Self-hosted mode
+        - Performance / speed
+        - Other
+    validations:
+      required: true
   - type: textarea
     id: problem
     attributes:
       label: Problem
-      description: What problem does this solve?
+      description: What problem does this solve? What's your use case?
       placeholder: "I want the reviewer to also check for..."
     validations:
       required: true
@@ -14,7 +37,7 @@ body:
     id: solution
     attributes:
       label: Proposed solution
-      description: How should it work?
+      description: How should it work? Include examples if possible.
     validations:
       required: true
   - type: textarea
@@ -22,3 +45,9 @@ body:
     attributes:
       label: Alternatives considered
       description: Any other approaches you've thought about?
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Would you like to contribute this?
+      options:
+        - label: I'd be willing to submit a PR for this feature

@@ -354,6 +354,186 @@ SECURITY_RULES: list[SecurityRule] = [
         fix_hint="Never disable TLS verification in production.",
         languages=["go"],
     ),
+
+    # ── Additional rules (expanded coverage) ────────────────────────────────
+
+    # Path traversal via user input in filenames
+    SecurityRule(
+        id="SEC031",
+        name="Path traversal (os.path.join with user input)",
+        pattern=r"""os\.path\.join\s*\(.*(?:request|req\.|params|args|input|user)""",
+        severity="high",
+        category="path-traversal",
+        description="os.path.join with user input can be bypassed with absolute paths.",
+        fix_hint="Use pathlib and resolve against a safe base: `base.joinpath(user_input).resolve().relative_to(base)`",
+        languages=["python"],
+    ),
+
+    # Timing attack on secret comparison
+    SecurityRule(
+        id="SEC052",
+        name="Timing attack (string comparison of secrets)",
+        pattern=r"""(?:secret|token|password|api_key|hash|digest)\s*(?:==|!=)\s*""",
+        severity="medium",
+        category="crypto",
+        description="String comparison of secrets is vulnerable to timing attacks.",
+        fix_hint="Use `hmac.compare_digest()` (Python) or `crypto.timingSafeEqual()` (Node.js).",
+        exclude_test_files=True,
+    ),
+
+    # Prototype pollution (JS)
+    SecurityRule(
+        id="SEC110",
+        name="Prototype pollution",
+        pattern=r"""(?:__proto__|constructor\s*\[|Object\.assign\s*\(\s*\{\s*\}\s*,.*(?:req|request|params|body))""",
+        severity="high",
+        category="injection",
+        description="Potential prototype pollution via user-controlled object merge.",
+        fix_hint="Validate input keys. Use Object.create(null) or a safe merge library.",
+        languages=["javascript", "typescript"],
+    ),
+
+    # Open redirect
+    SecurityRule(
+        id="SEC111",
+        name="Open redirect",
+        pattern=r"""(?:redirect|location\.href|window\.location|res\.redirect)\s*(?:=|\()\s*(?:req\.|request\.|params\.|args\.|query\.)""",
+        severity="medium",
+        category="auth",
+        description="Redirect URL from user input. Vulnerable to open redirect attacks.",
+        fix_hint="Validate redirect URLs against an allowlist of trusted domains.",
+    ),
+
+    # XML External Entity (XXE)
+    SecurityRule(
+        id="SEC112",
+        name="XML External Entity (XXE)",
+        pattern=r"""(?:etree\.parse|xml\.dom\.minidom\.parse|parseString|XMLParser)\s*\(""",
+        severity="high",
+        category="injection",
+        description="XML parsing without disabling external entities is vulnerable to XXE.",
+        fix_hint="Disable external entities: use defusedxml library or set parser features.",
+        languages=["python"],
+    ),
+
+    # Unsafe regex (ReDoS)
+    SecurityRule(
+        id="SEC113",
+        name="ReDoS (catastrophic backtracking)",
+        pattern=r"""re\.(?:compile|match|search|findall)\s*\(\s*[\"'](?:.*\.\*.*\.\*|.*\+.*\+|.*\{.*\}.*\{.*\})""",
+        severity="medium",
+        category="quality",
+        description="Complex regex with nested quantifiers may cause catastrophic backtracking (ReDoS).",
+        fix_hint="Simplify regex or use re2/google-re2 for guaranteed linear time.",
+        languages=["python"],
+    ),
+
+    # Hardcoded JWT secret
+    SecurityRule(
+        id="SEC025",
+        name="Hardcoded JWT secret",
+        pattern=r"""jwt\.(?:encode|sign)\s*\(.*[\"'][A-Za-z0-9_\-]{8,}[\"']""",
+        severity="critical",
+        category="secrets",
+        description="JWT signed with hardcoded secret. Secret will be exposed in source control.",
+        fix_hint="Load JWT secret from environment variable or secrets manager.",
+    ),
+
+    # Mass assignment
+    SecurityRule(
+        id="SEC114",
+        name="Mass assignment",
+        pattern=r"""\.(?:update|create)\s*\(\s*\*\*(?:request\.(?:data|json|POST|body)|kwargs)""",
+        severity="high",
+        category="auth",
+        description="Mass assignment: passing request data directly to ORM create/update can allow privilege escalation.",
+        fix_hint="Explicitly list allowed fields instead of passing **request.data directly.",
+        languages=["python"],
+    ),
+
+    # Unvalidated file upload
+    SecurityRule(
+        id="SEC115",
+        name="Unvalidated file upload",
+        pattern=r"""(?:save|write|upload).*(?:request\.files|uploaded_file|file\.save)\s*\(""",
+        severity="high",
+        category="path-traversal",
+        description="File upload without validation. Check file type, size, and sanitize filename.",
+        fix_hint="Validate MIME type, limit file size, use `secure_filename()`, and store outside web root.",
+    ),
+
+    # Disabled CSRF protection
+    SecurityRule(
+        id="SEC083",
+        name="CSRF protection disabled",
+        pattern=r"""(?:csrf_exempt|@csrf_exempt|WTF_CSRF_ENABLED\s*=\s*False|CSRF_ENABLED\s*=\s*False)""",
+        severity="high",
+        category="auth",
+        description="CSRF protection disabled. State-changing endpoints are vulnerable to CSRF attacks.",
+        fix_hint="Enable CSRF protection. Use token-based CSRF for APIs, SameSite cookies for sessions.",
+        languages=["python"],
+    ),
+
+    # Insecure cookie
+    SecurityRule(
+        id="SEC084",
+        name="Insecure cookie settings",
+        pattern=r"""(?:set_cookie|cookies\[)\s*.*(?:httponly\s*=\s*False|secure\s*=\s*False|samesite\s*=\s*[\"'](?:none|None)[\"'])""",
+        severity="medium",
+        category="auth",
+        description="Cookie set without security flags (httponly, secure, samesite).",
+        fix_hint="Set httponly=True, secure=True, samesite='Lax' for session cookies.",
+    ),
+
+    # Logging sensitive data
+    SecurityRule(
+        id="SEC091",
+        name="Sensitive data in logs",
+        pattern=r"""(?:log(?:ger)?\.(?:info|debug|warning|error)|print|console\.log)\s*\(.*(?:password|secret|token|api_key|credit_card|ssn)""",
+        severity="medium",
+        category="secrets",
+        description="Sensitive data (password, token, etc.) may be written to logs.",
+        fix_hint="Redact sensitive fields before logging. Use structured logging with field filtering.",
+        exclude_test_files=True,
+    ),
+
+    # Hardcoded IP / internal URLs
+    SecurityRule(
+        id="SEC026",
+        name="Hardcoded internal URL",
+        pattern=r"""(?:https?://(?:localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(?:1[6-9]|2\d|3[01])\.\d+\.\d+))""",
+        severity="low",
+        category="secrets",
+        description="Hardcoded internal URL/IP. Use configuration or service discovery.",
+        fix_hint="Use environment variables for service URLs.",
+        exclude_test_files=True,
+    ),
+
+    # TypeScript any abuse
+    SecurityRule(
+        id="SEC120",
+        name="TypeScript 'any' type in security context",
+        pattern=r"""(?:token|auth|session|credential|password|secret)\s*:\s*any\b""",
+        severity="medium",
+        category="quality",
+        description="Using 'any' type for security-sensitive variables disables type checking.",
+        fix_hint="Use specific types for auth/security variables to catch misuse at compile time.",
+        languages=["typescript"],
+        exclude_test_files=True,
+    ),
+
+    # Go defer in loop
+    SecurityRule(
+        id="SEC102",
+        name="Defer in loop (Go resource leak)",
+        pattern=r"""for\s.*\{[^}]*defer\s""",
+        severity="medium",
+        category="quality",
+        description="defer inside a loop delays cleanup until function exit, causing resource leaks.",
+        fix_hint="Extract the loop body into a separate function, or close resources manually.",
+        languages=["go"],
+        exclude_test_files=True,
+    ),
 ]
 
 

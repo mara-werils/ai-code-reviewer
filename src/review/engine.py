@@ -116,7 +116,21 @@ class ReviewEngine:
         if learning_context:
             custom += learning_context
 
-        system = SYSTEM_PROMPT.format(custom_instructions=custom)
+        # Apply persona if configured
+        from src.review.personas import apply_persona, get_persona
+
+        persona_name = getattr(self.config, "persona", "")
+        review_style = self.config.review_style
+        base_system = SYSTEM_PROMPT.format(custom_instructions=custom)
+        if persona_name:
+            persona = get_persona(persona_name)
+            if persona:
+                base_system, review_style = apply_persona(persona, base_system, review_style)
+                if persona.max_comments:
+                    self.config.max_comments = persona.max_comments
+                logger.info(f"Using persona: {persona.name} ({persona.description})")
+
+        system = base_system
         user = REVIEW_PROMPT.format(
             title=pr.title,
             author=pr.author,

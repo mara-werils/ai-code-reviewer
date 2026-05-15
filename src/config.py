@@ -76,6 +76,9 @@ class ReviewConfig:
     collapse_below: str = "info"
     custom_instructions: str = ""
 
+    # Persona
+    persona: str = ""  # default, security-hawk, mentor, nitpicker, quick-scan, dora
+
     # Features
     auto_summarize: bool = True
     check_security: bool = True

@@ -27,7 +27,7 @@ inputs:
     required: false
     default: ''
   language:
-    description: 'Language for review comments (en, zh, ja, ko, es, de, fr, ru, pt)'
+    description: 'Language for review comments (en, zh, zh-tw, ja, ko, es, pt, de, fr, ru, it, tr, pl, nl, ar)'
     required: false
     default: 'en'
   review_style:
@@ -54,6 +54,18 @@ inputs:
     description: 'Automatically label PR by type (bugfix, feature, refactor, etc.)'
     required: false
     default: 'false'
+  persona:
+    description: 'Review persona: default, security-hawk, mentor, nitpicker, quick-scan, dora'
+    required: false
+    default: ''
+  slack_webhook:
+    description: 'Slack webhook URL for review notifications'
+    required: false
+    default: ''
+  discord_webhook:
+    description: 'Discord webhook URL for review notifications'
+    required: false
+    default: ''
 
 outputs:
   summary:
@@ -80,3 +92,6 @@ runs:
     INPUT_AUTO_SUMMARIZE: ${{ inputs.auto_summarize }}
     INPUT_SUGGEST_TESTS: ${{ inputs.suggest_tests }}
     INPUT_LABEL_PR: ${{ inputs.label_pr }}
+    INPUT_PERSONA: ${{ inputs.persona }}
+    INPUT_SLACK_WEBHOOK: ${{ inputs.slack_webhook }}
+    INPUT_DISCORD_WEBHOOK: ${{ inputs.discord_webhook }}

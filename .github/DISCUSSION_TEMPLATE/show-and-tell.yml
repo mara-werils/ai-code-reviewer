@@ -1,0 +1,32 @@
+title: "[Show & Tell] "
+labels: ["show-and-tell"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share how you're using AI Code Reviewer! We love seeing real-world setups.
+  - type: textarea
+    id: setup
+    attributes:
+      label: Your Setup
+      description: How are you using AI Code Reviewer? (provider, team size, repo type)
+      placeholder: |
+        - Provider: Groq (Llama 3.3)
+        - Team: 5 developers
+        - Repo: Python microservices monorepo
+    validations:
+      required: true
+  - type: textarea
+    id: results
+    attributes:
+      label: Results & Impact
+      description: What impact has it had on your workflow?
+      placeholder: "Catches ~3 real bugs per week that would have slipped through manual review..."
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration (optional)
+      description: Share your .pr-reviewer.yml or workflow config
+      render: yaml

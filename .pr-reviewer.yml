@@ -1,21 +1,31 @@
 # .pr-reviewer.yml — Drop this in your repo root to customize reviews.
 # All settings are optional. Defaults are shown below.
+# Docs: https://github.com/mara-werils/ai-code-reviewer#configuration
 
-# Review style: concise (default), thorough, or minimal
+# ── Review Persona ──────────────────────────────────────────────────────
+# Pick a reviewer personality (overrides review_style and priorities)
+# Options: default, security-hawk, mentor, nitpicker, quick-scan, dora
+# persona: security-hawk
+
+# ── Review Style ────────────────────────────────────────────────────────
+# concise (default), thorough, or minimal
 # review_style: concise
 
 # Maximum number of comments per review
 # max_comments: 15
 
-# Custom instructions — teach the reviewer about your codebase
+# Language for review comments (15 languages supported)
+# en, zh, zh-tw, ja, ko, es, pt, de, fr, ru, it, tr, pl, nl, ar
+# review_language: en
+
+# ── Custom Instructions ─────────────────────────────────────────────────
+# Teach the reviewer about your codebase and team conventions
 # custom_instructions: |
 #   - We use the Repository pattern — flag direct DB access in handlers
 #   - All new API endpoints must have OpenAPI docs
 #   - We're migrating from JavaScript to TypeScript — flag new .js files
 
-# Language for review comments (en, zh, ja, ko, es, de, fr, ru, pt)
-# review_language: en
-
+# ── File Filtering ──────────────────────────────────────────────────────
 # Skip these file patterns
 # ignore_paths:
 #   - "*.lock"
@@ -30,9 +40,17 @@
 #   - "DO NOT MERGE"
 #   - "DRAFT"
 
-# Feature toggles
+# ── Feature Toggles ────────────────────────────────────────────────────
 # auto_summarize: true
-# check_security: true
+# check_security: true          # Built-in SAST scanner (35+ rules)
 # check_performance: true
 # suggest_tests: true
 # label_pr: false
+
+# ── Notifications ───────────────────────────────────────────────────────
+# Send review summaries to team channels
+# notifications:
+#   slack_webhook: https://hooks.slack.com/services/T.../B.../xxx
+#   discord_webhook: https://discord.com/api/webhooks/.../...
+#   teams_webhook: https://outlook.office.com/webhook/...
+#   notify_on: [high, critical]    # risk levels that trigger notification

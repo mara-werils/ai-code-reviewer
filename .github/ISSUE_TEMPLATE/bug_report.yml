@@ -1,23 +1,64 @@
 name: Bug Report
 description: Report a problem with AI Code Reviewer
-labels: ["bug"]
+labels: ["bug", "needs-triage"]
 body:
   - type: markdown
     attributes:
-      value: Thanks for reporting! Please fill out the sections below.
-  - type: input
+      value: |
+        Thanks for reporting! The more detail you provide, the faster we can fix it.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: Where are you running AI Code Reviewer?
+      options:
+        - GitHub Action
+        - GitLab CI
+        - Bitbucket Pipelines
+        - CLI (local)
+        - Pre-commit hook
+        - VS Code extension
+        - Self-hosted (Docker)
+    validations:
+      required: true
+  - type: dropdown
     id: provider
     attributes:
       label: LLM Provider
-      description: Which provider are you using?
-      placeholder: "openai / anthropic / groq / google / ollama"
+      description: Which LLM provider are you using?
+      options:
+        - Groq (Llama)
+        - OpenAI (GPT-4o)
+        - Anthropic (Claude)
+        - Google (Gemini)
+        - Ollama (local)
+        - Azure OpenAI
+        - Other OpenAI-compatible
+    validations:
+      required: true
+  - type: dropdown
+    id: command
+    attributes:
+      label: Command / Feature
+      description: Which feature is affected?
+      options:
+        - Auto review (on PR open)
+        - /review (on-demand)
+        - /fix (auto-fix)
+        - /ask (PR chat)
+        - /generate-tests
+        - Security scanner
+        - Rules engine
+        - Inline comments
+        - Thread replies
+        - Other
     validations:
       required: true
   - type: textarea
     id: what-happened
     attributes:
       label: What happened?
-      description: Describe the bug clearly.
+      description: Describe the bug clearly. Include the PR URL if public.
       placeholder: "The review posted but all comments were on wrong lines..."
     validations:
       required: true
@@ -31,18 +72,18 @@ body:
   - type: textarea
     id: workflow
     attributes:
-      label: Workflow file
-      description: Paste your workflow YAML (remove secrets).
+      label: Configuration
+      description: Paste your workflow YAML or .pr-reviewer.yml (remove secrets).
       render: yaml
   - type: textarea
     id: logs
     attributes:
-      label: Action logs
-      description: Paste relevant logs from the GitHub Actions run.
+      label: Logs
+      description: Paste relevant logs from the Action run or CLI output.
       render: text
   - type: input
     id: version
     attributes:
       label: Version
-      description: "Which version are you using? (e.g., v1, v0.3.0)"
+      description: "Which version? (e.g., v1, v0.4.0, or commit SHA)"
       placeholder: "v1"

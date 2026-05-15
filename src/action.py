@@ -347,8 +347,21 @@ async def run_action() -> None:
                 f"Monorepo impact: {monorepo_analysis.total_packages_affected} packages affected"
             )
 
+        # Compute PR complexity score
+        from src.review.complexity import compute_complexity, format_complexity_section
+
+        complexity = compute_complexity(files)
+        complexity_section = format_complexity_section(complexity)
+
+        if complexity.score > 60:
+            logger.info(
+                f"PR complexity: {complexity.score}/100 ({complexity.level})"
+            )
+
         # Format output
         body = format_review_body(result)
+        if complexity_section:
+            body += "\n" + complexity_section
         if security_summary:
             body += "\n" + security_summary
         if cross_repo_section:

@@ -1,0 +1,55 @@
+# Rule pack: TypeScript + React
+# Usage: copy to .pr-reviewer-rules.yml in your repo root
+
+rules:
+  - name: no-console-log
+    pattern: "console\\.(?:log|debug|info)\\("
+    severity: warning
+    message: "Remove console.log() before merging. Use a proper logger for production."
+    include_files: "src/**/*.{ts,tsx,js,jsx}"
+    exclude_files: "**/*.test.*|**/*.spec.*"
+
+  - name: no-any-type
+    pattern: ":\\s*any\\b|as\\s+any\\b|<any>"
+    severity: suggestion
+    message: "Avoid `any` — it disables TypeScript's type safety. Use a specific type or `unknown`."
+    include_files: "**/*.{ts,tsx}"
+    exclude_files: "**/*.test.*|**/*.d.ts"
+
+  - name: no-dangerously-set-html
+    pattern: "dangerouslySetInnerHTML"
+    severity: critical
+    message: "dangerouslySetInnerHTML bypasses React's XSS protection. Use DOMPurify if necessary."
+    include_files: "**/*.{tsx,jsx}"
+
+  - name: no-inline-styles
+    pattern: "style\\s*=\\s*\\{\\{"
+    severity: suggestion
+    message: "Prefer CSS modules, Tailwind classes, or styled-components over inline styles."
+    include_files: "**/*.{tsx,jsx}"
+
+  - name: no-index-as-key
+    pattern: "key\\s*=\\s*\\{\\s*(?:index|i|idx)\\s*\\}"
+    severity: warning
+    message: "Using array index as key causes bugs with reordering. Use a stable unique ID."
+    include_files: "**/*.{tsx,jsx}"
+
+  - name: require-tests-for-components
+    when:
+      files_match: "src/components/**/*.tsx"
+      no_files_match: "**/*.test.{ts,tsx}|**/*.spec.{ts,tsx}"
+    severity: warning
+    message: "Component changes should include test coverage."
+
+  - name: no-eslint-disable
+    pattern: "eslint-disable(?!-next-line)"
+    severity: warning
+    message: "Avoid blanket eslint-disable. Use eslint-disable-next-line with a specific rule."
+    include_files: "**/*.{ts,tsx,js,jsx}"
+
+  - name: no-hardcoded-urls
+    pattern: "https?://(?!localhost|127\\.0\\.0\\.1)[a-z]+\\.[a-z]"
+    severity: suggestion
+    message: "Consider using environment variables for URLs instead of hardcoding them."
+    include_files: "src/**/*.{ts,tsx}"
+    exclude_files: "**/*.test.*|**/*.config.*"
