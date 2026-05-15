@@ -174,10 +174,7 @@ async def run_action() -> None:
             reply_body = format_chat_response(chat_result)
             await github.reply_to_review_comment(repo, pr_number, chat_comment_id, reply_body)
 
-            logger.info(
-                f"Chat reply posted on PR #{pr_number}, "
-                f"cost=${chat_result.cost_usd:.4f}"
-            )
+            logger.info(f"Chat reply posted on PR #{pr_number}, cost=${chat_result.cost_usd:.4f}")
             return
 
         # --- /ask command ---
@@ -196,10 +193,7 @@ async def run_action() -> None:
             reply_body = format_chat_response(chat_result)
             await github.post_comment(repo, pr_number, reply_body)
 
-            logger.info(
-                f"/ask answered on PR #{pr_number}, "
-                f"cost=${chat_result.cost_usd:.4f}"
-            )
+            logger.info(f"/ask answered on PR #{pr_number}, cost=${chat_result.cost_usd:.4f}")
             return
 
         # --- /generate-tests command ---
@@ -327,9 +321,7 @@ async def run_action() -> None:
         cross_repo_section = format_cross_repo_comment(cross_repo_impacts)
 
         if cross_repo_impacts:
-            logger.info(
-                f"Cross-repo impact: {len(cross_repo_impacts)} dependent repos affected"
-            )
+            logger.info(f"Cross-repo impact: {len(cross_repo_impacts)} dependent repos affected")
 
         # Analyze monorepo impact
         from src.review.monorepo import (
@@ -354,9 +346,7 @@ async def run_action() -> None:
         complexity_section = format_complexity_section(complexity)
 
         if complexity.score > 60:
-            logger.info(
-                f"PR complexity: {complexity.score}/100 ({complexity.level})"
-            )
+            logger.info(f"PR complexity: {complexity.score}/100 ({complexity.level})")
 
         # Format output
         body = format_review_body(result)
@@ -458,23 +448,25 @@ async def run_action() -> None:
             for c in result.comments:
                 severity_counts[c.severity] = severity_counts.get(c.severity, 0) + 1
 
-            log.add(ReviewLogEntry(
-                pr_number=pr_number,
-                title=pr.title,
-                author=pr.author,
-                repo=repo,
-                risk_level=result.risk_level,
-                category=result.category,
-                comments_count=len(result.comments),
-                cost_usd=result.cost_usd,
-                duration_ms=result.duration_ms,
-                model=result.model,
-                provider=config.provider,
-                files_changed=len(files),
-                lines_added=sum(f.additions for f in files),
-                lines_deleted=sum(f.deletions for f in files),
-                severity_counts=severity_counts,
-            ))
+            log.add(
+                ReviewLogEntry(
+                    pr_number=pr_number,
+                    title=pr.title,
+                    author=pr.author,
+                    repo=repo,
+                    risk_level=result.risk_level,
+                    category=result.category,
+                    comments_count=len(result.comments),
+                    cost_usd=result.cost_usd,
+                    duration_ms=result.duration_ms,
+                    model=result.model,
+                    provider=config.provider,
+                    files_changed=len(files),
+                    lines_added=sum(f.additions for f in files),
+                    lines_deleted=sum(f.deletions for f in files),
+                    severity_counts=severity_counts,
+                )
+            )
             save_log(log)
         except Exception as e:
             logger.debug(f"Review logging skipped: {e}")

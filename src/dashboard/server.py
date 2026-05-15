@@ -61,7 +61,9 @@ def _render_dashboard(stats: dict) -> str:
     risk_items = ""
     for level, count in sorted(risk.items()):
         color = {"low": "#22c55e", "medium": "#f59e0b", "high": "#ef4444"}.get(level, "#6b7280")
-        risk_items += f'<span style="color:{color};font-weight:bold">{level}: {count}</span>&nbsp;&nbsp;'
+        risk_items += (
+            f'<span style="color:{color};font-weight:bold">{level}: {count}</span>&nbsp;&nbsp;'
+        )
 
     cat_items = ""
     for cat, count in sorted(categories.items(), key=lambda x: x[1], reverse=True):
@@ -119,7 +121,7 @@ def _render_dashboard(stats: dict) -> str:
     <div class="card"><div class="value">{comments}</div><div class="label">Comments</div></div>
     <div class="card"><div class="value">${cost:.2f}</div><div class="label">Total Cost</div></div>
     <div class="card"><div class="value">${avg_cost:.4f}</div><div class="label">Avg Cost/Review</div></div>
-    <div class="card"><div class="value">{avg_dur/1000:.1f}s</div><div class="label">Avg Duration</div></div>
+    <div class="card"><div class="value">{avg_dur / 1000:.1f}s</div><div class="label">Avg Duration</div></div>
   </div>
 
   <div class="section">

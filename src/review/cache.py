@@ -99,8 +99,7 @@ def filter_changed_files(
 
     if unchanged:
         logger.info(
-            f"Cache hit: {len(unchanged)} unchanged files skipped, "
-            f"{len(changed)} files need review"
+            f"Cache hit: {len(unchanged)} unchanged files skipped, {len(changed)} files need review"
         )
 
     return changed, unchanged

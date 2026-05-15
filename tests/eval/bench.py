@@ -68,10 +68,7 @@ def run_scanner_bench(samples: list[dict]) -> dict:
         files = [_make_file(filename, diff)]
         findings = scan_diff(files)
 
-        finding_texts = [
-            f"{f.rule_name} {f.description} {f.category}".lower()
-            for f in findings
-        ]
+        finding_texts = [f"{f.rule_name} {f.description} {f.category}".lower() for f in findings]
         all_findings_text = " ".join(finding_texts)
 
         # Check expected findings
@@ -92,16 +89,17 @@ def run_scanner_bench(samples: list[dict]) -> dict:
             else:
                 results["false_positives"] += 1
 
-        results["details"].append({
-            "name": name,
-            "expected_count": len(expected),
-            "found_count": len(findings),
-            "matched": matched_expected,
-            "status": "PASS" if (
-                (expected and matched_expected > 0) or
-                (not expected and not findings)
-            ) else "FAIL",
-        })
+        results["details"].append(
+            {
+                "name": name,
+                "expected_count": len(expected),
+                "found_count": len(findings),
+                "matched": matched_expected,
+                "status": "PASS"
+                if ((expected and matched_expected > 0) or (not expected and not findings))
+                else "FAIL",
+            }
+        )
 
     tp = results["true_positives"]
     fn = results["false_negatives"]
@@ -128,15 +126,18 @@ def print_report(results: dict) -> None:
     print("\n  Per-sample:")
     for d in results["details"]:
         status = "PASS" if d["status"] == "PASS" else "FAIL"
-        print(f"    [{status}] {d['name']}: expected={d['expected_count']}, "
-              f"found={d['found_count']}, matched={d['matched']}")
+        print(
+            f"    [{status}] {d['name']}: expected={d['expected_count']}, "
+            f"found={d['found_count']}, matched={d['matched']}"
+        )
     print("=" * 60)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run review quality benchmarks")
     parser.add_argument(
-        "--with-llm", action="store_true",
+        "--with-llm",
+        action="store_true",
         help="Also run LLM-based review (requires API key)",
     )
     parser.add_argument("--provider", default="groq", help="LLM provider for --with-llm")

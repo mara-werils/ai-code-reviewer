@@ -154,7 +154,13 @@ class TestChatEngine:
             cost_usd=0.003,
         )
 
-        with patch.object(ChatEngine, "__init__", lambda self, cfg: setattr(self, "config", cfg) or setattr(self, "provider", AsyncMock())):
+        with patch.object(
+            ChatEngine,
+            "__init__",
+            lambda self, cfg: (
+                setattr(self, "config", cfg) or setattr(self, "provider", AsyncMock())
+            ),
+        ):
             engine = ChatEngine(config)
             engine.provider.complete = AsyncMock(return_value=mock_response)
 
@@ -197,7 +203,13 @@ class TestChatEngine:
         )
 
         files = [
-            PRFile(filename="src/cache.py", status="added", additions=50, deletions=0, patch="@@ -0,0 +1,50 @@\n+import redis"),
+            PRFile(
+                filename="src/cache.py",
+                status="added",
+                additions=50,
+                deletions=0,
+                patch="@@ -0,0 +1,50 @@\n+import redis",
+            ),
         ]
 
         mock_response = LLMResponse(
@@ -208,7 +220,13 @@ class TestChatEngine:
             cost_usd=0.004,
         )
 
-        with patch.object(ChatEngine, "__init__", lambda self, cfg: setattr(self, "config", cfg) or setattr(self, "provider", AsyncMock())):
+        with patch.object(
+            ChatEngine,
+            "__init__",
+            lambda self, cfg: (
+                setattr(self, "config", cfg) or setattr(self, "provider", AsyncMock())
+            ),
+        ):
             engine = ChatEngine(config)
             engine.provider.complete = AsyncMock(return_value=mock_response)
 

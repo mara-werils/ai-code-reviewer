@@ -132,12 +132,14 @@ def load_monorepo_config(path: Path | None = None) -> MonorepoConfig:
         if isinstance(owners, str):
             owners = [owners]
 
-        packages.append(Package(
-            name=item["name"],
-            path=item["path"].rstrip("/"),
-            depends_on=depends_on,
-            owners=owners,
-        ))
+        packages.append(
+            Package(
+                name=item["name"],
+                path=item["path"].rstrip("/"),
+                depends_on=depends_on,
+                owners=owners,
+            )
+        )
 
     return MonorepoConfig(packages=packages)
 
@@ -213,14 +215,16 @@ def analyze_monorepo_impact(
         downstream = _find_downstream(pkg_name, config.packages)
         all_downstream.update(downstream)
 
-        directly_changed.append(PackageImpact(
-            package_name=pkg_name,
-            package_path=pkg.path,
-            changed_files=changed_files,
-            downstream_consumers=downstream,
-            owners=pkg.owners,
-            is_direct=True,
-        ))
+        directly_changed.append(
+            PackageImpact(
+                package_name=pkg_name,
+                package_path=pkg.path,
+                changed_files=changed_files,
+                downstream_consumers=downstream,
+                owners=pkg.owners,
+                is_direct=True,
+            )
+        )
 
     # Build transitive impacts (packages affected but not directly changed)
     transitively_affected: list[PackageImpact] = []
@@ -229,14 +233,16 @@ def analyze_monorepo_impact(
             continue  # Already directly changed
         pkg = config.get_package(downstream_name)
         if pkg:
-            transitively_affected.append(PackageImpact(
-                package_name=downstream_name,
-                package_path=pkg.path,
-                changed_files=[],
-                downstream_consumers=[],
-                owners=pkg.owners,
-                is_direct=False,
-            ))
+            transitively_affected.append(
+                PackageImpact(
+                    package_name=downstream_name,
+                    package_path=pkg.path,
+                    changed_files=[],
+                    downstream_consumers=[],
+                    owners=pkg.owners,
+                    is_direct=False,
+                )
+            )
 
     return ImpactAnalysis(
         directly_changed=directly_changed,
@@ -269,7 +275,9 @@ def format_impact_comment(analysis: ImpactAnalysis) -> str:
         parts.append("**Directly changed:**")
         for impact in analysis.directly_changed:
             owners_str = f" (owners: {', '.join(impact.owners)})" if impact.owners else ""
-            parts.append(f"- `{impact.package_name}` — {len(impact.changed_files)} files{owners_str}")
+            parts.append(
+                f"- `{impact.package_name}` — {len(impact.changed_files)} files{owners_str}"
+            )
             if impact.downstream_consumers:
                 consumers = ", ".join(f"`{c}`" for c in impact.downstream_consumers)
                 parts.append(f"  - Downstream: {consumers}")

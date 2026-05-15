@@ -51,7 +51,8 @@ class TestLoadDeps:
 
     def test_valid_config(self, tmp_path: Path) -> None:
         f = tmp_path / ".pr-reviewer-deps.yml"
-        f.write_text(dedent("""\
+        f.write_text(
+            dedent("""\
             dependencies:
               - repo: org/frontend
                 depends_on:
@@ -60,7 +61,8 @@ class TestLoadDeps:
               - repo: org/mobile
                 depends_on:
                   - "proto/*.proto"
-        """))
+        """)
+        )
         config = load_deps(f)
         assert len(config.dependencies) == 2
         assert config.dependencies[0].repo == "org/frontend"
@@ -69,11 +71,13 @@ class TestLoadDeps:
 
     def test_string_depends_on(self, tmp_path: Path) -> None:
         f = tmp_path / "deps.yml"
-        f.write_text(dedent("""\
+        f.write_text(
+            dedent("""\
             dependencies:
               - repo: org/docs
                 depends_on: "src/**/*.py"
-        """))
+        """)
+        )
         config = load_deps(f)
         assert config.dependencies[0].depends_on == ["src/**/*.py"]
 
@@ -91,13 +95,15 @@ class TestLoadDeps:
 
     def test_skips_invalid_entries(self, tmp_path: Path) -> None:
         f = tmp_path / "deps.yml"
-        f.write_text(dedent("""\
+        f.write_text(
+            dedent("""\
             dependencies:
               - not_a_dict
               - depends_on: ["missing repo field"]
               - repo: org/valid
                 depends_on: ["src/**"]
-        """))
+        """)
+        )
         config = load_deps(f)
         assert len(config.dependencies) == 1
         assert config.dependencies[0].repo == "org/valid"
@@ -105,13 +111,15 @@ class TestLoadDeps:
 
 class TestAnalyzeCrossRepoImpact:
     def test_detects_impact(self) -> None:
-        deps = DepsConfig(dependencies=[
-            RepoDependency(
-                repo="org/frontend",
-                depends_on=["src/api/schemas/*.py"],
-                description="Frontend uses schemas",
-            ),
-        ])
+        deps = DepsConfig(
+            dependencies=[
+                RepoDependency(
+                    repo="org/frontend",
+                    depends_on=["src/api/schemas/*.py"],
+                    description="Frontend uses schemas",
+                ),
+            ]
+        )
         files = [
             _make_file("src/api/schemas/user.py"),
             _make_file("src/utils/helpers.py"),
@@ -122,26 +130,32 @@ class TestAnalyzeCrossRepoImpact:
         assert "src/api/schemas/user.py" in impacts[0].changed_files_in_pr
 
     def test_no_impact(self) -> None:
-        deps = DepsConfig(dependencies=[
-            RepoDependency(repo="org/frontend", depends_on=["src/api/**"]),
-        ])
+        deps = DepsConfig(
+            dependencies=[
+                RepoDependency(repo="org/frontend", depends_on=["src/api/**"]),
+            ]
+        )
         files = [_make_file("tests/test_api.py")]
         impacts = analyze_cross_repo_impact(files, deps)
         assert len(impacts) == 0
 
     def test_multiple_repos_affected(self) -> None:
-        deps = DepsConfig(dependencies=[
-            RepoDependency(repo="org/frontend", depends_on=["src/api/**"]),
-            RepoDependency(repo="org/mobile", depends_on=["src/api/v2/**"]),
-        ])
+        deps = DepsConfig(
+            dependencies=[
+                RepoDependency(repo="org/frontend", depends_on=["src/api/**"]),
+                RepoDependency(repo="org/mobile", depends_on=["src/api/v2/**"]),
+            ]
+        )
         files = [_make_file("src/api/v2/users.py")]
         impacts = analyze_cross_repo_impact(files, deps)
         assert len(impacts) == 2
 
     def test_multiple_files_matched(self) -> None:
-        deps = DepsConfig(dependencies=[
-            RepoDependency(repo="org/frontend", depends_on=["src/api/**"]),
-        ])
+        deps = DepsConfig(
+            dependencies=[
+                RepoDependency(repo="org/frontend", depends_on=["src/api/**"]),
+            ]
+        )
         files = [
             _make_file("src/api/routes.py"),
             _make_file("src/api/schemas.py"),
@@ -155,9 +169,11 @@ class TestAnalyzeCrossRepoImpact:
         assert impacts == []
 
     def test_double_star_pattern(self) -> None:
-        deps = DepsConfig(dependencies=[
-            RepoDependency(repo="org/docs", depends_on=["src/**/*.py"]),
-        ])
+        deps = DepsConfig(
+            dependencies=[
+                RepoDependency(repo="org/docs", depends_on=["src/**/*.py"]),
+            ]
+        )
         files = [_make_file("src/deep/nested/module.py")]
         impacts = analyze_cross_repo_impact(files, deps)
         assert len(impacts) == 1

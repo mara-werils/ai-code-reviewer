@@ -59,13 +59,15 @@ class TestLoadRules:
 
     def test_pattern_rule(self, tmp_path: Path) -> None:
         rules_file = tmp_path / ".pr-reviewer-rules.yml"
-        rules_file.write_text(dedent("""\
+        rules_file.write_text(
+            dedent("""\
             rules:
               - name: no-raw-sql
                 pattern: "execute\\\\(.*SELECT|INSERT|UPDATE|DELETE"
                 severity: critical
                 message: "Use ORM instead of raw SQL"
-        """))
+        """)
+        )
         config = load_rules(rules_file)
         assert len(config.rules) == 1
         assert config.rules[0].name == "no-raw-sql"
@@ -74,7 +76,8 @@ class TestLoadRules:
 
     def test_file_match_rule_with_when(self, tmp_path: Path) -> None:
         rules_file = tmp_path / ".pr-reviewer-rules.yml"
-        rules_file.write_text(dedent("""\
+        rules_file.write_text(
+            dedent("""\
             rules:
               - name: require-tests-for-api
                 when:
@@ -82,7 +85,8 @@ class TestLoadRules:
                   no_files_match: "tests/api/**/*.py"
                 severity: warning
                 message: "API changes require test coverage"
-        """))
+        """)
+        )
         config = load_rules(rules_file)
         assert len(config.rules) == 1
         assert config.rules[0].files_match == "src/api/**/*.py"
@@ -90,7 +94,8 @@ class TestLoadRules:
 
     def test_multiple_rules(self, tmp_path: Path) -> None:
         rules_file = tmp_path / ".pr-reviewer-rules.yml"
-        rules_file.write_text(dedent("""\
+        rules_file.write_text(
+            dedent("""\
             rules:
               - name: rule1
                 pattern: "TODO"
@@ -100,7 +105,8 @@ class TestLoadRules:
                 pattern: "FIXME"
                 severity: warning
                 message: "Found FIXME"
-        """))
+        """)
+        )
         config = load_rules(rules_file)
         assert len(config.rules) == 2
 
@@ -118,21 +124,24 @@ class TestLoadRules:
 
     def test_skips_entries_without_name(self, tmp_path: Path) -> None:
         rules_file = tmp_path / ".pr-reviewer-rules.yml"
-        rules_file.write_text(dedent("""\
+        rules_file.write_text(
+            dedent("""\
             rules:
               - pattern: "TODO"
                 severity: info
               - name: valid-rule
                 pattern: "FIXME"
                 message: "Fix me"
-        """))
+        """)
+        )
         config = load_rules(rules_file)
         assert len(config.rules) == 1
         assert config.rules[0].name == "valid-rule"
 
     def test_include_exclude_files(self, tmp_path: Path) -> None:
         rules_file = tmp_path / ".pr-reviewer-rules.yml"
-        rules_file.write_text(dedent("""\
+        rules_file.write_text(
+            dedent("""\
             rules:
               - name: no-console-log
                 pattern: "console\\\\.log"
@@ -140,7 +149,8 @@ class TestLoadRules:
                 message: "Remove console.log"
                 include_files: "src/**/*.ts"
                 exclude_files: "src/**/*.test.ts"
-        """))
+        """)
+        )
         config = load_rules(rules_file)
         assert config.rules[0].include_files == "src/**/*.ts"
         assert config.rules[0].exclude_files == "src/**/*.test.ts"
@@ -242,7 +252,10 @@ class TestEvaluatePatternRules:
         rule = Rule(name="bad-regex", pattern="[invalid", message="oops")
         files = [
             PRFile(
-                filename="f.py", status="added", additions=1, deletions=0,
+                filename="f.py",
+                status="added",
+                additions=1,
+                deletions=0,
                 patch="@@ -0,0 +1 @@\n+code",
             ),
         ]
@@ -274,7 +287,9 @@ class TestEvaluateFileMatchRules:
             message="API changes need tests",
         )
         files = [
-            PRFile(filename="src/api/users.py", status="modified", additions=10, deletions=0, patch=""),
+            PRFile(
+                filename="src/api/users.py", status="modified", additions=10, deletions=0, patch=""
+            ),
         ]
         violations = evaluate_rules(RulesConfig(rules=[rule]), files)
         assert len(violations) == 1
@@ -289,8 +304,16 @@ class TestEvaluateFileMatchRules:
             message="API changes need tests",
         )
         files = [
-            PRFile(filename="src/api/users.py", status="modified", additions=10, deletions=0, patch=""),
-            PRFile(filename="tests/api/test_users.py", status="added", additions=20, deletions=0, patch=""),
+            PRFile(
+                filename="src/api/users.py", status="modified", additions=10, deletions=0, patch=""
+            ),
+            PRFile(
+                filename="tests/api/test_users.py",
+                status="added",
+                additions=20,
+                deletions=0,
+                patch="",
+            ),
         ]
         violations = evaluate_rules(RulesConfig(rules=[rule]), files)
         assert len(violations) == 0
@@ -304,7 +327,9 @@ class TestEvaluateFileMatchRules:
             message="API changes need tests",
         )
         files = [
-            PRFile(filename="docs/readme.md", status="modified", additions=5, deletions=0, patch=""),
+            PRFile(
+                filename="docs/readme.md", status="modified", additions=5, deletions=0, patch=""
+            ),
         ]
         violations = evaluate_rules(RulesConfig(rules=[rule]), files)
         assert len(violations) == 0
@@ -317,7 +342,9 @@ class TestEvaluateFileMatchRules:
             message="API files were changed",
         )
         files = [
-            PRFile(filename="src/api/users.py", status="modified", additions=5, deletions=0, patch=""),
+            PRFile(
+                filename="src/api/users.py", status="modified", additions=5, deletions=0, patch=""
+            ),
         ]
         violations = evaluate_rules(RulesConfig(rules=[rule]), files)
         assert len(violations) == 1
@@ -366,7 +393,13 @@ class TestFormatRuleViolations:
 class TestEvaluateEmpty:
     def test_no_rules(self) -> None:
         files = [
-            PRFile(filename="src/api.py", status="modified", additions=5, deletions=0, patch="@@ +1 @@\n+code"),
+            PRFile(
+                filename="src/api.py",
+                status="modified",
+                additions=5,
+                deletions=0,
+                patch="@@ +1 @@\n+code",
+            ),
         ]
         violations = evaluate_rules(RulesConfig(), files)
         assert violations == []

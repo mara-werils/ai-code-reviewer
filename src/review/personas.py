@@ -34,17 +34,20 @@ def _register(persona: Persona) -> Persona:
 
 # ── Built-in personas ────────────────────────────────────────────────────────
 
-_register(Persona(
-    name="default",
-    description="Balanced reviewer — catches bugs without being noisy.",
-    system_addendum="",
-    review_style="concise",
-))
+_register(
+    Persona(
+        name="default",
+        description="Balanced reviewer — catches bugs without being noisy.",
+        system_addendum="",
+        review_style="concise",
+    )
+)
 
-_register(Persona(
-    name="security-hawk",
-    description="Security-focused reviewer — prioritizes vulnerabilities and auth issues.",
-    system_addendum="""
+_register(
+    Persona(
+        name="security-hawk",
+        description="Security-focused reviewer — prioritizes vulnerabilities and auth issues.",
+        system_addendum="""
 ## Security-First Review Mode
 
 You are in SECURITY-HAWK mode. Your top priorities are:
@@ -57,14 +60,16 @@ You are in SECURITY-HAWK mode. Your top priorities are:
 Skip style, naming, and minor design issues. Focus ONLY on security-relevant findings.
 For each finding, include a CWE reference when applicable (e.g., CWE-89 for SQL injection).
 """,
-    review_style="thorough",
-    max_comments=25,
-))
+        review_style="thorough",
+        max_comments=25,
+    )
+)
 
-_register(Persona(
-    name="mentor",
-    description="Educational reviewer — explains WHY, not just WHAT. Great for junior devs.",
-    system_addendum="""
+_register(
+    Persona(
+        name="mentor",
+        description="Educational reviewer — explains WHY, not just WHAT. Great for junior devs.",
+        system_addendum="""
 ## Mentor Review Mode
 
 You are reviewing code written by a developer who is learning. Your goal is to TEACH, not just find bugs.
@@ -79,14 +84,16 @@ For every comment:
 Keep severity labels, but add a "Learn more" section with the underlying concept.
 Example: "This is the **Strategy pattern** — by extracting the algorithm into a separate class..."
 """,
-    review_style="thorough",
-    max_comments=20,
-))
+        review_style="thorough",
+        max_comments=20,
+    )
+)
 
-_register(Persona(
-    name="nitpicker",
-    description="Thorough reviewer — catches everything including style and naming.",
-    system_addendum="""
+_register(
+    Persona(
+        name="nitpicker",
+        description="Thorough reviewer — catches everything including style and naming.",
+        system_addendum="""
 ## Nitpicker Review Mode
 
 You catch EVERYTHING. Unlike the default mode, you DO comment on:
@@ -98,14 +105,16 @@ You catch EVERYTHING. Unlike the default mode, you DO comment on:
 
 Use severity levels strictly: style issues are INFO, naming is SUGGESTION.
 """,
-    review_style="thorough",
-    max_comments=30,
-))
+        review_style="thorough",
+        max_comments=30,
+    )
+)
 
-_register(Persona(
-    name="quick-scan",
-    description="Fast, minimal reviewer — only catches critical bugs and security issues.",
-    system_addendum="""
+_register(
+    Persona(
+        name="quick-scan",
+        description="Fast, minimal reviewer — only catches critical bugs and security issues.",
+        system_addendum="""
 ## Quick Scan Mode
 
 Speed is the priority. Only flag:
@@ -115,14 +124,16 @@ Speed is the priority. Only flag:
 
 Skip everything else. Maximum 5 comments. No style, no performance, no design.
 """,
-    review_style="minimal",
-    max_comments=5,
-))
+        review_style="minimal",
+        max_comments=5,
+    )
+)
 
-_register(Persona(
-    name="dora",
-    description="DORA metrics optimizer — focuses on deployment risk and change failure rate.",
-    system_addendum="""
+_register(
+    Persona(
+        name="dora",
+        description="DORA metrics optimizer — focuses on deployment risk and change failure rate.",
+        system_addendum="""
 ## DORA Review Mode
 
 Review through the lens of DORA metrics (Deployment Frequency, Lead Time, Change Failure Rate, MTTR).
@@ -136,8 +147,9 @@ Focus on:
 
 For each issue, estimate the impact on Change Failure Rate (Low/Medium/High).
 """,
-    review_style="thorough",
-))
+        review_style="thorough",
+    )
+)
 
 
 def get_persona(name: str) -> Persona | None:

@@ -15,9 +15,17 @@ from src.dashboard.review_log import (
 class TestReviewLogEntry:
     def test_defaults(self) -> None:
         e = ReviewLogEntry(
-            pr_number=1, title="Fix bug", author="dev", repo="o/r",
-            risk_level="low", category="bugfix", comments_count=3,
-            cost_usd=0.01, duration_ms=2000, model="gpt-4o", provider="openai",
+            pr_number=1,
+            title="Fix bug",
+            author="dev",
+            repo="o/r",
+            risk_level="low",
+            category="bugfix",
+            comments_count=3,
+            cost_usd=0.01,
+            duration_ms=2000,
+            model="gpt-4o",
+            provider="openai",
         )
         assert e.timestamp != ""
         assert e.files_changed == 0
@@ -27,9 +35,17 @@ class TestReviewLogEntry:
 class TestReviewLog:
     def _make_entry(self, **kwargs) -> ReviewLogEntry:
         defaults = dict(
-            pr_number=1, title="PR", author="dev", repo="o/r",
-            risk_level="low", category="bugfix", comments_count=2,
-            cost_usd=0.01, duration_ms=1000, model="gpt-4o", provider="openai",
+            pr_number=1,
+            title="PR",
+            author="dev",
+            repo="o/r",
+            risk_level="low",
+            category="bugfix",
+            comments_count=2,
+            cost_usd=0.01,
+            duration_ms=1000,
+            model="gpt-4o",
+            provider="openai",
             timestamp="2025-01-15T00:00:00",
         )
         defaults.update(kwargs)
@@ -140,12 +156,22 @@ class TestLoadSaveLog:
     def test_save_and_load(self, tmp_path: Path) -> None:
         path = tmp_path / "log.json"
         log = ReviewLog()
-        log.add(ReviewLogEntry(
-            pr_number=42, title="Fix", author="dev", repo="o/r",
-            risk_level="low", category="bugfix", comments_count=3,
-            cost_usd=0.005, duration_ms=1500, model="gpt-4o", provider="openai",
-            severity_counts={"warning": 2, "info": 1},
-        ))
+        log.add(
+            ReviewLogEntry(
+                pr_number=42,
+                title="Fix",
+                author="dev",
+                repo="o/r",
+                risk_level="low",
+                category="bugfix",
+                comments_count=3,
+                cost_usd=0.005,
+                duration_ms=1500,
+                model="gpt-4o",
+                provider="openai",
+                severity_counts={"warning": 2, "info": 1},
+            )
+        )
         save_log(log, path)
 
         loaded = load_log(path)

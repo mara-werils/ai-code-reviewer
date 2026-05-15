@@ -34,8 +34,11 @@ class TestFeedbackStore:
     def test_add_entry(self) -> None:
         store = FeedbackStore()
         entry = FeedbackEntry(
-            comment_body="test", severity="warning",
-            file_path="a.py", category="design", outcome="accepted",
+            comment_body="test",
+            severity="warning",
+            file_path="a.py",
+            category="design",
+            outcome="accepted",
         )
         store.add(entry)
         assert len(store.entries) == 1
@@ -57,10 +60,15 @@ class TestFeedbackStore:
     def test_evicts_old_entries(self) -> None:
         store = FeedbackStore()
         for i in range(250):
-            store.add(FeedbackEntry(
-                comment_body=f"comment {i}", severity="info",
-                file_path="f.py", category="general", outcome="accepted",
-            ))
+            store.add(
+                FeedbackEntry(
+                    comment_body=f"comment {i}",
+                    severity="info",
+                    file_path="f.py",
+                    category="general",
+                    outcome="accepted",
+                )
+            )
         assert len(store.entries) == 200  # Max entries
 
 
@@ -73,15 +81,17 @@ class TestLoadSaveFeedback:
         path = tmp_path / "feedback.json"
 
         store = FeedbackStore(repo="owner/repo")
-        store.add(FeedbackEntry(
-            comment_body="SQL injection risk",
-            severity="critical",
-            file_path="db.py",
-            category="security",
-            outcome="accepted",
-            developer_reply="Good catch!",
-            pr_number=42,
-        ))
+        store.add(
+            FeedbackEntry(
+                comment_body="SQL injection risk",
+                severity="critical",
+                file_path="db.py",
+                category="security",
+                outcome="accepted",
+                developer_reply="Good catch!",
+                pr_number=42,
+            )
+        )
         save_feedback(store, path)
 
         loaded = load_feedback(path)
@@ -133,7 +143,11 @@ class TestBuildLearningPrompt:
         store = FeedbackStore(stats={"total": 1, "rejected": 1})
         store.entries = [
             FeedbackEntry(
-                "Add null check", "warning", "api.py", "correctness", "rejected",
+                "Add null check",
+                "warning",
+                "api.py",
+                "correctness",
+                "rejected",
                 developer_reply="This is validated upstream in middleware",
             ),
         ]

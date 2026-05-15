@@ -49,9 +49,7 @@ def _get_auth() -> GitHubAppAuth:
             private_key = Path(private_key_path).read_text()
 
         if not private_key:
-            raise RuntimeError(
-                "Set GITHUB_PRIVATE_KEY or GITHUB_PRIVATE_KEY_PATH"
-            )
+            raise RuntimeError("Set GITHUB_PRIVATE_KEY or GITHUB_PRIVATE_KEY_PATH")
 
         _app_auth = GitHubAppAuth(app_id, private_key)
     return _app_auth
@@ -66,12 +64,14 @@ def _get_webhook_secret() -> str:
 
 # ── Health ───────────────────────────────────────────────────────────────────
 
+
 @app.get("/health")
 async def health() -> dict:
     return {"status": "ok", "mode": "github-app"}
 
 
 # ── Webhook endpoint ────────────────────────────────────────────────────────
+
 
 @app.post("/webhooks/github")
 async def handle_webhook(request: Request) -> Response:
@@ -127,6 +127,7 @@ async def handle_webhook(request: Request) -> Response:
 
 # ── Event handlers ──────────────────────────────────────────────────────────
 
+
 async def _get_github_client(installation_id: int) -> GitHubAPI:
     """Create a GitHubAPI client authenticated as the App installation."""
     auth = _get_auth()
@@ -158,7 +159,8 @@ async def _handle_pr_review(event: dict) -> None:
         traceback.print_exc()
         with contextlib.suppress(Exception):
             await github.post_comment(
-                repo, pr_number,
+                repo,
+                pr_number,
                 f"## AI Code Review\n\nReview failed: `{type(e).__name__}: {e}`",
             )
     finally:
@@ -189,7 +191,8 @@ async def _handle_command(event: dict, comment_body: str) -> None:
         traceback.print_exc()
         with contextlib.suppress(Exception):
             await github.post_comment(
-                repo, pr_number,
+                repo,
+                pr_number,
                 f"## AI Code Reviewer\n\n`{cmd}` failed: `{type(e).__name__}: {e}`",
             )
     finally:
@@ -225,9 +228,7 @@ async def _handle_chat_reply(event: dict) -> None:
         )
 
         reply_body = format_chat_response(chat_result)
-        await github.reply_to_review_comment(
-            repo, pr_number, comment["in_reply_to_id"], reply_body
-        )
+        await github.reply_to_review_comment(repo, pr_number, comment["in_reply_to_id"], reply_body)
         logger.info(f"Chat reply posted on PR #{pr_number}")
     except Exception as e:
         logger.error(f"Chat reply failed on PR #{pr_number}: {e}")
@@ -237,6 +238,7 @@ async def _handle_chat_reply(event: dict) -> None:
 
 
 # ── Core operations ──────────────────────────────────────────────────────────
+
 
 def _load_config() -> ReviewConfig:
     """Load review config from env vars + .pr-reviewer.yml."""
@@ -280,13 +282,20 @@ async def _run_review(github: GitHubAPI, repo: str, pr_number: int) -> None:
     if inline_comments:
         try:
             await github.post_review(
-                repo, pr_number, body, inline_comments,
-                event="COMMENT", commit_id=pr.head_sha,
+                repo,
+                pr_number,
+                body,
+                inline_comments,
+                event="COMMENT",
+                commit_id=pr.head_sha,
             )
         except Exception:
             await github.post_comment(repo, pr_number, body)
             await github.post_inline_comments(
-                repo, pr_number, pr.head_sha, inline_comments,
+                repo,
+                pr_number,
+                pr.head_sha,
+                inline_comments,
             )
     else:
         await github.post_comment(repo, pr_number, body)
@@ -309,17 +318,19 @@ async def _run_fix(github: GitHubAPI, repo: str, pr_number: int) -> None:
     pr = await github.get_pr(repo, pr_number)
 
     fix_summary = await run_fix(
-        github=github, config=config, repo=repo,
-        pr_number=pr_number, head_ref=pr.head_ref, head_sha=pr.head_sha,
+        github=github,
+        config=config,
+        repo=repo,
+        pr_number=pr_number,
+        head_ref=pr.head_ref,
+        head_sha=pr.head_sha,
     )
 
     await github.post_comment(repo, pr_number, format_fix_comment(fix_summary))
     logger.info(f"/fix complete: {fix_summary.files_fixed} files fixed")
 
 
-async def _run_ask(
-    github: GitHubAPI, repo: str, pr_number: int, question: str
-) -> None:
+async def _run_ask(github: GitHubAPI, repo: str, pr_number: int, question: str) -> None:
     """Run /ask command."""
     from src.review.chat import ChatEngine, format_chat_response
 
@@ -330,16 +341,17 @@ async def _run_ask(
 
     chat_engine = ChatEngine(config)
     chat_result = await chat_engine.answer_question(
-        pr=pr, files=files, diff=diff, user_message=question,
+        pr=pr,
+        files=files,
+        diff=diff,
+        user_message=question,
     )
 
     await github.post_comment(repo, pr_number, format_chat_response(chat_result))
     logger.info(f"/ask answered on PR #{pr_number}")
 
 
-async def _run_generate_tests(
-    github: GitHubAPI, repo: str, pr_number: int
-) -> None:
+async def _run_generate_tests(github: GitHubAPI, repo: str, pr_number: int) -> None:
     """Run /generate-tests command."""
     from src.review.test_generator import format_test_gen_comment, generate_tests
 
@@ -348,8 +360,12 @@ async def _run_generate_tests(
     files = await github.get_pr_files(repo, pr_number)
 
     test_summary = await generate_tests(
-        github=github, config=config, repo=repo,
-        pr_number=pr_number, head_ref=pr.head_ref, files=files,
+        github=github,
+        config=config,
+        repo=repo,
+        pr_number=pr_number,
+        head_ref=pr.head_ref,
+        files=files,
     )
 
     await github.post_comment(repo, pr_number, format_test_gen_comment(test_summary))

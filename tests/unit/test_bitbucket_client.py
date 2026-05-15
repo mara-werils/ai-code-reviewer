@@ -125,14 +125,18 @@ class TestBitbucketAPI:
         assert posted == 2
 
     @pytest.mark.asyncio
-    async def test_post_inline_comment_failure(self, api: BitbucketAPI, mock_client: AsyncMock) -> None:
+    async def test_post_inline_comment_failure(
+        self, api: BitbucketAPI, mock_client: AsyncMock
+    ) -> None:
         mock_resp = MagicMock()
         mock_resp.status_code = 400
         mock_resp.text = "Bad request"
         mock_client.post.return_value = mock_resp
 
         posted = await api.post_inline_comments(
-            "team", "repo", 1,
+            "team",
+            "repo",
+            1,
             [{"path": "f.py", "line": 1, "body": "test"}],
         )
         assert posted == 0

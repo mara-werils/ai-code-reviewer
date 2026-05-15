@@ -60,9 +60,7 @@ class BitbucketAPI:
             author=author.get("display_name", author.get("nickname", "")),
         )
 
-    async def get_pr_diff(
-        self, workspace: str, repo_slug: str, pr_id: int
-    ) -> str:
+    async def get_pr_diff(self, workspace: str, repo_slug: str, pr_id: int) -> str:
         """Get the unified diff for a pull request."""
         resp = await self._client.get(
             f"/repositories/{workspace}/{repo_slug}/pullrequests/{pr_id}/diff",
@@ -71,9 +69,7 @@ class BitbucketAPI:
         resp.raise_for_status()
         return resp.text
 
-    async def get_pr_files(
-        self, workspace: str, repo_slug: str, pr_id: int
-    ) -> list[PRFile]:
+    async def get_pr_files(self, workspace: str, repo_slug: str, pr_id: int) -> list[PRFile]:
         """Get changed files in a pull request via the diffstat endpoint."""
         files: list[PRFile] = []
         url = f"/repositories/{workspace}/{repo_slug}/pullrequests/{pr_id}/diffstat"
@@ -125,9 +121,7 @@ class BitbucketAPI:
 
         return files
 
-    async def get_file_content(
-        self, workspace: str, repo_slug: str, path: str, ref: str
-    ) -> str:
+    async def get_file_content(self, workspace: str, repo_slug: str, path: str, ref: str) -> str:
         """Get file content at a specific commit."""
         resp = await self._client.get(
             f"/repositories/{workspace}/{repo_slug}/src/{ref}/{path}",
@@ -137,9 +131,7 @@ class BitbucketAPI:
         resp.raise_for_status()
         return resp.text
 
-    async def post_comment(
-        self, workspace: str, repo_slug: str, pr_id: int, body: str
-    ) -> int:
+    async def post_comment(self, workspace: str, repo_slug: str, pr_id: int, body: str) -> int:
         """Post a general comment on a pull request."""
         resp = await self._client.post(
             f"/repositories/{workspace}/{repo_slug}/pullrequests/{pr_id}/comments",
@@ -187,9 +179,7 @@ class BitbucketAPI:
 
         return posted
 
-    async def get_pr_comments(
-        self, workspace: str, repo_slug: str, pr_id: int
-    ) -> list[dict]:
+    async def get_pr_comments(self, workspace: str, repo_slug: str, pr_id: int) -> list[dict]:
         """Get all comments on a pull request."""
         comments: list[dict] = []
         url = f"/repositories/{workspace}/{repo_slug}/pullrequests/{pr_id}/comments"
