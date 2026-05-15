@@ -255,6 +255,11 @@ def main() -> None:
     review_parser.add_argument("--bb-username", help="Bitbucket username")
     review_parser.add_argument("--bb-app-password", help="Bitbucket app password")
 
+    # init command
+    subparsers.add_parser(
+        "init", help="Interactive setup wizard — generates config and workflow files"
+    )
+
     # dashboard command
     dash_parser = subparsers.add_parser("dashboard", help="Launch analytics dashboard")
     dash_parser.add_argument("--port", type=int, default=8000, help="Port (default: 8000)")
@@ -264,6 +269,10 @@ def main() -> None:
 
     if args.command == "review":
         asyncio.run(cmd_review(args))
+    elif args.command == "init":
+        from src.wizard import run_wizard
+
+        run_wizard()
     elif args.command == "dashboard":
         import uvicorn
 
