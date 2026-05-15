@@ -18,7 +18,7 @@
 
 **$0.002/review with Groq** &middot; **$0.00 with Ollama** &middot; **30-second setup** &middot; **Works with any LLM**
 
-[Quick Start](#-quick-start) &middot; [GitHub App](#-github-app) &middot; [/fix](#-auto-fix-with-fix) &middot; [Security Scanner](#-security-scanner) &middot; [PR Chat](#-pr-chat--talk-to-the-reviewer) &middot; [/generate-tests](#-ai-test-generation-with-generate-tests) &middot; [Rules Engine](#-review-rules-engine) &middot; [Playground](#-try-it-online-no-install) &middot; [Pre-Commit](#-pre-commit-hook) &middot; [Providers](#-supported-providers) &middot; [/review](#-on-demand-review) &middot; [GitLab](#-gitlab-ci-integration) &middot; [Bitbucket](#-bitbucket-pipelines-integration) &middot; [VS Code](#-vs-code-extension) &middot; [Self-Hosted](#-self-hosted-mode)
+[Quick Start](#-quick-start) &middot; [Personas](#-review-personas) &middot; [/fix](#-auto-fix-with-fix) &middot; [Security Scanner](#-security-scanner) &middot; [PR Chat](#-pr-chat--talk-to-the-reviewer) &middot; [/generate-tests](#-ai-test-generation-with-generate-tests) &middot; [Rules Engine](#-review-rules-engine) &middot; [Complexity Score](#-pr-complexity-score) &middot; [Notifications](#-notifications) &middot; [Providers](#-supported-providers) &middot; [GitLab](#-gitlab-ci-integration) &middot; [Bitbucket](#-bitbucket-pipelines-integration) &middot; [VS Code](#-vs-code-extension) &middot; [Migration](#-migrate-from-other-tools) &middot; [Self-Hosted](#-self-hosted-mode)
 
 </div>
 
@@ -55,9 +55,15 @@ https://github.com/user-attachments/assets/demo-placeholder
 | **PR Chat `/ask`** | **Yes** (threaded conversations) | No | No | No |
 | **AI Test Gen `/generate-tests`** | **Yes** (commits tests to PR) | No | No | No |
 | **Rules Engine** | **Yes** (declarative YAML rules) | No | No | No |
-| **Security Scanner (SAST)** | **Yes** (built-in, 20+ rules) | No | No | No |
+| **Security Scanner (SAST)** | **Yes** (built-in, 35+ rules) | No | No | No |
 | **Self-learning** | **Yes** (learns from team feedback) | No | No | No |
 | **Analytics Dashboard** | **Yes** (web UI, no DB) | No | No | No |
+| **Review personas** | **Yes** (6 built-in) | No | No | No |
+| **PR complexity score** | **Yes** (algorithmic, free) | No | No | No |
+| **Slack/Discord/Teams** | **Yes** (webhook notifications) | No | No | No |
+| **Migration guides** | **Yes** (from CodeRabbit/PR-Agent) | N/A | N/A | N/A |
+| **Rule packs** | **Yes** (Django, React, Go) | No | No | No |
+| **Setup wizard** | **Yes** (`pr-reviewer init`) | No | No | No |
 | **Multi-repo impact** | **Yes** (cross-repo warnings) | No | No | No |
 | **Monorepo support** | **Yes** (impact radius, owners) | No | No | No |
 | **Web playground** | **Yes** (try without install) | No | No | No |
@@ -414,7 +420,7 @@ rules:
 - Findings appear as inline comments + a summary in the review body
 - Controlled by `check_security: true` in `.pr-reviewer.yml` (enabled by default)
 
-### 20+ built-in rules
+### 35+ built-in rules
 
 All rules are pattern-based (regex) and cover **OWASP Top 10** vulnerabilities across Python, JavaScript/TypeScript, Go, Java, Ruby, PHP, and more.
 
@@ -865,6 +871,86 @@ graph LR
 
 ---
 
+## Review Personas
+
+Pick a **review personality** instead of writing custom instructions from scratch. One keyword changes the reviewer's priorities, tone, and depth.
+
+```yaml
+# .pr-reviewer.yml
+persona: security-hawk
+```
+
+Or in the workflow:
+
+```yaml
+- uses: mara-werils/ai-code-reviewer@v1
+  with:
+    persona: 'mentor'
+```
+
+| Persona | Focus | Best for |
+|---------|-------|----------|
+| `default` | Balanced — bugs, security, design | Most teams |
+| `security-hawk` | Security-only — CWE references, OWASP focus | Fintech, healthcare, compliance |
+| `mentor` | Educational — explains WHY, teaches patterns | Junior developers, bootcamps |
+| `nitpicker` | Everything — style, naming, docs, design | Pre-release, critical code |
+| `quick-scan` | Critical bugs and security only (max 5 comments) | Large PRs, fast iteration |
+| `dora` | Deployment risk, rollback safety, feature flags | DevOps, SRE teams |
+
+---
+
+## PR Complexity Score
+
+Every PR gets an algorithmic **complexity score (0-100)** — no LLM needed, instant, free.
+
+Helps teams enforce small, reviewable PRs.
+
+**Scoring factors:**
+- Lines changed (0-30 pts)
+- Files touched (0-15 pts)
+- Language mix (0-10 pts)
+- Cross-module coupling (0-15 pts)
+- Sensitive files (0-15 pts)
+- Code churn ratio (0-15 pts)
+
+**Example output:**
+> **Complexity: 65/100** (HIGH 4/5)
+>
+> Breakdown: Lines changed: +25 | Files touched: +15 | Language mix: +6 | Cross-module: +10 | Sensitive files: +9
+
+---
+
+## Notifications
+
+Send review summaries to **Slack**, **Discord**, or **Microsoft Teams** when risk level exceeds a threshold.
+
+```yaml
+# .pr-reviewer.yml
+notifications:
+  slack_webhook: https://hooks.slack.com/services/T.../B.../xxx
+  discord_webhook: https://discord.com/api/webhooks/.../...
+  notify_on: [high, critical]
+```
+
+Or via action inputs:
+
+```yaml
+- uses: mara-werils/ai-code-reviewer@v1
+  with:
+    slack_webhook: ${{ secrets.SLACK_WEBHOOK }}
+```
+
+---
+
+## Migrate from Other Tools
+
+Switching from another AI reviewer? We have step-by-step guides:
+
+- **[Migrate from CodeRabbit](docs/migrate/from-coderabbit.md)** — config translation, 5-minute switch
+- **[Migrate from PR-Agent](docs/migrate/from-pr-agent.md)** — command mapping, cost comparison
+
+---
+
 ## FAQ
 
 <details>
@@ -944,8 +1030,18 @@ Show that your project uses AI code reviews:
 - [x] Auto-fix `/fix` — AI commits fixes directly to your PR branch
 - [x] Learning from feedback — self-calibrating reviews based on team reactions
 - [x] VS Code extension
+- [x] Review personas (security-hawk, mentor, nitpicker, quick-scan, dora)
+- [x] PR complexity scoring (algorithmic, zero cost)
+- [x] Slack/Discord/Teams notifications
+- [x] Migration guides (from CodeRabbit, PR-Agent)
+- [x] Setup wizard (`pr-reviewer init`)
+- [x] Rule packs (Django, React, Go)
+- [x] Review quality benchmarks
+- [x] 35+ security scanner rules
+- [x] Diff-aware caching (skip unchanged files)
+- [x] 15-language support
 - [ ] JetBrains plugin
-- [ ] Slack/Discord notifications
+- [ ] GitHub Marketplace App (hosted)
 
 ---
 
