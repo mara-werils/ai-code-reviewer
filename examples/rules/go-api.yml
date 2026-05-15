@@ -1,0 +1,43 @@
+# Rule pack: Go API
+# Usage: copy to .pr-reviewer-rules.yml in your repo root
+
+rules:
+  - name: no-fmt-sprintf-sql
+    pattern: "(?:db\\.(?:Query|Exec|QueryRow))\\(.*fmt\\.Sprintf"
+    severity: critical
+    message: "SQL injection via fmt.Sprintf. Use parameterized queries with $1, $2."
+    include_files: "**/*.go"
+
+  - name: no-panic-in-handlers
+    pattern: "\\bpanic\\("
+    severity: critical
+    message: "Never panic in HTTP handlers — it crashes the process. Return an error instead."
+    include_files: "**/*.go"
+    exclude_files: "**/*_test.go"
+
+  - name: no-insecure-tls
+    pattern: "InsecureSkipVerify\\s*:\\s*true"
+    severity: critical
+    message: "TLS verification disabled. Vulnerable to MITM attacks in production."
+    include_files: "**/*.go"
+
+  - name: check-error-handling
+    pattern: "\\b\\w+\\s*,\\s*_\\s*:?=.*\\("
+    severity: warning
+    message: "Ignoring error with `_`. Handle or explicitly document why it's safe to ignore."
+    include_files: "**/*.go"
+    exclude_files: "**/*_test.go"
+
+  - name: no-log-fatal-in-handlers
+    pattern: "log\\.Fatal"
+    severity: warning
+    message: "log.Fatal calls os.Exit(1). Use log.Printf and return error in handlers."
+    include_files: "**/*.go"
+    exclude_files: "cmd/**|main.go"
+
+  - name: require-tests
+    when:
+      files_match: "pkg/**/*.go"
+      no_files_match: "**/*_test.go"
+    severity: warning
+    message: "Package changes should include test coverage."

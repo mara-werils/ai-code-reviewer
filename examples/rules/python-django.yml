@@ -1,0 +1,48 @@
+# Rule pack: Python + Django
+# Usage: copy to .pr-reviewer-rules.yml in your repo root
+
+rules:
+  - name: no-raw-sql
+    pattern: "(?:execute|raw)\\(.*(?:SELECT|INSERT|UPDATE|DELETE|DROP|ALTER)"
+    severity: critical
+    message: "Use Django ORM instead of raw SQL to prevent injection."
+    include_files: "**/*.py"
+    exclude_files: "tests/**"
+
+  - name: no-model-save-in-loop
+    pattern: "\\.save\\(\\)"
+    severity: warning
+    message: "Model.save() in a loop causes N+1 writes. Use bulk_create() or bulk_update()."
+    include_files: "**/*.py"
+
+  - name: no-print-debug
+    pattern: "^\\s*print\\("
+    severity: warning
+    message: "Use Django logging instead of print()."
+    include_files: "**/*.py"
+    exclude_files: "tests/**|**/management/commands/**"
+
+  - name: no-wildcard-import
+    pattern: "from .+ import \\*"
+    severity: suggestion
+    message: "Avoid wildcard imports — they break static analysis and IDE autocompletion."
+    include_files: "**/*.py"
+
+  - name: require-tests-for-views
+    when:
+      files_match: "**/views.py"
+      no_files_match: "tests/**/test_*.py"
+    severity: warning
+    message: "View changes should include test coverage."
+
+  - name: require-migration-review
+    when:
+      files_match: "**/migrations/*.py"
+    severity: warning
+    message: "Database migration detected. Ensure reversibility and data preservation."
+
+  - name: no-debug-toolbar-in-prod
+    pattern: "debug_toolbar|DEBUG\\s*=\\s*True"
+    severity: critical
+    message: "Debug configuration detected. Ensure this is not active in production."
+    include_files: "**/settings*.py"
