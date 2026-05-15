@@ -1,0 +1,105 @@
+[
+  {
+    "name": "sql_injection_basic",
+    "description": "Raw SQL with string formatting in Python",
+    "diff": "--- a/src/db.py\n+++ b/src/db.py\n@@ -10,3 +10,5 @@\n+def get_user(user_id):\n+    cursor.execute(f\"SELECT * FROM users WHERE id = {user_id}\")\n+    return cursor.fetchone()\n",
+    "expected_findings": [
+      {
+        "type": "security",
+        "severity": "critical",
+        "pattern": "sql injection",
+        "line_hint": 12
+      }
+    ]
+  },
+  {
+    "name": "missing_null_check",
+    "description": "Function returns Optional but caller doesn't check None",
+    "diff": "--- a/src/api.py\n+++ b/src/api.py\n@@ -15,3 +15,6 @@\n+def handle_request(request):\n+    user = get_user(request.user_id)  # can return None\n+    return {\"name\": user.name, \"email\": user.email}\n",
+    "expected_findings": [
+      {
+        "type": "bug",
+        "severity": "warning",
+        "pattern": "null|none|optional",
+        "line_hint": 17
+      }
+    ]
+  },
+  {
+    "name": "hardcoded_secret",
+    "description": "API key hardcoded in config file",
+    "diff": "--- a/src/config.py\n+++ b/src/config.py\n@@ -1,3 +1,5 @@\n+API_KEY = \"sk-1234567890abcdef1234567890abcdef\"\n+DATABASE_URL = \"postgresql://admin:password123@db.example.com/prod\"\n",
+    "expected_findings": [
+      {
+        "type": "security",
+        "severity": "critical",
+        "pattern": "secret|key|hardcoded",
+        "line_hint": 2
+      },
+      {
+        "type": "security",
+        "severity": "critical",
+        "pattern": "password|credential",
+        "line_hint": 3
+      }
+    ]
+  },
+  {
+    "name": "n_plus_one_query",
+    "description": "N+1 query in loop",
+    "diff": "--- a/src/views.py\n+++ b/src/views.py\n@@ -20,3 +20,8 @@\n+def list_orders():\n+    orders = Order.objects.all()\n+    result = []\n+    for order in orders:\n+        customer = Customer.objects.get(id=order.customer_id)\n+        result.append({\"order\": order.id, \"customer\": customer.name})\n+    return result\n",
+    "expected_findings": [
+      {
+        "type": "performance",
+        "severity": "warning",
+        "pattern": "n\\+1|n plus one|loop.*query",
+        "line_hint": 25
+      }
+    ]
+  },
+  {
+    "name": "xss_innerhtml",
+    "description": "XSS via innerHTML with user input",
+    "diff": "--- a/src/ui.js\n+++ b/src/ui.js\n@@ -5,3 +5,5 @@\n+function renderComment(comment) {\n+  document.getElementById('comments').innerHTML = comment.body;\n+}\n",
+    "expected_findings": [
+      {
+        "type": "security",
+        "severity": "high",
+        "pattern": "xss|innerhtml|cross.site",
+        "line_hint": 7
+      }
+    ]
+  },
+  {
+    "name": "race_condition_check_then_act",
+    "description": "TOCTOU race condition in file handling",
+    "diff": "--- a/src/upload.py\n+++ b/src/upload.py\n@@ -10,3 +10,7 @@\n+def save_upload(filename, content):\n+    path = os.path.join(UPLOAD_DIR, filename)\n+    if not os.path.exists(path):\n+        with open(path, 'w') as f:\n+            f.write(content)\n",
+    "expected_findings": [
+      {
+        "type": "bug",
+        "severity": "warning",
+        "pattern": "race|toctou|time.of.check",
+        "line_hint": 13
+      }
+    ]
+  },
+  {
+    "name": "eval_user_input",
+    "description": "eval() with user-controlled input",
+    "diff": "--- a/src/calc.py\n+++ b/src/calc.py\n@@ -1,3 +1,5 @@\n+def calculate(expression):\n+    return eval(expression)\n",
+    "expected_findings": [
+      {
+        "type": "security",
+        "severity": "critical",
+        "pattern": "eval|injection|arbitrary.code",
+        "line_hint": 3
+      }
+    ]
+  },
+  {
+    "name": "clean_code_no_issues",
+    "description": "Well-written code with no issues — should return no findings",
+    "diff": "--- a/src/utils.py\n+++ b/src/utils.py\n@@ -1,3 +1,10 @@\n+from typing import Optional\n+\n+def safe_divide(a: float, b: float) -> Optional[float]:\n+    \"\"\"Divide a by b, returning None if b is zero.\"\"\"\n+    if b == 0:\n+        return None\n+    return a / b\n",
+    "expected_findings": []
+  }
+]
