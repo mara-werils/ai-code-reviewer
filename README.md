@@ -4,17 +4,19 @@
 
 # AI Code Reviewer
 
-### AI-powered code review for GitHub pull requests.
-### One-line setup. Zero config. Works with any LLM.
+### The open-source AI code reviewer that works with **any LLM**.
+### Drop-in replacement for CodeRabbit. Free forever.
 
 [![GitHub stars](https://img.shields.io/github/stars/mara-werils/ai-code-reviewer?style=social)](https://github.com/mara-werils/ai-code-reviewer/stargazers)
 [![CI](https://img.shields.io/github/actions/workflow/status/mara-werils/ai-code-reviewer/ci.yml?label=CI&logo=github)](https://github.com/mara-werils/ai-code-reviewer/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![GitHub Marketplace](https://img.shields.io/badge/Marketplace-AI%20Code%20Reviewer-blueviolet?logo=github)](https://github.com/marketplace/actions/ai-code-reviewer)
 [![PyPI](https://img.shields.io/pypi/v/pr-reviewer?logo=pypi&logoColor=white)](https://pypi.org/project/pr-reviewer/)
-[![Discord](https://img.shields.io/discord/YOUR_SERVER_ID?logo=discord&logoColor=white&label=Discord&color=5865F2)](https://discord.gg/YOUR_INVITE_LINK)
+[![Downloads](https://img.shields.io/pypi/dm/pr-reviewer?logo=pypi&logoColor=white&label=downloads)](https://pypi.org/project/pr-reviewer/)
+[![Python](https://img.shields.io/pypi/pyversions/pr-reviewer?logo=python&logoColor=white)](https://pypi.org/project/pr-reviewer/)
+[![Discord](https://img.shields.io/badge/Discord-Join%20Chat-5865F2?logo=discord&logoColor=white)](https://discord.gg/ai-code-reviewer)
 
-**Used by [X] developers** &middot; **[Y] reviews completed** &middot; **$0.002/review with Groq**
+**$0.002/review with Groq** &middot; **$0.00 with Ollama** &middot; **30-second setup** &middot; **Works with any LLM**
 
 [Quick Start](#-quick-start) &middot; [GitHub App](#-github-app) &middot; [/fix](#-auto-fix-with-fix) &middot; [Security Scanner](#-security-scanner) &middot; [PR Chat](#-pr-chat--talk-to-the-reviewer) &middot; [/generate-tests](#-ai-test-generation-with-generate-tests) &middot; [Rules Engine](#-review-rules-engine) &middot; [Playground](#-try-it-online-no-install) &middot; [Pre-Commit](#-pre-commit-hook) &middot; [Providers](#-supported-providers) &middot; [/review](#-on-demand-review) &middot; [GitLab](#-gitlab-ci-integration) &middot; [Bitbucket](#-bitbucket-pipelines-integration) &middot; [VS Code](#-vs-code-extension) &middot; [Self-Hosted](#-self-hosted-mode)
 
