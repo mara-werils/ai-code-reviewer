@@ -55,7 +55,6 @@ async def notify_slack(
 ) -> None:
     """Send review summary to Slack via incoming webhook."""
     icon = RISK_ICON.get(result.risk_level, "speech_balloon")
-    summary = _build_summary(result, repo, pr_number, pr_title)
 
     payload = {
         "blocks": [

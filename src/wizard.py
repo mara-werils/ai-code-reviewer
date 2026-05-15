@@ -6,7 +6,6 @@ Usage:
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 WORKFLOW_TEMPLATE = """name: AI Code Review
@@ -219,7 +218,7 @@ def run_wizard() -> None:
     print("\n  Next steps:")
     if info["env"]:
         print(f"  1. Add {info['env']} to GitHub repo secrets")
-        print(f"     Settings > Secrets > Actions > New repository secret")
-    print(f"  2. Push to GitHub and open a PR")
-    print(f"  3. AI review lands in ~30 seconds")
+        print("     Settings > Secrets > Actions > New repository secret")
+    print("  2. Push to GitHub and open a PR")
+    print("  3. AI review lands in ~30 seconds")
     print("=" * 60)

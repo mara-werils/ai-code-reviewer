@@ -1,7 +1,6 @@
 """Tests for review personas."""
 
 from src.review.personas import (
-    PERSONA_REGISTRY,
     apply_persona,
     get_persona,
     list_personas,

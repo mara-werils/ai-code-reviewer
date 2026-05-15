@@ -12,7 +12,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import asyncio
 import json
 import re
 import sys
@@ -107,7 +106,6 @@ def run_scanner_bench(samples: list[dict]) -> dict:
     tp = results["true_positives"]
     fn = results["false_negatives"]
     fp = results["false_positives"]
-    tn = results["true_negatives"]
 
     results["recall"] = tp / max(tp + fn, 1)
     results["precision"] = tp / max(tp + fp, 1)
@@ -142,7 +140,7 @@ def main() -> None:
         help="Also run LLM-based review (requires API key)",
     )
     parser.add_argument("--provider", default="groq", help="LLM provider for --with-llm")
-    args = parser.parse_args()
+    parser.parse_args()
 
     if not GOLDEN_PATH.exists():
         print(f"Golden dataset not found at {GOLDEN_PATH}")
