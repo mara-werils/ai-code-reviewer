@@ -40,10 +40,7 @@ class TestComputeComplexity:
         assert result.level in ("trivial", "low")
 
     def test_medium_pr(self) -> None:
-        files = [
-            _file(f"src/module{i}/handler.py", additions=40, deletions=20)
-            for i in range(8)
-        ]
+        files = [_file(f"src/module{i}/handler.py", additions=40, deletions=20) for i in range(8)]
         result = compute_complexity(files)
         assert result.score >= 20
 

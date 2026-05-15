@@ -74,10 +74,12 @@ async def notify_slack(
     }
 
     if result.summary:
-        payload["blocks"].append({
-            "type": "context",
-            "elements": [{"type": "mrkdwn", "text": result.summary[:300]}],
-        })
+        payload["blocks"].append(
+            {
+                "type": "context",
+                "elements": [{"type": "mrkdwn", "text": result.summary[:300]}],
+            }
+        )
 
     try:
         async with httpx.AsyncClient() as client:
@@ -118,11 +120,13 @@ async def notify_discord(
     }
 
     if result.summary:
-        payload["embeds"][0]["fields"].append({
-            "name": "Summary",
-            "value": result.summary[:1024],
-            "inline": False,
-        })
+        payload["embeds"][0]["fields"].append(
+            {
+                "name": "Summary",
+                "value": result.summary[:1024],
+                "inline": False,
+            }
+        )
 
     try:
         async with httpx.AsyncClient() as client:

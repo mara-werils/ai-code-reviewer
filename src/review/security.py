@@ -111,7 +111,6 @@ SECURITY_RULES: list[SecurityRule] = [
         fix_hint="Use ORM query builders or parameterized raw queries.",
         languages=["python"],
     ),
-
     # ── XSS ──────────────────────────────────────────────────────────────
     SecurityRule(
         id="SEC010",
@@ -143,7 +142,6 @@ SECURITY_RULES: list[SecurityRule] = [
         fix_hint="Use escaped output. Avoid mark_safe() and |safe unless content is trusted.",
         languages=["python", "ruby"],
     ),
-
     # ── Hardcoded Secrets ────────────────────────────────────────────────
     SecurityRule(
         id="SEC020",
@@ -192,7 +190,6 @@ SECURITY_RULES: list[SecurityRule] = [
         fix_hint="Store private keys in a secure key store, not in source code.",
         exclude_test_files=True,
     ),
-
     # ── Path Traversal ───────────────────────────────────────────────────
     SecurityRule(
         id="SEC030",
@@ -204,7 +201,6 @@ SECURITY_RULES: list[SecurityRule] = [
         fix_hint="Validate and sanitize file paths. Use `os.path.basename()` or resolve against a safe base directory.",
         languages=["python", "javascript", "typescript"],
     ),
-
     # ── Command Injection ────────────────────────────────────────────────
     SecurityRule(
         id="SEC040",
@@ -236,7 +232,6 @@ SECURITY_RULES: list[SecurityRule] = [
         fix_hint="Use ast.literal_eval() for Python, JSON.parse() for JS, or avoid eval entirely.",
         languages=["python", "javascript", "typescript"],
     ),
-
     # ── Insecure Crypto ──────────────────────────────────────────────────
     SecurityRule(
         id="SEC050",
@@ -257,7 +252,6 @@ SECURITY_RULES: list[SecurityRule] = [
         fix_hint="Use `secrets` module (Python) or `crypto.randomBytes()` (Node.js).",
         exclude_test_files=True,
     ),
-
     # ── SSRF ─────────────────────────────────────────────────────────────
     SecurityRule(
         id="SEC060",
@@ -268,7 +262,6 @@ SECURITY_RULES: list[SecurityRule] = [
         description="HTTP request with user-controlled URL. Vulnerable to SSRF.",
         fix_hint="Validate URLs against an allowlist. Block internal/private IP ranges.",
     ),
-
     # ── Insecure Deserialization ─────────────────────────────────────────
     SecurityRule(
         id="SEC070",
@@ -290,7 +283,6 @@ SECURITY_RULES: list[SecurityRule] = [
         fix_hint="Use `yaml.safe_load()` or `yaml.load(data, Loader=yaml.SafeLoader)`.",
         languages=["python"],
     ),
-
     # ── Auth Issues ──────────────────────────────────────────────────────
     SecurityRule(
         id="SEC080",
@@ -320,7 +312,6 @@ SECURITY_RULES: list[SecurityRule] = [
         fix_hint="Disable debug mode in production. Use environment variables to control it.",
         exclude_test_files=True,
     ),
-
     # ── Dangerous Functions ──────────────────────────────────────────────
     SecurityRule(
         id="SEC090",
@@ -332,7 +323,6 @@ SECURITY_RULES: list[SecurityRule] = [
         fix_hint="Remove all debugger statements before merging.",
         exclude_test_files=True,
     ),
-
     # ── Go-specific ──────────────────────────────────────────────────────
     SecurityRule(
         id="SEC100",
@@ -341,7 +331,7 @@ SECURITY_RULES: list[SecurityRule] = [
         severity="critical",
         category="injection",
         description="SQL query built with fmt.Sprintf or concatenation in Go.",
-        fix_hint="Use parameterized queries: `db.Query(\"SELECT * FROM users WHERE id = $1\", id)`",
+        fix_hint='Use parameterized queries: `db.Query("SELECT * FROM users WHERE id = $1", id)`',
         languages=["go"],
     ),
     SecurityRule(
@@ -354,9 +344,7 @@ SECURITY_RULES: list[SecurityRule] = [
         fix_hint="Never disable TLS verification in production.",
         languages=["go"],
     ),
-
     # ── Additional rules (expanded coverage) ────────────────────────────────
-
     # Path traversal via user input in filenames
     SecurityRule(
         id="SEC031",
@@ -368,7 +356,6 @@ SECURITY_RULES: list[SecurityRule] = [
         fix_hint="Use pathlib and resolve against a safe base: `base.joinpath(user_input).resolve().relative_to(base)`",
         languages=["python"],
     ),
-
     # Timing attack on secret comparison
     SecurityRule(
         id="SEC052",
@@ -380,7 +367,6 @@ SECURITY_RULES: list[SecurityRule] = [
         fix_hint="Use `hmac.compare_digest()` (Python) or `crypto.timingSafeEqual()` (Node.js).",
         exclude_test_files=True,
     ),
-
     # Prototype pollution (JS)
     SecurityRule(
         id="SEC110",
@@ -392,7 +378,6 @@ SECURITY_RULES: list[SecurityRule] = [
         fix_hint="Validate input keys. Use Object.create(null) or a safe merge library.",
         languages=["javascript", "typescript"],
     ),
-
     # Open redirect
     SecurityRule(
         id="SEC111",
@@ -403,7 +388,6 @@ SECURITY_RULES: list[SecurityRule] = [
         description="Redirect URL from user input. Vulnerable to open redirect attacks.",
         fix_hint="Validate redirect URLs against an allowlist of trusted domains.",
     ),
-
     # XML External Entity (XXE)
     SecurityRule(
         id="SEC112",
@@ -415,7 +399,6 @@ SECURITY_RULES: list[SecurityRule] = [
         fix_hint="Disable external entities: use defusedxml library or set parser features.",
         languages=["python"],
     ),
-
     # Unsafe regex (ReDoS)
     SecurityRule(
         id="SEC113",
@@ -427,7 +410,6 @@ SECURITY_RULES: list[SecurityRule] = [
         fix_hint="Simplify regex or use re2/google-re2 for guaranteed linear time.",
         languages=["python"],
     ),
-
     # Hardcoded JWT secret
     SecurityRule(
         id="SEC025",
@@ -438,7 +420,6 @@ SECURITY_RULES: list[SecurityRule] = [
         description="JWT signed with hardcoded secret. Secret will be exposed in source control.",
         fix_hint="Load JWT secret from environment variable or secrets manager.",
     ),
-
     # Mass assignment
     SecurityRule(
         id="SEC114",
@@ -450,7 +431,6 @@ SECURITY_RULES: list[SecurityRule] = [
         fix_hint="Explicitly list allowed fields instead of passing **request.data directly.",
         languages=["python"],
     ),
-
     # Unvalidated file upload
     SecurityRule(
         id="SEC115",
@@ -461,7 +441,6 @@ SECURITY_RULES: list[SecurityRule] = [
         description="File upload without validation. Check file type, size, and sanitize filename.",
         fix_hint="Validate MIME type, limit file size, use `secure_filename()`, and store outside web root.",
     ),
-
     # Disabled CSRF protection
     SecurityRule(
         id="SEC083",
@@ -473,7 +452,6 @@ SECURITY_RULES: list[SecurityRule] = [
         fix_hint="Enable CSRF protection. Use token-based CSRF for APIs, SameSite cookies for sessions.",
         languages=["python"],
     ),
-
     # Insecure cookie
     SecurityRule(
         id="SEC084",
@@ -484,7 +462,6 @@ SECURITY_RULES: list[SecurityRule] = [
         description="Cookie set without security flags (httponly, secure, samesite).",
         fix_hint="Set httponly=True, secure=True, samesite='Lax' for session cookies.",
     ),
-
     # Logging sensitive data
     SecurityRule(
         id="SEC091",
@@ -496,7 +473,6 @@ SECURITY_RULES: list[SecurityRule] = [
         fix_hint="Redact sensitive fields before logging. Use structured logging with field filtering.",
         exclude_test_files=True,
     ),
-
     # Hardcoded IP / internal URLs
     SecurityRule(
         id="SEC026",
@@ -508,7 +484,6 @@ SECURITY_RULES: list[SecurityRule] = [
         fix_hint="Use environment variables for service URLs.",
         exclude_test_files=True,
     ),
-
     # TypeScript any abuse
     SecurityRule(
         id="SEC120",
@@ -521,7 +496,6 @@ SECURITY_RULES: list[SecurityRule] = [
         languages=["typescript"],
         exclude_test_files=True,
     ),
-
     # Go defer in loop
     SecurityRule(
         id="SEC102",
@@ -621,21 +595,20 @@ def format_security_findings(findings: list[SecurityFinding]) -> list[dict]:
     comments: list[dict] = []
     for f in findings:
         icon = severity_icon.get(f.severity, "WARNING")
-        body = (
-            f"**[{icon}] Security: {f.rule_name}** (`{f.rule_id}`)\n\n"
-            f"{f.description}\n\n"
-        )
+        body = f"**[{icon}] Security: {f.rule_name}** (`{f.rule_id}`)\n\n{f.description}\n\n"
         if f.fix_hint:
             body += f"**Fix:** {f.fix_hint}\n\n"
         if f.matched_text:
             body += f"Matched: `{f.matched_text}`"
 
-        comments.append({
-            "path": f.path,
-            "line": f.line,
-            "body": body,
-            "severity": "critical" if f.severity in ("critical", "high") else "warning",
-        })
+        comments.append(
+            {
+                "path": f.path,
+                "line": f.line,
+                "body": body,
+                "severity": "critical" if f.severity in ("critical", "high") else "warning",
+            }
+        )
 
     return comments
 
@@ -665,8 +638,8 @@ def format_security_summary(findings: list[SecurityFinding]) -> str:
             parts.append(f"- **{sev.upper()}**: {count}")
 
     parts.append("")
-    parts.append("Categories: " + ", ".join(
-        f"{cat} ({count})" for cat, count in sorted(by_category.items())
-    ))
+    parts.append(
+        "Categories: " + ", ".join(f"{cat} ({count})" for cat, count in sorted(by_category.items()))
+    )
 
     return "\n".join(parts)

@@ -95,11 +95,13 @@ def load_deps(path: Path | None = None) -> DepsConfig:
         depends_on = item.get("depends_on", [])
         if isinstance(depends_on, str):
             depends_on = [depends_on]
-        dependencies.append(RepoDependency(
-            repo=item["repo"],
-            depends_on=depends_on,
-            description=item.get("description", ""),
-        ))
+        dependencies.append(
+            RepoDependency(
+                repo=item["repo"],
+                depends_on=depends_on,
+                description=item.get("description", ""),
+            )
+        )
 
     logger.info(f"Loaded {len(dependencies)} dependency mappings")
     return DepsConfig(dependencies=dependencies)
@@ -167,12 +169,14 @@ def analyze_cross_repo_impact(
                         matched_pr_files.append(filename)
 
         if matched_pr_files:
-            impacts.append(CrossRepoImpact(
-                dependent_repo=dep.repo,
-                affected_files=matched_patterns,
-                dependency_description=dep.description,
-                changed_files_in_pr=matched_pr_files,
-            ))
+            impacts.append(
+                CrossRepoImpact(
+                    dependent_repo=dep.repo,
+                    affected_files=matched_patterns,
+                    dependency_description=dep.description,
+                    changed_files_in_pr=matched_pr_files,
+                )
+            )
 
     return impacts
 

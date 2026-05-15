@@ -151,24 +151,26 @@ def load_log(path: Path | None = None) -> ReviewLog:
 
     entries = []
     for item in data.get("entries", []):
-        entries.append(ReviewLogEntry(
-            pr_number=item.get("pr_number", 0),
-            title=item.get("title", ""),
-            author=item.get("author", ""),
-            repo=item.get("repo", ""),
-            risk_level=item.get("risk_level", ""),
-            category=item.get("category", ""),
-            comments_count=item.get("comments_count", 0),
-            cost_usd=item.get("cost_usd", 0),
-            duration_ms=item.get("duration_ms", 0),
-            model=item.get("model", ""),
-            provider=item.get("provider", ""),
-            timestamp=item.get("timestamp", ""),
-            files_changed=item.get("files_changed", 0),
-            lines_added=item.get("lines_added", 0),
-            lines_deleted=item.get("lines_deleted", 0),
-            severity_counts=item.get("severity_counts", {}),
-        ))
+        entries.append(
+            ReviewLogEntry(
+                pr_number=item.get("pr_number", 0),
+                title=item.get("title", ""),
+                author=item.get("author", ""),
+                repo=item.get("repo", ""),
+                risk_level=item.get("risk_level", ""),
+                category=item.get("category", ""),
+                comments_count=item.get("comments_count", 0),
+                cost_usd=item.get("cost_usd", 0),
+                duration_ms=item.get("duration_ms", 0),
+                model=item.get("model", ""),
+                provider=item.get("provider", ""),
+                timestamp=item.get("timestamp", ""),
+                files_changed=item.get("files_changed", 0),
+                lines_added=item.get("lines_added", 0),
+                lines_deleted=item.get("lines_deleted", 0),
+                severity_counts=item.get("severity_counts", {}),
+            )
+        )
 
     return ReviewLog(entries=entries)
 

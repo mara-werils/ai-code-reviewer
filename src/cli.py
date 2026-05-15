@@ -175,9 +175,7 @@ async def cmd_review(args: argparse.Namespace) -> None:
                 inline = build_github_review_comments(result)
                 await bb.post_comment(workspace, repo_slug, mr_number, body)
                 if inline:
-                    await bb.post_inline_comments(
-                        workspace, repo_slug, mr_number, inline
-                    )
+                    await bb.post_inline_comments(workspace, repo_slug, mr_number, inline)
                 logger.info(f"Posted review to Bitbucket PR #{mr_number}")
             finally:
                 await bb.close()

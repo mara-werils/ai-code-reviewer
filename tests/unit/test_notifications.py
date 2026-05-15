@@ -15,8 +15,11 @@ def _result(risk: str = "high", comments: int = 3) -> ReviewResult:
         category="bugfix",
         comments=[
             ReviewComment(
-                path=f"src/file{i}.py", line=10, side="RIGHT",
-                body="issue", severity="warning",
+                path=f"src/file{i}.py",
+                line=10,
+                side="RIGHT",
+                body="issue",
+                severity="warning",
             )
             for i in range(comments)
         ],

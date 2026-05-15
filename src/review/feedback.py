@@ -51,11 +51,13 @@ class FeedbackStore:
 
     repo: str = ""
     entries: list[FeedbackEntry] = field(default_factory=list)
-    stats: dict[str, int] = field(default_factory=lambda: {
-        "total": 0,
-        "accepted": 0,
-        "rejected": 0,
-    })
+    stats: dict[str, int] = field(
+        default_factory=lambda: {
+            "total": 0,
+            "accepted": 0,
+            "rejected": 0,
+        }
+    )
 
     def add(self, entry: FeedbackEntry) -> None:
         """Add a feedback entry and update stats."""
@@ -104,17 +106,19 @@ def load_feedback(path: Path | None = None) -> FeedbackStore:
 
     entries = []
     for item in data.get("entries", []):
-        entries.append(FeedbackEntry(
-            comment_body=item.get("comment_body", ""),
-            severity=item.get("severity", ""),
-            file_path=item.get("file_path", ""),
-            category=item.get("category", ""),
-            outcome=item.get("outcome", ""),
-            developer_reply=item.get("developer_reply", ""),
-            pr_number=item.get("pr_number", 0),
-            timestamp=item.get("timestamp", ""),
-            language=item.get("language", ""),
-        ))
+        entries.append(
+            FeedbackEntry(
+                comment_body=item.get("comment_body", ""),
+                severity=item.get("severity", ""),
+                file_path=item.get("file_path", ""),
+                category=item.get("category", ""),
+                outcome=item.get("outcome", ""),
+                developer_reply=item.get("developer_reply", ""),
+                pr_number=item.get("pr_number", 0),
+                timestamp=item.get("timestamp", ""),
+                language=item.get("language", ""),
+            )
+        )
 
     return FeedbackStore(
         repo=data.get("repo", ""),
@@ -179,9 +183,13 @@ def build_learning_prompt(store: FeedbackStore) -> str:
             parts.append(f"- {cat}: dismissed {count} times")
 
         # If low-severity comments are mostly rejected, note it
-        info_rejected = rejected_severities.get("info", 0) + rejected_severities.get("suggestion", 0)
+        info_rejected = rejected_severities.get("info", 0) + rejected_severities.get(
+            "suggestion", 0
+        )
         if info_rejected > len(rejected) * 0.5:
-            parts.append("- **This team prefers fewer, higher-impact comments. Skip INFO/SUGGESTION level issues.**")
+            parts.append(
+                "- **This team prefers fewer, higher-impact comments. Skip INFO/SUGGESTION level issues.**"
+            )
 
         # Include specific rejected examples (most recent)
         recent_rejected = rejected[-5:]
@@ -221,10 +229,7 @@ def collect_feedback_from_reactions(
     - Comment thread was resolved → accepted
     """
     entries: list[FeedbackEntry] = []
-    bot_comments = [
-        c for c in review_comments
-        if _is_bot_comment(c, bot_username)
-    ]
+    bot_comments = [c for c in review_comments if _is_bot_comment(c, bot_username)]
 
     # Build reply map: bot_comment_id → list of replies
     reply_map: dict[int, list[dict]] = {}
@@ -270,19 +275,22 @@ def collect_feedback_from_reactions(
             if human_replies:
                 developer_reply = human_replies[-1].get("body", "")
 
-        entries.append(FeedbackEntry(
-            comment_body=body[:300],
-            severity=severity,
-            file_path=path,
-            category=category,
-            outcome=outcome,
-            developer_reply=developer_reply[:200],
-        ))
+        entries.append(
+            FeedbackEntry(
+                comment_body=body[:300],
+                severity=severity,
+                file_path=path,
+                category=category,
+                outcome=outcome,
+                developer_reply=developer_reply[:200],
+            )
+        )
 
     return entries
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
+
 
 def _is_bot_comment(comment: dict, bot_username: str) -> bool:
     user = comment.get("user", {}).get("login", "")
@@ -319,9 +327,18 @@ def _extract_category(body: str) -> str:
 
 
 _DISAGREEMENT_KEYWORDS = (
-    "disagree", "don't think", "not necessary", "not needed",
-    "won't fix", "by design", "intentional", "false positive",
-    "this is fine", "already handled", "not an issue", "nit",
+    "disagree",
+    "don't think",
+    "not necessary",
+    "not needed",
+    "won't fix",
+    "by design",
+    "intentional",
+    "false positive",
+    "this is fine",
+    "already handled",
+    "not an issue",
+    "nit",
 )
 
 

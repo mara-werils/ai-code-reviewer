@@ -131,11 +131,17 @@ class TestGuessTestPath:
 class TestFilterTestableFiles:
     def test_filters_correctly(self) -> None:
         files = [
-            PRFile(filename="src/api.py", status="modified", additions=10, deletions=2, patch="@@ ..."),
-            PRFile(filename="tests/test_api.py", status="modified", additions=5, deletions=0, patch=""),
+            PRFile(
+                filename="src/api.py", status="modified", additions=10, deletions=2, patch="@@ ..."
+            ),
+            PRFile(
+                filename="tests/test_api.py", status="modified", additions=5, deletions=0, patch=""
+            ),
             PRFile(filename="README.md", status="modified", additions=20, deletions=5, patch=""),
             PRFile(filename="src/old.py", status="removed", additions=0, deletions=50, patch=""),
-            PRFile(filename="src/utils.ts", status="added", additions=30, deletions=0, patch="@@ ..."),
+            PRFile(
+                filename="src/utils.ts", status="added", additions=30, deletions=0, patch="@@ ..."
+            ),
         ]
         result = filter_testable_files(files)
         assert len(result) == 2
@@ -148,7 +154,9 @@ class TestFilterTestableFiles:
     def test_all_tests(self) -> None:
         files = [
             PRFile(filename="tests/test_a.py", status="added", additions=10, deletions=0, patch=""),
-            PRFile(filename="tests/test_b.py", status="modified", additions=5, deletions=2, patch=""),
+            PRFile(
+                filename="tests/test_b.py", status="modified", additions=5, deletions=2, patch=""
+            ),
         ]
         assert filter_testable_files(files) == []
 
@@ -156,8 +164,12 @@ class TestFilterTestableFiles:
 class TestFormatTestGenComment:
     def test_no_testable_files(self) -> None:
         summary = GeneratedTestSummary(
-            files_processed=0, files_with_tests=0, total_tests=0,
-            total_skipped=0, results=[], cost_usd=0,
+            files_processed=0,
+            files_with_tests=0,
+            total_tests=0,
+            total_skipped=0,
+            results=[],
+            cost_usd=0,
         )
         result = format_test_gen_comment(summary)
         assert "No testable source files" in result
@@ -230,8 +242,12 @@ class TestFormatTestGenComment:
 
     def test_errors_only(self) -> None:
         summary = GeneratedTestSummary(
-            files_processed=1, files_with_tests=0, total_tests=0,
-            total_skipped=0, results=[], cost_usd=0,
+            files_processed=1,
+            files_with_tests=0,
+            total_tests=0,
+            total_skipped=0,
+            results=[],
+            cost_usd=0,
             errors=["src/api.py: rate limit exceeded"],
         )
         result = format_test_gen_comment(summary)
@@ -323,8 +339,12 @@ class TestGenerateTests:
 
         with patch("src.review.test_generator.create_provider"):
             result = await generate_tests(
-                github=mock_github, config=config, repo="o/r",
-                pr_number=1, head_ref="main", files=files,
+                github=mock_github,
+                config=config,
+                repo="o/r",
+                pr_number=1,
+                head_ref="main",
+                files=files,
             )
 
         assert result.files_processed == 0

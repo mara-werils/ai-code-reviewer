@@ -237,18 +237,14 @@ def _evaluate_file_match_rule(
     all_filenames: list[str],
 ) -> list[RuleViolation]:
     """Evaluate a file-match rule (files_match present but no_files_match absent)."""
-    has_match = any(
-        _file_matches_glob(fn, rule.files_match) for fn in all_filenames
-    )
+    has_match = any(_file_matches_glob(fn, rule.files_match) for fn in all_filenames)
 
     if not has_match:
         return []
 
     # If no_files_match is set, check that at least one file matches it
     if rule.no_files_match:
-        has_counter = any(
-            _file_matches_glob(fn, rule.no_files_match) for fn in all_filenames
-        )
+        has_counter = any(_file_matches_glob(fn, rule.no_files_match) for fn in all_filenames)
         if has_counter:
             return []  # Counter-files exist, rule passes
 

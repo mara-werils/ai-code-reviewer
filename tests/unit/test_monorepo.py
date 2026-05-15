@@ -80,7 +80,8 @@ class TestLoadMonorepoConfig:
 
     def test_valid(self, tmp_path: Path) -> None:
         f = tmp_path / "mono.yml"
-        f.write_text(dedent("""\
+        f.write_text(
+            dedent("""\
             packages:
               - name: core
                 path: packages/core
@@ -89,7 +90,8 @@ class TestLoadMonorepoConfig:
                 path: services/api
                 depends_on: [core]
                 owners: ["@api-team"]
-        """))
+        """)
+        )
         config = load_monorepo_config(f)
         assert len(config.packages) == 2
         assert config.packages[1].depends_on == ["core"]
@@ -102,25 +104,29 @@ class TestLoadMonorepoConfig:
 
     def test_skips_invalid(self, tmp_path: Path) -> None:
         f = tmp_path / "mono.yml"
-        f.write_text(dedent("""\
+        f.write_text(
+            dedent("""\
             packages:
               - name: valid
                 path: pkg/valid
               - name: no-path
               - not_a_dict
-        """))
+        """)
+        )
         config = load_monorepo_config(f)
         assert len(config.packages) == 1
 
 
 class TestAnalyzeMonorepoImpact:
     def _config(self) -> MonorepoConfig:
-        return MonorepoConfig(packages=[
-            Package("core", "packages/core", owners=["@backend"]),
-            Package("api", "services/api", depends_on=["core"], owners=["@api"]),
-            Package("web", "apps/web", depends_on=["api"], owners=["@frontend"]),
-            Package("db", "packages/db", owners=["@backend"]),
-        ])
+        return MonorepoConfig(
+            packages=[
+                Package("core", "packages/core", owners=["@backend"]),
+                Package("api", "services/api", depends_on=["core"], owners=["@api"]),
+                Package("web", "apps/web", depends_on=["api"], owners=["@frontend"]),
+                Package("db", "packages/db", owners=["@backend"]),
+            ]
+        )
 
     def test_direct_impact(self) -> None:
         files = [_f("packages/core/src/util.ts")]
@@ -171,7 +177,9 @@ class TestFormatImpactComment:
     def test_format(self) -> None:
         analysis = ImpactAnalysis(
             directly_changed=[
-                PackageImpact("core", "packages/core", ["a.ts"], ["api", "web"], ["@backend"], True),
+                PackageImpact(
+                    "core", "packages/core", ["a.ts"], ["api", "web"], ["@backend"], True
+                ),
             ],
             transitively_affected=[
                 PackageImpact("api", "services/api", [], [], ["@api"], False),

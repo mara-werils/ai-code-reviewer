@@ -32,9 +32,7 @@ class TestVerifyWebhookSignature:
         import hashlib
         import hmac
 
-        sig = "sha256=" + hmac.new(
-            secret.encode(), payload, hashlib.sha256
-        ).hexdigest()
+        sig = "sha256=" + hmac.new(secret.encode(), payload, hashlib.sha256).hexdigest()
 
         assert verify_webhook_signature(payload, sig, secret) is True
 
@@ -50,9 +48,7 @@ class TestVerifyWebhookSignature:
 
         payload = b""
         secret = "test"
-        sig = "sha256=" + hmac.new(
-            secret.encode(), payload, hashlib.sha256
-        ).hexdigest()
+        sig = "sha256=" + hmac.new(secret.encode(), payload, hashlib.sha256).hexdigest()
         assert verify_webhook_signature(payload, sig, secret) is True
 
 
