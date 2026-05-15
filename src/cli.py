@@ -37,6 +37,8 @@ async def cmd_review(args: argparse.Namespace) -> None:
         config.model = args.model
     if args.api_key:
         config.api_key = args.api_key
+    if args.persona:
+        config.persona = args.persona
 
     engine = ReviewEngine(config)
 
@@ -131,6 +133,30 @@ async def cmd_review(args: argparse.Namespace) -> None:
             await github.close()
 
     # Output
+    if args.output_json:
+        import json
+
+        output = {
+            "summary": result.summary,
+            "risk_level": result.risk_level,
+            "category": result.category,
+            "comments_count": len(result.comments),
+            "cost_usd": result.cost_usd,
+            "duration_ms": result.duration_ms,
+            "model": result.model,
+            "comments": [
+                {
+                    "path": c.path,
+                    "line": c.line,
+                    "severity": c.severity,
+                    "body": c.body,
+                }
+                for c in result.comments
+            ],
+        }
+        print(json.dumps(output, indent=2))
+        return
+
     body = format_review_body(result)
     print(body)
 
@@ -210,6 +236,22 @@ def main() -> None:
     review_parser.add_argument("--model", help="Model name override")
     review_parser.add_argument("--api-key", help="API key (or use env var)")
     review_parser.add_argument("--post", action="store_true", help="Post review to platform")
+    review_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show review output without posting (default when --post is not set)",
+    )
+    review_parser.add_argument(
+        "--persona",
+        choices=["default", "security-hawk", "mentor", "nitpicker", "quick-scan", "dora"],
+        help="Review persona (overrides review style and priorities)",
+    )
+    review_parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="output_json",
+        help="Output review as JSON (for CI integration)",
+    )
     review_parser.add_argument("--bb-username", help="Bitbucket username")
     review_parser.add_argument("--bb-app-password", help="Bitbucket app password")
 
