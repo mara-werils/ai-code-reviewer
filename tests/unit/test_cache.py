@@ -2,12 +2,12 @@
 
 from src.github.client import PRFile
 from src.review.cache import (
+    CacheEntry,
     _hash_patch,
     filter_changed_files,
     load_cache,
     save_cache,
     update_cache,
-    CacheEntry,
 )
 
 

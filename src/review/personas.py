@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-PERSONA_REGISTRY: dict[str, "Persona"] = {}
+PERSONA_REGISTRY: dict[str, Persona] = {}
 
 
 @dataclass

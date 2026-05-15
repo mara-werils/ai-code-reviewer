@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -11,8 +11,8 @@ from src.github.app_auth import GitHubAppAuth, verify_webhook_signature
 
 # Generate a real test RSA key at import time
 def _make_test_key() -> str:
-    from cryptography.hazmat.primitives.asymmetric import rsa
     from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric import rsa
 
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     return key.private_bytes(

@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from src.bitbucket.client import BitbucketAPI, _parse_diff_patches
-from src.github.client import PRFile, PRInfo
+from src.github.client import PRInfo
 
 
 class TestParseDiffPatches:

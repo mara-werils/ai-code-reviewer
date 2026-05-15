@@ -17,7 +17,7 @@ from __future__ import annotations
 import datetime
 from dataclasses import dataclass
 
-from src.dashboard.review_log import ReviewLog, ReviewLogEntry, load_log
+from src.dashboard.review_log import ReviewLogEntry, load_log
 
 
 @dataclass
@@ -146,8 +146,8 @@ def format_report_markdown(report: ReportCard) -> str:
         "",
         f"## Team Health Score: {report.health_score}/100",
         "",
-        f"| Metric | Value |",
-        f"|--------|-------|",
+        "| Metric | Value |",
+        "|--------|-------|",
         f"| PRs Reviewed | {report.total_reviews} |",
         f"| Total Comments | {report.total_comments} |",
         f"| Total Cost | ${report.total_cost_usd:.2f} |",
