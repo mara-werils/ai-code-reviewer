@@ -171,6 +171,36 @@ class ReviewEngine:
         result.input_tokens = response.input_tokens
         result.output_tokens = response.output_tokens
 
+        # Run security scan if enabled
+        if self.config.check_security:
+            from src.review.security import SecurityFinding, scan_diff
+
+            security_findings = scan_diff(filtered, enabled=True)
+            if security_findings:
+                for finding in security_findings:
+                    # Avoid duplicate comments on the same file+line
+                    already_commented = any(
+                        c.path == finding.path and c.line == finding.line
+                        for c in result.comments
+                    )
+                    if not already_commented:
+                        result.comments.append(
+                            ReviewComment(
+                                path=finding.path,
+                                line=finding.line,
+                                side="RIGHT",
+                                body=(
+                                    f"**[{finding.severity.upper()}] Security: "
+                                    f"{finding.rule_name}** (`{finding.rule_id}`)\n\n"
+                                    f"{finding.description}\n\n"
+                                    f"**Fix:** {finding.fix_hint}"
+                                ),
+                                severity="critical"
+                                if finding.severity in ("critical", "high")
+                                else "warning",
+                            )
+                        )
+
         logger.info(
             f"Review complete: {len(result.comments)} comments, "
             f"risk={result.risk_level}, cost=${result.cost_usd:.4f}, "
