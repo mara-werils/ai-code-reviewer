@@ -102,6 +102,10 @@ class ReviewConfig:
     gitlab_token: str = ""
     gitlab_url: str = "https://gitlab.com"
 
+    # Bitbucket
+    bitbucket_username: str = ""
+    bitbucket_app_password: str = ""
+
     # Cost
     cost_limit_usd: float = 1.00
 
@@ -162,6 +166,8 @@ class ReviewConfig:
             github_token=os.getenv("GITHUB_TOKEN", ""),
             gitlab_token=os.getenv("GITLAB_TOKEN", ""),
             gitlab_url=os.getenv("GITLAB_URL", os.getenv("CI_SERVER_URL", "https://gitlab.com")),
+            bitbucket_username=os.getenv("BITBUCKET_USERNAME", ""),
+            bitbucket_app_password=os.getenv("BITBUCKET_APP_PASSWORD", ""),
             review_language=os.getenv("INPUT_LANGUAGE", os.getenv("LANGUAGE", "en")),
             review_style=os.getenv("INPUT_REVIEW_STYLE", os.getenv("REVIEW_STYLE", "concise")),
             max_comments=max_comments,
