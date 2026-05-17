@@ -221,6 +221,20 @@ def compute_complexity(files: list[PRFile]) -> ComplexityResult:
         churn_score = 0
     breakdown["churn"] = churn_score
 
+    # 7. Concentration score (0-10) — large single-file changes are harder to review
+    max_file_changes = max((f.additions + f.deletions) for f in files)
+    if max_file_changes > 500:
+        concentration_score = 10
+        suggestions.append(
+            f"Largest file has {max_file_changes} line changes. "
+            "Consider breaking large file changes into separate PRs."
+        )
+    elif max_file_changes > 300:
+        concentration_score = 5
+    else:
+        concentration_score = 0
+    breakdown["concentration"] = concentration_score
+
     # Total
     total = sum(breakdown.values())
     score = min(total, 100)
@@ -278,6 +292,7 @@ def format_complexity_section(result: ComplexityResult) -> str:
             "coupling": "Cross-module",
             "risk": "Sensitive files",
             "churn": "Code churn",
+            "concentration": "File concentration",
         }
         items = []
         for key, pts in result.breakdown.items():
