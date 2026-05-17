@@ -12,6 +12,8 @@ PRICING = {
     "llama-3.3-70b-versatile": {"input": 0.59, "output": 0.79},
     "llama-3.1-8b-instant": {"input": 0.05, "output": 0.08},
     "llama-3.1-70b-versatile": {"input": 0.59, "output": 0.79},
+    "llama-4-scout-17b-16e-instruct": {"input": 0.11, "output": 0.34},
+    "llama-4-maverick-17b-128e-instruct": {"input": 0.50, "output": 0.77},
     "mixtral-8x7b-32768": {"input": 0.24, "output": 0.24},
     "gemma2-9b-it": {"input": 0.20, "output": 0.20},
     "deepseek-r1-distill-llama-70b": {"input": 0.75, "output": 0.99},
