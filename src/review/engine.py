@@ -116,6 +116,13 @@ class ReviewEngine:
         if learning_context:
             custom += learning_context
 
+        # Inject i18n language instructions
+        from src.review.i18n import get_language_prompt
+
+        lang_prompt = get_language_prompt(self.config.review_language)
+        if lang_prompt:
+            custom += lang_prompt
+
         # Apply persona if configured
         from src.review.personas import apply_persona, get_persona
 
