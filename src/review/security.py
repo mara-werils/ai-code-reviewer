@@ -57,6 +57,8 @@ _EXT_LANG: dict[str, str] = {
     ".ts": "typescript",
     ".tsx": "typescript",
     ".jsx": "javascript",
+    ".mjs": "javascript",
+    ".cjs": "javascript",
     ".go": "go",
     ".java": "java",
     ".rb": "ruby",
@@ -67,9 +69,13 @@ _EXT_LANG: dict[str, str] = {
     ".swift": "swift",
     ".sh": "shell",
     ".bash": "shell",
+    ".zsh": "shell",
     ".sql": "sql",
     ".yaml": "yaml",
     ".yml": "yaml",
+    ".dockerfile": "docker",
+    ".tf": "terraform",
+    ".hcl": "terraform",
 }
 
 _TEST_PATTERNS = (
@@ -88,6 +94,10 @@ _TEST_PATTERNS = (
 
 
 def _detect_lang(path: str) -> str:
+    # Handle files without extensions (e.g., Dockerfile, Makefile)
+    basename = path.rsplit("/", 1)[-1].lower()
+    if basename == "dockerfile" or basename.startswith("dockerfile."):
+        return "docker"
     for ext, lang in _EXT_LANG.items():
         if path.endswith(ext):
             return lang
