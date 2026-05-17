@@ -508,6 +508,72 @@ SECURITY_RULES: list[SecurityRule] = [
         languages=["go"],
         exclude_test_files=True,
     ),
+    # ── NoSQL Injection ─────────────────────────────────────────────────
+    SecurityRule(
+        id="SEC130",
+        name="NoSQL injection (MongoDB)",
+        pattern=r"""(?:\.find|\.findOne|\.updateOne|\.deleteOne|\.aggregate)\s*\(\s*(?:f[\"']|.*\{.*\$(?:where|regex|ne|gt|lt|gte|lte|in|nin|or|and|not|nor|exists))""",
+        severity="high",
+        category="injection",
+        description="MongoDB query with operator injection. Attacker can manipulate query logic via $-operators.",
+        fix_hint="Validate and sanitize user input. Use explicit field matching, not raw query objects from user input.",
+        languages=["python", "javascript", "typescript"],
+    ),
+    # ── Server-Side Template Injection ──────────────────────────────────
+    SecurityRule(
+        id="SEC131",
+        name="Server-Side Template Injection (SSTI)",
+        pattern=r"""(?:render_template_string|Template\s*\(\s*(?:request|req|params|args|user|input)|Jinja2.*from_string|Environment\s*\(.*loader)""",
+        severity="critical",
+        category="injection",
+        description="Template rendered from user input enables server-side template injection (SSTI).",
+        fix_hint="Never pass user input as a template. Use render_template() with a file, not render_template_string().",
+        languages=["python"],
+    ),
+    # ── LDAP Injection ──────────────────────────────────────────────────
+    SecurityRule(
+        id="SEC132",
+        name="LDAP injection",
+        pattern=r"""(?:ldap\.search|search_s|search_ext_s)\s*\(.*(?:f[\"']|[\"'].*\{|[\"'].*\+\s*\w)""",
+        severity="high",
+        category="injection",
+        description="LDAP query built with string formatting. Vulnerable to LDAP injection.",
+        fix_hint="Use parameterized LDAP filters or escape special characters with ldap.filter.escape_filter_chars().",
+        languages=["python"],
+    ),
+    # ── Unsafe Rust ─────────────────────────────────────────────────────
+    SecurityRule(
+        id="SEC140",
+        name="Unsafe Rust block",
+        pattern=r"""unsafe\s*\{""",
+        severity="medium",
+        category="quality",
+        description="unsafe block bypasses Rust's memory safety guarantees. Requires careful review.",
+        fix_hint="Minimize unsafe scope. Document safety invariants. Consider safe alternatives.",
+        languages=["rust"],
+        exclude_test_files=True,
+    ),
+    # ── PHP-specific ────────────────────────────────────────────────────
+    SecurityRule(
+        id="SEC150",
+        name="PHP code injection",
+        pattern=r"""(?:eval|assert|preg_replace\s*\(.*['\"]\/.*\/e)\s*\(""",
+        severity="critical",
+        category="injection",
+        description="eval/assert/preg_replace with 'e' modifier enables arbitrary code execution.",
+        fix_hint="Avoid eval(). Use preg_replace_callback() instead of the /e modifier.",
+        languages=["php"],
+    ),
+    SecurityRule(
+        id="SEC151",
+        name="PHP file inclusion",
+        pattern=r"""(?:include|require|include_once|require_once)\s*\(\s*\$""",
+        severity="critical",
+        category="injection",
+        description="Dynamic file inclusion with user-controlled variable enables Local/Remote File Inclusion.",
+        fix_hint="Use an allowlist of permitted files. Never include files based on user input.",
+        languages=["php"],
+    ),
 ]
 
 
