@@ -24,6 +24,10 @@ CATEGORY_LABEL = {
     "docs": "Docs",
     "chore": "Chore",
     "test": "Test",
+    "style": "Style",
+    "perf": "Performance",
+    "ci": "CI/CD",
+    "deps": "Dependencies",
     "other": "Other",
 }
 
