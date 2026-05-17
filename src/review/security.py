@@ -72,7 +72,19 @@ _EXT_LANG: dict[str, str] = {
     ".yml": "yaml",
 }
 
-_TEST_PATTERNS = ("test_", "_test.", ".test.", ".spec.", "tests/", "__tests__/")
+_TEST_PATTERNS = (
+    "test_",
+    "_test.",
+    ".test.",
+    ".spec.",
+    "tests/",
+    "__tests__/",
+    "testing/",
+    "fixtures/",
+    "mocks/",
+    "testdata/",
+    "test-data/",
+)
 
 
 def _detect_lang(path: str) -> str:
