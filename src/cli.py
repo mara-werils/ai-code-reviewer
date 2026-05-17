@@ -142,6 +142,12 @@ async def cmd_review(args: argparse.Namespace) -> None:
         finally:
             await github.close()
 
+    # Summary-only mode
+    if args.summary_only:
+        summary = await engine.generate_summary(pr, files)
+        print(summary)
+        return
+
     # Output
     if args.output_json:
         import json
@@ -272,6 +278,11 @@ def main() -> None:
         "--verbose",
         action="store_true",
         help="Enable debug logging",
+    )
+    review_parser.add_argument(
+        "--summary-only",
+        action="store_true",
+        help="Generate only a PR summary (no inline comments)",
     )
 
     # init command
