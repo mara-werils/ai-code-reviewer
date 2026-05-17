@@ -122,6 +122,10 @@ class ReviewConfig:
     bitbucket_username: str = ""
     bitbucket_app_password: str = ""
 
+    # Retry
+    max_retries: int = 3
+    retry_base_delay: float = 1.0
+
     # Cost
     cost_limit_usd: float = 1.00
 
