@@ -61,6 +61,22 @@ class ReviewConfig:
             "node_modules/**",
             "dist/**",
             "build/**",
+            ".env",
+            ".env.*",
+            "*.pem",
+            "*.key",
+            "*.cert",
+            "*.wasm",
+            "*.png",
+            "*.jpg",
+            "*.jpeg",
+            "*.gif",
+            "*.svg",
+            "*.ico",
+            "*.woff",
+            "*.woff2",
+            "*.ttf",
+            "*.eot",
         ]
     )
     ignore_titles: list[str] = field(
