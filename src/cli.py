@@ -223,6 +223,13 @@ async def cmd_review(args: argparse.Namespace) -> None:
         f"\n---\nCost: ${result.cost_usd:.4f} | Model: {result.model} | Duration: {result.duration_ms}ms"
     )
 
+    # Exit with non-zero code if high-risk issues found (for CI gating)
+    if args.exit_code:
+        critical_count = sum(1 for c in result.comments if c.severity == "critical")
+        if critical_count > 0:
+            logger.info(f"Exiting with code 1: {critical_count} critical issues found")
+            sys.exit(1)
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(
@@ -287,6 +294,11 @@ def main() -> None:
         "--summary-only",
         action="store_true",
         help="Generate only a PR summary (no inline comments)",
+    )
+    review_parser.add_argument(
+        "--exit-code",
+        action="store_true",
+        help="Exit with code 1 if critical issues found (for CI gating)",
     )
 
     # init command
