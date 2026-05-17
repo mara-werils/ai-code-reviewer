@@ -27,7 +27,16 @@ logger = logging.getLogger(__name__)
 
 
 async def cmd_review(args: argparse.Namespace) -> None:
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+
     config = ReviewConfig.from_env()
+
+    # Load YAML config if specified or auto-detect
+    if args.config:
+        from pathlib import Path
+
+        config = ReviewConfig.from_yaml(Path(args.config), base=config)
 
     # Override from CLI args
     if args.provider:
@@ -254,6 +263,16 @@ def main() -> None:
     )
     review_parser.add_argument("--bb-username", help="Bitbucket username")
     review_parser.add_argument("--bb-app-password", help="Bitbucket app password")
+    review_parser.add_argument(
+        "--config",
+        help="Path to .pr-reviewer.yml config file",
+    )
+    review_parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Enable debug logging",
+    )
 
     # init command
     subparsers.add_parser(
