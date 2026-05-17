@@ -17,6 +17,8 @@ _PROVIDER_MAX_DIFF: dict[str, int] = {
     "ollama": 12000,  # Local models often have smaller context
 }
 
+VALID_PROVIDERS = {"openai", "anthropic", "groq", "ollama", "google"}
+
 MODEL_DEFAULTS: dict[str, str] = {
     "openai": "gpt-4o",
     "anthropic": "claude-sonnet-4-20250514",
@@ -104,6 +106,16 @@ class ReviewConfig:
     cost_limit_usd: float = 1.00
 
     def __post_init__(self) -> None:
+        # Validate provider name
+        if self.provider not in VALID_PROVIDERS:
+            logger.warning(
+                "Unknown provider '%s', falling back to openai. "
+                "Valid providers: %s",
+                self.provider,
+                ", ".join(sorted(VALID_PROVIDERS)),
+            )
+            self.provider = "openai"
+
         if not self.model:
             self.model = MODEL_DEFAULTS.get(self.provider, "gpt-4o")
 
