@@ -152,6 +152,26 @@ class ReviewEngine:
             {"role": "user", "content": user},
         ]
 
+        # Estimate cost and check limit
+        estimated_input_tokens = len(system + user) // 4  # rough estimate
+        estimated_cost = self.provider.estimate_cost(estimated_input_tokens, 4096)
+        if estimated_cost > self.config.cost_limit_usd:
+            logger.warning(
+                "Estimated cost $%.4f exceeds limit $%.2f, truncating diff",
+                estimated_cost,
+                self.config.cost_limit_usd,
+            )
+            # Reduce diff to fit within budget
+            diff = diff[: len(diff) // 2]
+            user = REVIEW_PROMPT.format(
+                title=pr.title,
+                author=pr.author,
+                body=(pr.body or "No description")[:2000],
+                files_summary=files_summary,
+                diff=diff,
+                max_comments=self.config.max_comments,
+            )
+
         # Call LLM
         logger.info(f"Reviewing PR #{pr.number} with {self.provider.name}")
         response = await self.provider.complete(
