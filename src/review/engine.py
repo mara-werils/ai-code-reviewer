@@ -116,6 +116,13 @@ class ReviewEngine:
         if learning_context:
             custom += learning_context
 
+        # Inject i18n language instructions
+        from src.review.i18n import get_language_prompt
+
+        lang_prompt = get_language_prompt(self.config.review_language)
+        if lang_prompt:
+            custom += lang_prompt
+
         # Apply persona if configured
         from src.review.personas import apply_persona, get_persona
 
@@ -145,6 +152,26 @@ class ReviewEngine:
             {"role": "user", "content": user},
         ]
 
+        # Estimate cost and check limit
+        estimated_input_tokens = len(system + user) // 4  # rough estimate
+        estimated_cost = self.provider.estimate_cost(estimated_input_tokens, 4096)
+        if estimated_cost > self.config.cost_limit_usd:
+            logger.warning(
+                "Estimated cost $%.4f exceeds limit $%.2f, truncating diff",
+                estimated_cost,
+                self.config.cost_limit_usd,
+            )
+            # Reduce diff to fit within budget
+            diff = diff[: len(diff) // 2]
+            user = REVIEW_PROMPT.format(
+                title=pr.title,
+                author=pr.author,
+                body=(pr.body or "No description")[:2000],
+                files_summary=files_summary,
+                diff=diff,
+                max_comments=self.config.max_comments,
+            )
+
         # Call LLM
         logger.info(f"Reviewing PR #{pr.number} with {self.provider.name}")
         response = await self.provider.complete(
@@ -163,6 +190,36 @@ class ReviewEngine:
         result.model = response.model
         result.input_tokens = response.input_tokens
         result.output_tokens = response.output_tokens
+
+        # Run security scan if enabled
+        if self.config.check_security:
+            from src.review.security import SecurityFinding, scan_diff
+
+            security_findings = scan_diff(filtered, enabled=True)
+            if security_findings:
+                for finding in security_findings:
+                    # Avoid duplicate comments on the same file+line
+                    already_commented = any(
+                        c.path == finding.path and c.line == finding.line
+                        for c in result.comments
+                    )
+                    if not already_commented:
+                        result.comments.append(
+                            ReviewComment(
+                                path=finding.path,
+                                line=finding.line,
+                                side="RIGHT",
+                                body=(
+                                    f"**[{finding.severity.upper()}] Security: "
+                                    f"{finding.rule_name}** (`{finding.rule_id}`)\n\n"
+                                    f"{finding.description}\n\n"
+                                    f"**Fix:** {finding.fix_hint}"
+                                ),
+                                severity="critical"
+                                if finding.severity in ("critical", "high")
+                                else "warning",
+                            )
+                        )
 
         logger.info(
             f"Review complete: {len(result.comments)} comments, "

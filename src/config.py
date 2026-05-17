@@ -17,6 +17,8 @@ _PROVIDER_MAX_DIFF: dict[str, int] = {
     "ollama": 12000,  # Local models often have smaller context
 }
 
+VALID_PROVIDERS = {"openai", "anthropic", "groq", "ollama", "google"}
+
 MODEL_DEFAULTS: dict[str, str] = {
     "openai": "gpt-4o",
     "anthropic": "claude-sonnet-4-20250514",
@@ -59,6 +61,22 @@ class ReviewConfig:
             "node_modules/**",
             "dist/**",
             "build/**",
+            ".env",
+            ".env.*",
+            "*.pem",
+            "*.key",
+            "*.cert",
+            "*.wasm",
+            "*.png",
+            "*.jpg",
+            "*.jpeg",
+            "*.gif",
+            "*.svg",
+            "*.ico",
+            "*.woff",
+            "*.woff2",
+            "*.ttf",
+            "*.eot",
         ]
     )
     ignore_titles: list[str] = field(
@@ -100,10 +118,28 @@ class ReviewConfig:
     gitlab_token: str = ""
     gitlab_url: str = "https://gitlab.com"
 
+    # Bitbucket
+    bitbucket_username: str = ""
+    bitbucket_app_password: str = ""
+
+    # Retry
+    max_retries: int = 3
+    retry_base_delay: float = 1.0
+
     # Cost
     cost_limit_usd: float = 1.00
 
     def __post_init__(self) -> None:
+        # Validate provider name
+        if self.provider not in VALID_PROVIDERS:
+            logger.warning(
+                "Unknown provider '%s', falling back to openai. "
+                "Valid providers: %s",
+                self.provider,
+                ", ".join(sorted(VALID_PROVIDERS)),
+            )
+            self.provider = "openai"
+
         if not self.model:
             self.model = MODEL_DEFAULTS.get(self.provider, "gpt-4o")
 
@@ -150,6 +186,8 @@ class ReviewConfig:
             github_token=os.getenv("GITHUB_TOKEN", ""),
             gitlab_token=os.getenv("GITLAB_TOKEN", ""),
             gitlab_url=os.getenv("GITLAB_URL", os.getenv("CI_SERVER_URL", "https://gitlab.com")),
+            bitbucket_username=os.getenv("BITBUCKET_USERNAME", ""),
+            bitbucket_app_password=os.getenv("BITBUCKET_APP_PASSWORD", ""),
             review_language=os.getenv("INPUT_LANGUAGE", os.getenv("LANGUAGE", "en")),
             review_style=os.getenv("INPUT_REVIEW_STYLE", os.getenv("REVIEW_STYLE", "concise")),
             max_comments=max_comments,

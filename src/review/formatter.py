@@ -24,11 +24,19 @@ CATEGORY_LABEL = {
     "docs": "Docs",
     "chore": "Chore",
     "test": "Test",
+    "style": "Style",
+    "perf": "Performance",
+    "ci": "CI/CD",
+    "deps": "Dependencies",
     "other": "Other",
 }
 
 
-def format_review_body(result: ReviewResult) -> str:
+def format_review_body(
+    result: ReviewResult,
+    complexity_section: str = "",
+    security_summary: str = "",
+) -> str:
     """Format the main review comment body."""
     risk_label = RISK_LABEL.get(result.risk_level, "[INFO]")
     cat_label = CATEGORY_LABEL.get(result.category, result.category)
@@ -41,6 +49,14 @@ def format_review_body(result: ReviewResult) -> str:
         f"**{cat_label}** | Risk: {risk_label} {result.risk_level.capitalize()}",
         "",
     ]
+
+    if complexity_section:
+        parts.append(complexity_section)
+        parts.append("")
+
+    if security_summary:
+        parts.append(security_summary)
+        parts.append("")
 
     if result.comments:
         # Stats

@@ -31,11 +31,12 @@ def _build_summary(result: ReviewResult, repo: str, pr_number: int, pr_title: st
     for c in result.comments:
         severity_counts[c.severity] = severity_counts.get(c.severity, 0) + 1
 
+    duration_s = result.duration_ms / 1000 if result.duration_ms else 0
     parts = [
         f"AI Code Review: {repo}#{pr_number}",
         f"Title: {pr_title}",
         f"Risk: {result.risk_level.upper()} | {len(result.comments)} comments",
-        f"Cost: ${result.cost_usd:.4f} | Model: {result.model}",
+        f"Cost: ${result.cost_usd:.4f} | Model: {result.model} | {duration_s:.1f}s",
     ]
 
     if severity_counts:

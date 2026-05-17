@@ -24,6 +24,12 @@ SUPPORTED_LANGUAGES: dict[str, str] = {
     "pl": "Polish",
     "nl": "Dutch",
     "ar": "Arabic",
+    "hi": "Hindi",
+    "vi": "Vietnamese",
+    "th": "Thai",
+    "uk": "Ukrainian",
+    "cs": "Czech",
+    "sv": "Swedish",
 }
 
 # Language-specific prompt addendum

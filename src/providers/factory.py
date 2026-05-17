@@ -2,12 +2,38 @@
 
 from __future__ import annotations
 
+import logging
+
 from src.config import ReviewConfig
 from src.providers.base import LLMProvider
+
+logger = logging.getLogger(__name__)
+
+_API_KEY_ENVS: dict[str, str] = {
+    "openai": "OPENAI_API_KEY",
+    "anthropic": "ANTHROPIC_API_KEY",
+    "groq": "GROQ_API_KEY",
+    "google": "GOOGLE_API_KEY",
+}
+
+
+def _check_api_key(config: ReviewConfig) -> None:
+    """Warn if API key is missing for a provider that requires one."""
+    if config.provider == "ollama":
+        return
+    if not config.api_key:
+        env_var = _API_KEY_ENVS.get(config.provider, f"{config.provider.upper()}_API_KEY")
+        logger.warning(
+            "No API key for provider '%s'. Set %s or pass --api-key.",
+            config.provider,
+            env_var,
+        )
 
 
 def create_provider(config: ReviewConfig) -> LLMProvider:
     """Create an LLM provider based on configuration."""
+    _check_api_key(config)
+
     if config.provider == "openai":
         from src.providers.openai_provider import OpenAIProvider
 

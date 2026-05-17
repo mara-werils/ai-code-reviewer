@@ -14,6 +14,7 @@ import asyncio
 import logging
 import sys
 
+from src import __version__
 from src.bitbucket.client import BitbucketAPI
 from src.config import ReviewConfig
 from src.github.client import GitHubAPI
@@ -26,7 +27,16 @@ logger = logging.getLogger(__name__)
 
 
 async def cmd_review(args: argparse.Namespace) -> None:
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+
     config = ReviewConfig.from_env()
+
+    # Load YAML config if specified or auto-detect
+    if args.config:
+        from pathlib import Path
+
+        config = ReviewConfig.from_yaml(Path(args.config), base=config)
 
     # Override from CLI args
     if args.provider:
@@ -132,6 +142,12 @@ async def cmd_review(args: argparse.Namespace) -> None:
         finally:
             await github.close()
 
+    # Summary-only mode
+    if args.summary_only:
+        summary = await engine.generate_summary(pr, files)
+        print(summary)
+        return
+
     # Output
     if args.output_json:
         import json
@@ -207,12 +223,20 @@ async def cmd_review(args: argparse.Namespace) -> None:
         f"\n---\nCost: ${result.cost_usd:.4f} | Model: {result.model} | Duration: {result.duration_ms}ms"
     )
 
+    # Exit with non-zero code if high-risk issues found (for CI gating)
+    if args.exit_code:
+        critical_count = sum(1 for c in result.comments if c.severity == "critical")
+        if critical_count > 0:
+            logger.info(f"Exiting with code 1: {critical_count} critical issues found")
+            sys.exit(1)
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="pr-reviewer",
         description="AI-powered code review for pull requests",
     )
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     subparsers = parser.add_subparsers(dest="command")
 
     # review command
@@ -230,7 +254,11 @@ def main() -> None:
         default="github",
         help="Platform (default: github)",
     )
-    review_parser.add_argument("--provider", help="LLM provider (openai, anthropic, groq, ollama)")
+    review_parser.add_argument(
+        "--provider",
+        choices=["openai", "anthropic", "groq", "ollama", "google"],
+        help="LLM provider",
+    )
     review_parser.add_argument("--model", help="Model name override")
     review_parser.add_argument("--api-key", help="API key (or use env var)")
     review_parser.add_argument("--post", action="store_true", help="Post review to platform")
@@ -252,6 +280,26 @@ def main() -> None:
     )
     review_parser.add_argument("--bb-username", help="Bitbucket username")
     review_parser.add_argument("--bb-app-password", help="Bitbucket app password")
+    review_parser.add_argument(
+        "--config",
+        help="Path to .pr-reviewer.yml config file",
+    )
+    review_parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Enable debug logging",
+    )
+    review_parser.add_argument(
+        "--summary-only",
+        action="store_true",
+        help="Generate only a PR summary (no inline comments)",
+    )
+    review_parser.add_argument(
+        "--exit-code",
+        action="store_true",
+        help="Exit with code 1 if critical issues found (for CI gating)",
+    )
 
     # init command
     subparsers.add_parser(
