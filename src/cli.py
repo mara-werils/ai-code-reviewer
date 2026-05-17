@@ -247,7 +247,11 @@ def main() -> None:
         default="github",
         help="Platform (default: github)",
     )
-    review_parser.add_argument("--provider", help="LLM provider (openai, anthropic, groq, ollama)")
+    review_parser.add_argument(
+        "--provider",
+        choices=["openai", "anthropic", "groq", "ollama", "google"],
+        help="LLM provider",
+    )
     review_parser.add_argument("--model", help="Model name override")
     review_parser.add_argument("--api-key", help="API key (or use env var)")
     review_parser.add_argument("--post", action="store_true", help="Post review to platform")
