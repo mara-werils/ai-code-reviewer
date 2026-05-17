@@ -14,6 +14,7 @@ import asyncio
 import logging
 import sys
 
+from src import __version__
 from src.bitbucket.client import BitbucketAPI
 from src.config import ReviewConfig
 from src.github.client import GitHubAPI
@@ -213,6 +214,7 @@ def main() -> None:
         prog="pr-reviewer",
         description="AI-powered code review for pull requests",
     )
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     subparsers = parser.add_subparsers(dest="command")
 
     # review command
