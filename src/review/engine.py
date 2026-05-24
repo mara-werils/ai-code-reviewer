@@ -221,6 +221,89 @@ class ReviewEngine:
                             )
                         )
 
+        # Run performance anti-pattern scan
+        if getattr(self.config, "check_performance", True):
+            from src.review.performance import PerformanceFinding, scan_performance
+
+            perf_findings = scan_performance(filtered)
+            for finding in perf_findings:
+                already_commented = any(
+                    c.path == finding.path and c.line == finding.line
+                    for c in result.comments
+                )
+                if not already_commented:
+                    result.comments.append(
+                        ReviewComment(
+                            path=finding.path,
+                            line=finding.line,
+                            side="RIGHT",
+                            body=(
+                                f"**[{finding.severity.upper()}] Performance: "
+                                f"{finding.rule_name}** (`{finding.rule_id}`)\n\n"
+                                f"{finding.description}\n\n"
+                                f"**Fix:** {finding.fix_hint}"
+                            ),
+                            severity="warning"
+                            if finding.severity in ("critical", "high")
+                            else "suggestion",
+                        )
+                    )
+
+        # Run migration risk analysis
+        from src.review.migration_risk import scan_migration_risks
+
+        migration_risks = scan_migration_risks(filtered)
+        for risk in migration_risks:
+            already_commented = any(
+                c.path == risk.path and c.line == risk.line
+                for c in result.comments
+            )
+            if not already_commented:
+                result.comments.append(
+                    ReviewComment(
+                        path=risk.path,
+                        line=risk.line,
+                        side="RIGHT",
+                        body=(
+                            f"**[{risk.severity.upper()}] Migration Risk: "
+                            f"{risk.name}** (`{risk.id}`)\n\n"
+                            f"{risk.description}\n\n"
+                            f"**Fix:** {risk.fix_hint}"
+                        ),
+                        severity="critical"
+                        if risk.severity in ("critical", "high")
+                        else "warning",
+                    )
+                )
+
+        # Run dependency risk scan
+        from src.review.dependency_check import scan_dependencies
+
+        dep_findings = scan_dependencies(filtered)
+        for finding in dep_findings:
+            if finding.line > 0:
+                already_commented = any(
+                    c.path == finding.path and c.line == finding.line
+                    for c in result.comments
+                )
+                if not already_commented:
+                    result.comments.append(
+                        ReviewComment(
+                            path=finding.path,
+                            line=finding.line,
+                            side="RIGHT",
+                            body=(
+                                f"**[{finding.severity.upper()}] Dependency: "
+                                f"{finding.package}** ({finding.kind})\n\n"
+                                f"{finding.description}\n\n"
+                                f"**Fix:** {finding.fix_hint}"
+                            ),
+                            severity="warning"
+                            if finding.severity in ("critical", "high")
+                            else "suggestion",
+                        )
+                    )
+
         logger.info(
             f"Review complete: {len(result.comments)} comments, "
             f"risk={result.risk_level}, cost=${result.cost_usd:.4f}, "
