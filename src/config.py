@@ -111,6 +111,19 @@ class ReviewConfig:
     suggest_tests: bool = True
     label_pr: bool = False
 
+    # New analysis features
+    check_performance_patterns: bool = True
+    check_dead_code: bool = False
+    check_duplication: bool = False
+    check_metrics: bool = True
+    check_migration_risks: bool = True
+    check_breaking_changes: bool = True
+    check_dependencies: bool = True
+    check_licenses: bool = False
+    check_doc_coverage: bool = False
+    auto_approve_enabled: bool = False
+    export_format: str = ""  # sarif, json, csv, markdown
+
     # Self-hosted features
     enable_rag: bool = False
     database_url: str = ""
