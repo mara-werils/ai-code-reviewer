@@ -49,7 +49,10 @@ class TestPolicies:
         assert "passed" in report.lower()
 
     def test_required_tests_warning(self):
-        # Source code without test files
-        files = [_file("src/app.py"), _file("src/utils.py")]
+        # Source code without test files — must match the when_changed globs
+        files = [
+            PRFile(filename="src/services/app.py", status="modified", additions=20, deletions=0, patch=""),
+            PRFile(filename="src/utils/helpers.py", status="modified", additions=10, deletions=0, patch=""),
+        ]
         violations = evaluate_policies(_pr(), files)
         assert any(v.policy_id == "REQ001" for v in violations)
