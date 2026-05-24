@@ -1,16 +1,20 @@
-# On-demand review: type /review in any PR comment to trigger AI review
-# Also supports automatic review on PR open/update
+# AI Code Reviewer: supports /review, /fix, /ask, /generate-tests,
+# /describe, /changelog, /split, /approve commands.
+# Also runs automatically on PR open/update.
 name: AI Code Review
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  pull_request_review_comment:
+    types: [created]
   issue_comment:
     types: [created]
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
+  checks: write
 
 jobs:
   # Automatic review on PR events
@@ -23,12 +27,20 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-  # On-demand review triggered by /review comment
-  on-demand-review:
+  # On-demand commands: /review, /fix, /ask, /generate-tests,
+  # /describe, /changelog, /split, /approve
+  on-demand:
     if: >
       github.event_name == 'issue_comment' &&
       github.event.issue.pull_request &&
-      startsWith(github.event.comment.body, '/review')
+      (startsWith(github.event.comment.body, '/review') ||
+       startsWith(github.event.comment.body, '/fix') ||
+       startsWith(github.event.comment.body, '/ask') ||
+       startsWith(github.event.comment.body, '/generate-tests') ||
+       startsWith(github.event.comment.body, '/describe') ||
+       startsWith(github.event.comment.body, '/changelog') ||
+       startsWith(github.event.comment.body, '/split') ||
+       startsWith(github.event.comment.body, '/approve'))
     runs-on: ubuntu-latest
     steps:
       - name: React to comment
