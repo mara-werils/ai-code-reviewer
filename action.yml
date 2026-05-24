@@ -66,6 +66,50 @@ inputs:
     description: 'Discord webhook URL for review notifications'
     required: false
     default: ''
+  check_performance:
+    description: 'Run performance anti-pattern detection (20 rules)'
+    required: false
+    default: 'true'
+  check_migrations:
+    description: 'Run database migration risk analysis'
+    required: false
+    default: 'true'
+  check_breaking_changes:
+    description: 'Detect API breaking changes'
+    required: false
+    default: 'true'
+  check_dependencies:
+    description: 'Scan for dependency vulnerabilities and risks'
+    required: false
+    default: 'true'
+  check_metrics:
+    description: 'Compute code complexity metrics'
+    required: false
+    default: 'true'
+  check_dead_code:
+    description: 'Detect unused imports and unreachable code'
+    required: false
+    default: 'false'
+  check_doc_coverage:
+    description: 'Check documentation coverage for public APIs'
+    required: false
+    default: 'false'
+  export_format:
+    description: 'Also export review to format: sarif, json, csv, markdown'
+    required: false
+    default: ''
+  auto_approve:
+    description: 'Auto-approve low-risk PRs (docs, tests, config changes)'
+    required: false
+    default: 'false'
+  jira_base_url:
+    description: 'Jira base URL for ticket linking (e.g., https://company.atlassian.net)'
+    required: false
+    default: ''
+  linear_api_key:
+    description: 'Linear API key for issue linking'
+    required: false
+    default: ''
 
 outputs:
   summary:
@@ -95,3 +139,14 @@ runs:
     INPUT_PERSONA: ${{ inputs.persona }}
     INPUT_SLACK_WEBHOOK: ${{ inputs.slack_webhook }}
     INPUT_DISCORD_WEBHOOK: ${{ inputs.discord_webhook }}
+    INPUT_CHECK_PERFORMANCE: ${{ inputs.check_performance }}
+    INPUT_CHECK_MIGRATIONS: ${{ inputs.check_migrations }}
+    INPUT_CHECK_BREAKING_CHANGES: ${{ inputs.check_breaking_changes }}
+    INPUT_CHECK_DEPENDENCIES: ${{ inputs.check_dependencies }}
+    INPUT_CHECK_METRICS: ${{ inputs.check_metrics }}
+    INPUT_CHECK_DEAD_CODE: ${{ inputs.check_dead_code }}
+    INPUT_CHECK_DOC_COVERAGE: ${{ inputs.check_doc_coverage }}
+    INPUT_EXPORT_FORMAT: ${{ inputs.export_format }}
+    INPUT_AUTO_APPROVE: ${{ inputs.auto_approve }}
+    INPUT_JIRA_BASE_URL: ${{ inputs.jira_base_url }}
+    INPUT_LINEAR_API_KEY: ${{ inputs.linear_api_key }}

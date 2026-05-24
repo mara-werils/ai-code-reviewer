@@ -311,6 +311,38 @@ def main() -> None:
     dash_parser.add_argument("--port", type=int, default=8000, help="Port (default: 8000)")
     dash_parser.add_argument("--host", default="127.0.0.1", help="Host (default: 127.0.0.1)")
 
+    # batch command
+    batch_parser = subparsers.add_parser("batch", help="Review multiple PRs at once")
+    batch_parser.add_argument("--repo", required=True, help="Repository (owner/name)")
+    batch_parser.add_argument("--prs", type=int, nargs="*", help="Specific PR numbers")
+    batch_parser.add_argument("--labels", nargs="*", help="Filter by labels")
+    batch_parser.add_argument("--max", type=int, default=20, help="Max PRs to review")
+    batch_parser.add_argument("--concurrency", type=int, default=3, help="Concurrent reviews")
+    batch_parser.add_argument("--dry-run", action="store_true", help="Preview without posting")
+    batch_parser.add_argument("--provider", help="LLM provider")
+    batch_parser.add_argument("-v", "--verbose", action="store_true")
+
+    # export command
+    export_parser = subparsers.add_parser("export", help="Export review to SARIF/JSON/CSV")
+    export_parser.add_argument("--repo", required=True, help="Repository")
+    export_parser.add_argument("--pr", type=int, required=True, help="PR number")
+    export_parser.add_argument(
+        "--format", choices=["sarif", "json", "csv", "markdown"], default="json",
+        help="Export format",
+    )
+    export_parser.add_argument("--output", "-o", help="Output file (default: stdout)")
+    export_parser.add_argument("--provider", help="LLM provider")
+    export_parser.add_argument("-v", "--verbose", action="store_true")
+
+    # validate command
+    validate_parser = subparsers.add_parser("validate", help="Validate .pr-reviewer.yml config")
+    validate_parser.add_argument("--config", default=".pr-reviewer.yml", help="Config file path")
+
+    # stats command
+    stats_parser = subparsers.add_parser("stats", help="Show local review telemetry stats")
+    stats_parser.add_argument("--days", type=int, default=30, help="Days of history")
+    stats_parser.add_argument("--clear", action="store_true", help="Clear telemetry data")
+
     args = parser.parse_args()
 
     if args.command == "review":
@@ -326,8 +358,110 @@ def main() -> None:
 
         logger.info(f"Dashboard: http://{args.host}:{args.port}")
         uvicorn.run(dashboard_app, host=args.host, port=args.port, log_level="info")
+    elif args.command == "batch":
+        asyncio.run(_cmd_batch(args))
+    elif args.command == "export":
+        asyncio.run(_cmd_export(args))
+    elif args.command == "validate":
+        _cmd_validate(args)
+    elif args.command == "stats":
+        _cmd_stats(args)
     else:
         parser.print_help()
+
+
+async def _cmd_batch(args: argparse.Namespace) -> None:
+    """Handle batch review command."""
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+
+    config = ReviewConfig.from_env()
+    if args.provider:
+        config.provider = args.provider
+        config.model = ""
+        config.__post_init__()
+
+    from src.review.batch import batch_review, format_batch_summary
+
+    summary = await batch_review(
+        config=config,
+        repo=args.repo,
+        pr_numbers=args.prs,
+        labels=args.labels,
+        max_prs=args.max,
+        concurrency=args.concurrency,
+        dry_run=args.dry_run,
+    )
+    print(format_batch_summary(summary))
+
+
+async def _cmd_export(args: argparse.Namespace) -> None:
+    """Handle export command."""
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+
+    config = ReviewConfig.from_env()
+    if args.provider:
+        config.provider = args.provider
+        config.model = ""
+        config.__post_init__()
+
+    engine = ReviewEngine(config)
+    github = GitHubAPI(config.github_token)
+
+    try:
+        pr = await github.get_pr(args.repo, args.pr)
+        files = await github.get_pr_files(args.repo, args.pr)
+        diff = await github.get_pr_diff(args.repo, args.pr)
+        result = await engine.review_pr(pr, files, diff)
+    finally:
+        await github.close()
+
+    from src.review.export import export_csv, export_json, export_markdown, export_sarif
+
+    exporters = {
+        "json": export_json,
+        "sarif": lambda r: export_sarif(r, args.repo),
+        "csv": export_csv,
+        "markdown": export_markdown,
+    }
+
+    output = exporters[args.format](result)
+
+    if args.output:
+        with open(args.output, "w") as f:
+            f.write(output)
+        logger.info(f"Exported to {args.output}")
+    else:
+        print(output)
+
+
+def _cmd_validate(args: argparse.Namespace) -> None:
+    """Handle validate command."""
+    from pathlib import Path
+
+    from src.review.config_validator import format_validation_result, validate_config
+
+    result = validate_config(config_path=Path(args.config))
+    print(format_validation_result(result))
+
+    if not result.valid:
+        sys.exit(1)
+
+
+def _cmd_stats(args: argparse.Namespace) -> None:
+    """Handle stats command."""
+    from src.review.telemetry import TelemetryCollector, format_stats
+
+    collector = TelemetryCollector()
+
+    if args.clear:
+        count = collector.clear()
+        print(f"Cleared {count} telemetry files.")
+        return
+
+    stats = collector.get_stats(days=args.days)
+    print(format_stats(stats))
 
 
 if __name__ == "__main__":

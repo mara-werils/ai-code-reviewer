@@ -17,7 +17,12 @@ _PROVIDER_MAX_DIFF: dict[str, int] = {
     "ollama": 12000,  # Local models often have smaller context
 }
 
-VALID_PROVIDERS = {"openai", "anthropic", "groq", "ollama", "google"}
+VALID_PROVIDERS = {
+    "openai", "anthropic", "groq", "ollama", "google",
+    # Custom OpenAI-compatible providers
+    "together", "fireworks", "deepseek", "mistral", "openrouter",
+    "anyscale", "lmstudio", "custom",
+}
 
 MODEL_DEFAULTS: dict[str, str] = {
     "openai": "gpt-4o",
@@ -105,6 +110,19 @@ class ReviewConfig:
     check_best_practices: bool = True
     suggest_tests: bool = True
     label_pr: bool = False
+
+    # New analysis features
+    check_performance_patterns: bool = True
+    check_dead_code: bool = False
+    check_duplication: bool = False
+    check_metrics: bool = True
+    check_migration_risks: bool = True
+    check_breaking_changes: bool = True
+    check_dependencies: bool = True
+    check_licenses: bool = False
+    check_doc_coverage: bool = False
+    auto_approve_enabled: bool = False
+    export_format: str = ""  # sarif, json, csv, markdown
 
     # Self-hosted features
     enable_rag: bool = False

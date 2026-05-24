@@ -1,0 +1,173 @@
+"""Changelog generator — auto-generates changelog entries from PR diffs.
+
+Uses LLM to analyze changes and produce Keep a Changelog formatted entries.
+Triggered by /changelog comment command.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import re
+from datetime import date
+
+from src.config import ReviewConfig
+from src.github.client import GitHubAPI, PRFile, PRInfo
+from src.providers import create_provider
+from src.review.analyzer import build_diff_text, filter_files
+
+logger = logging.getLogger(__name__)
+
+CHANGELOG_SYSTEM_PROMPT = """You are an expert at writing clear, user-facing changelog entries.
+Follow the Keep a Changelog format (https://keepachangelog.com/).
+
+Rules:
+1. Write from the USER's perspective, not developer's
+2. Be concise — one line per change
+3. Group by: Added, Changed, Deprecated, Removed, Fixed, Security
+4. Skip internal refactoring that doesn't affect users
+5. Include migration notes for breaking changes"""
+
+CHANGELOG_PROMPT = """Generate changelog entries for this PR.
+
+## PR Title: {title}
+## PR Body: {body}
+
+## Files Changed
+{files_summary}
+
+## Diff
+{diff}
+
+Respond with JSON:
+{{
+  "version_bump": "patch|minor|major",
+  "entries": {{
+    "added": ["New features visible to users"],
+    "changed": ["Changes to existing functionality"],
+    "deprecated": ["Features marked for removal"],
+    "removed": ["Removed features"],
+    "fixed": ["Bug fixes"],
+    "security": ["Security-related changes"]
+  }},
+  "migration_notes": "User-facing migration steps or empty string"
+}}"""
+
+
+async def generate_changelog(
+    config: ReviewConfig,
+    pr: PRInfo,
+    files: list[PRFile],
+    diff: str | None = None,
+) -> dict:
+    """Generate changelog entries from PR."""
+    provider = create_provider(config)
+
+    filtered = filter_files(files, config.ignore_paths)
+    if not filtered:
+        return {"entries": {}, "version_bump": "patch"}
+
+    if not diff:
+        diff = build_diff_text(filtered, max_size=config.max_diff_size)
+    else:
+        diff = diff[: config.max_diff_size]
+
+    files_summary = "\n".join(f"- `{f.filename}` (+{f.additions}/-{f.deletions})" for f in filtered[:30])
+
+    messages = [
+        {"role": "system", "content": CHANGELOG_SYSTEM_PROMPT},
+        {
+            "role": "user",
+            "content": CHANGELOG_PROMPT.format(
+                title=pr.title,
+                body=(pr.body or "No description")[:1000],
+                files_summary=files_summary,
+                diff=diff,
+            ),
+        },
+    ]
+
+    response = await provider.complete(
+        messages=messages,
+        temperature=0.1,
+        max_tokens=1024,
+        json_mode=True,
+    )
+
+    try:
+        text = response.content.strip()
+        json_match = re.search(r"\{.*\}", text, re.DOTALL)
+        if json_match:
+            return json.loads(json_match.group())
+        return json.loads(text)
+    except (json.JSONDecodeError, ValueError):
+        return {"entries": {}, "version_bump": "patch"}
+
+
+def format_changelog_entry(data: dict, pr_number: int = 0) -> str:
+    """Format changelog data into Keep a Changelog markdown."""
+    parts = []
+    entries = data.get("entries", {})
+    bump = data.get("version_bump", "patch")
+
+    today = date.today().isoformat()
+    parts.append(f"## [Unreleased] - {today}")
+    parts.append("")
+
+    section_order = ["added", "changed", "deprecated", "removed", "fixed", "security"]
+    section_titles = {
+        "added": "Added",
+        "changed": "Changed",
+        "deprecated": "Deprecated",
+        "removed": "Removed",
+        "fixed": "Fixed",
+        "security": "Security",
+    }
+
+    has_content = False
+    for section in section_order:
+        items = entries.get(section, [])
+        if items:
+            has_content = True
+            parts.append(f"### {section_titles[section]}")
+            for item in items:
+                ref = f" (#{pr_number})" if pr_number else ""
+                parts.append(f"- {item}{ref}")
+            parts.append("")
+
+    if not has_content:
+        parts.append("_No user-facing changes._")
+        parts.append("")
+
+    migration = data.get("migration_notes", "")
+    if migration:
+        parts.append("### Migration Notes")
+        parts.append(migration)
+        parts.append("")
+
+    parts.append(f"_Suggested version bump: **{bump}**_")
+
+    return "\n".join(parts)
+
+
+async def handle_changelog_command(
+    config: ReviewConfig,
+    github: GitHubAPI,
+    repo: str,
+    pr_number: int,
+) -> None:
+    """Handle /changelog command — generate and post changelog entries."""
+    pr = await github.get_pr(repo, pr_number)
+    files = await github.get_pr_files(repo, pr_number)
+
+    data = await generate_changelog(config, pr, files)
+    changelog = format_changelog_entry(data, pr_number)
+
+    await github.post_comment(
+        repo,
+        pr_number,
+        f"## 📋 Generated Changelog\n\n{changelog}\n\n"
+        f"---\n*Generated by AI Code Reviewer*",
+    )
+
+    logger.info(f"Generated changelog for PR #{pr_number}")

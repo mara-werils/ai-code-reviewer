@@ -45,6 +45,10 @@ async def run_action() -> None:
     is_ask_command = False
     is_chat_reply = False
     is_test_gen_command = False
+    is_describe_command = False
+    is_changelog_command = False
+    is_split_command = False
+    is_approve_command = False
     ask_question = ""
     chat_comment_id = 0
     chat_user_message = ""
@@ -94,6 +98,22 @@ async def run_action() -> None:
             is_test_gen_command = True
             pr_number = event["issue"]["number"]
             logger.info(f"/generate-tests command triggered on PR #{pr_number}")
+        elif comment_body.startswith("/describe"):
+            is_describe_command = True
+            pr_number = event["issue"]["number"]
+            logger.info(f"/describe command triggered on PR #{pr_number}")
+        elif comment_body.startswith("/changelog"):
+            is_changelog_command = True
+            pr_number = event["issue"]["number"]
+            logger.info(f"/changelog command triggered on PR #{pr_number}")
+        elif comment_body.startswith("/split"):
+            is_split_command = True
+            pr_number = event["issue"]["number"]
+            logger.info(f"/split command triggered on PR #{pr_number}")
+        elif comment_body.startswith("/approve"):
+            is_approve_command = True
+            pr_number = event["issue"]["number"]
+            logger.info(f"/approve command triggered on PR #{pr_number}")
         else:
             logger.info("Comment is not a recognized command, skipping")
             return
@@ -249,6 +269,55 @@ async def run_action() -> None:
             )
             return
 
+        # --- /describe command ---
+        if is_describe_command:
+            from src.review.describe import handle_describe_command
+
+            await handle_describe_command(config, github, repo, pr_number)
+            logger.info(f"/describe complete for PR #{pr_number}")
+            return
+
+        # --- /changelog command ---
+        if is_changelog_command:
+            from src.review.changelog import handle_changelog_command
+
+            await handle_changelog_command(config, github, repo, pr_number)
+            logger.info(f"/changelog complete for PR #{pr_number}")
+            return
+
+        # --- /split command ---
+        if is_split_command:
+            from src.review.split_suggestion import format_split_suggestion, suggest_split
+
+            files = await github.get_pr_files(repo, pr_number)
+            suggestion = suggest_split(files)
+            comment = format_split_suggestion(suggestion)
+            await github.post_comment(repo, pr_number, comment)
+            logger.info(f"/split complete for PR #{pr_number}")
+            return
+
+        # --- /approve command ---
+        if is_approve_command:
+            from src.review.auto_approve import (
+                AutoApproveConfig,
+                evaluate_auto_approve,
+                format_approval_comment,
+            )
+
+            files = await github.get_pr_files(repo, pr_number)
+            approve_config = AutoApproveConfig(enabled=True)
+            decision = evaluate_auto_approve(pr, files, approve_config)
+            comment = format_approval_comment(decision)
+            await github.post_comment(repo, pr_number, comment)
+
+            if decision.approved:
+                try:
+                    await github.approve_pr(repo, pr_number, pr.head_sha)
+                    logger.info(f"PR #{pr_number} auto-approved")
+                except Exception as e:
+                    logger.warning(f"Auto-approve failed: {e}")
+            return
+
         # --- /review and auto-review ---
         engine = ReviewEngine(config)
 
@@ -348,12 +417,57 @@ async def run_action() -> None:
         if complexity.score > 60:
             logger.info(f"PR complexity: {complexity.score}/100 ({complexity.level})")
 
+        # Run performance scan
+        from src.review.performance import format_performance_summary, scan_performance
+
+        perf_findings = scan_performance(files)
+        perf_summary = format_performance_summary(perf_findings)
+
+        # Run migration risk analysis
+        from src.review.migration_risk import format_migration_summary, scan_migration_risks
+
+        migration_risks = scan_migration_risks(files)
+        migration_summary = format_migration_summary(migration_risks)
+
+        # Run API breaking change detection
+        from src.review.api_breaking import format_breaking_changes_summary, scan_breaking_changes
+
+        breaking_changes = scan_breaking_changes(files)
+        breaking_summary = format_breaking_changes_summary(breaking_changes)
+
+        # Run dependency scan
+        from src.review.dependency_check import format_dependency_summary, scan_dependencies
+
+        dep_findings = scan_dependencies(files)
+        dep_summary = format_dependency_summary(dep_findings)
+
+        # Compute code metrics
+        from src.review.metrics import compute_metrics, format_metrics_summary
+
+        metrics_result = compute_metrics(files)
+        metrics_summary = format_metrics_summary(metrics_result)
+
+        # Auto-label suggestion
+        from src.review.auto_label import suggest_labels
+
+        label_suggestions = suggest_labels(pr, files)
+
         # Format output
         body = format_review_body(result)
         if complexity_section:
             body += "\n" + complexity_section
         if security_summary:
             body += "\n" + security_summary
+        if perf_summary:
+            body += "\n" + perf_summary
+        if migration_summary:
+            body += "\n" + migration_summary
+        if breaking_summary:
+            body += "\n" + breaking_summary
+        if dep_summary:
+            body += "\n" + dep_summary
+        if metrics_summary:
+            body += "\n" + metrics_summary
         if cross_repo_section:
             body += "\n" + cross_repo_section
         if monorepo_section:
@@ -408,11 +522,16 @@ async def run_action() -> None:
             await github.post_comment(repo, pr_number, body)
             logger.info("Posted review summary (no inline comments)")
 
-        # Add labels
-        if config.label_pr and result.labels:
+        # Add labels (LLM-suggested + auto-label)
+        all_labels = list(result.labels) if result.labels else []
+        if config.label_pr and label_suggestions:
+            auto_labels = [l.name for l in label_suggestions if l.confidence >= 0.8]
+            all_labels.extend(auto_labels)
+
+        if config.label_pr and all_labels:
             try:
-                await github.add_labels(repo, pr_number, result.labels)
-                logger.info(f"Added labels: {result.labels}")
+                await github.add_labels(repo, pr_number, list(set(all_labels)))
+                logger.info(f"Added labels: {all_labels}")
             except Exception as e:
                 logger.warning(f"Failed to add labels: {e}")
 
