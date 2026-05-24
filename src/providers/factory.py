@@ -75,7 +75,27 @@ def create_provider(config: ReviewConfig) -> LLMProvider:
             model=config.model,
         )
 
-    # Default: try OpenAI-compatible with base_url
+    # Check for known custom providers (together, fireworks, deepseek, mistral, openrouter, etc.)
+    from src.providers.custom_provider import KNOWN_PROVIDERS, CustomProvider
+
+    if config.provider in KNOWN_PROVIDERS:
+        return CustomProvider(
+            api_key=config.api_key,
+            model=config.model,
+            base_url=config.api_base_url,
+            provider_name=config.provider,
+        )
+
+    # Default: try as custom OpenAI-compatible provider with base_url
+    if config.api_base_url:
+        return CustomProvider(
+            api_key=config.api_key,
+            model=config.model,
+            base_url=config.api_base_url,
+            provider_name=config.provider or "custom",
+        )
+
+    # Fallback to OpenAI
     from src.providers.openai_provider import OpenAIProvider
 
     return OpenAIProvider(

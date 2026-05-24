@@ -17,7 +17,12 @@ _PROVIDER_MAX_DIFF: dict[str, int] = {
     "ollama": 12000,  # Local models often have smaller context
 }
 
-VALID_PROVIDERS = {"openai", "anthropic", "groq", "ollama", "google"}
+VALID_PROVIDERS = {
+    "openai", "anthropic", "groq", "ollama", "google",
+    # Custom OpenAI-compatible providers
+    "together", "fireworks", "deepseek", "mistral", "openrouter",
+    "anyscale", "lmstudio", "custom",
+}
 
 MODEL_DEFAULTS: dict[str, str] = {
     "openai": "gpt-4o",
